@@ -1,16 +1,16 @@
-import TemplateBrowser from "../components/TemplateBrowser";
+import PremiumDesigner from "../components/PremiumDesigner";
 
-export default function DesignerPage() {
+export default function DesignerPage(){
   return (
-    <div className="stack">
+    <div className="grid" style={{gap:22}}>
       <div className="page-head">
         <div>
           <div className="badge">Designer</div>
-          <h1 style={{margin:"10px 0 6px"}}>Template-based design system</h1>
-          <div className="subtle">Cleaner customer flow with starter templates plus upload-your-own-design support.</div>
+          <h1 style={{margin:"10px 0 6px"}}>Premium template designer</h1>
+          <div className="subtle">A cleaner visual hierarchy, bigger templates, and a calmer customer flow.</div>
         </div>
       </div>
-      <TemplateBrowser />
+      <PremiumDesigner />
     </div>
   );
 }
