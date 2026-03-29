@@ -1,21 +1,49 @@
-import Stripe from 'stripe';
+import { headers } from "next/headers";
+import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
 
-export async function POST(request) {
-  const secret = process.env.STRIPE_SECRET_KEY;
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-  if (!secret || !webhookSecret) {
-    return Response.json({ ok: true, mode: 'demo', message: 'Webhook route is live. Add Stripe secrets to verify signatures.' });
-  }
+export async function POST(req) {
+  const body = await req.text();
+  const sig = headers().get("stripe-signature");
 
-  const stripe = new Stripe(secret);
-  const signature = request.headers.get('stripe-signature');
-  const payload = await request.text();
+  let event;
 
   try {
-    const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-    return Response.json({ ok: true, type: event.type });
-  } catch (error) {
-    return new Response(`Webhook Error: ${error.message}`, { status: 400 });
+    event = stripe.webhooks.constructEvent(
+      body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error("Webhook signature error:", err.message);
+    return new Response("Webhook Error", { status: 400 });
   }
+
+  // ✅ Supabase client (server safe)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  // 🎯 Handle successful checkout
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+
+    const { error } = await supabase.from("orders").insert([
+      {
+        user_id: null, // update later with auth if needed
+        status: "paid",
+        total: session.amount_total / 100,
+        stripe_session_id: session.id,
+      },
+    ]);
+
+    if (error) {
+      console.error("Supabase insert error:", error);
+    }
+  }
+
+  return new Response("Success", { status: 200 });
 }
