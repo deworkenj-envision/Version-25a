@@ -1,49 +1,58 @@
-import { headers } from "next/headers";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
+  const signature = req.headers.get("stripe-signature");
   const body = await req.text();
-  const sig = headers().get("stripe-signature");
+
+  if (!signature) {
+    return new Response("Missing stripe-signature header", { status: 400 });
+  }
 
   let event;
 
   try {
     event = stripe.webhooks.constructEvent(
       body,
-      sig,
+      signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.error("Webhook signature error:", err.message);
-    return new Response("Webhook Error", { status: 400 });
+    console.error("Stripe webhook signature verification failed:", err);
+    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // ✅ Supabase client (server safe)
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
 
-  // 🎯 Handle successful checkout
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
 
-    const { error } = await supabase.from("orders").insert([
-      {
-        user_id: null, // update later with auth if needed
-        status: "paid",
-        total: session.amount_total / 100,
-        stripe_session_id: session.id,
-      },
-    ]);
+      const { error } = await supabase.from("orders").insert([
+        {
+          status: "paid",
+          total: session.amount_total ? session.amount_total / 100 : 0,
+          stripe_session_id: session.id,
+        },
+      ]);
 
-    if (error) {
-      console.error("Supabase insert error:", error);
+      if (error) {
+        console.error("Supabase insert error:", error);
+        return new Response(`Supabase Error: ${error.message}`, { status: 500 });
+      }
     }
-  }
 
-  return new Response("Success", { status: 200 });
+    return new Response("ok", { status: 200 });
+  } catch (err) {
+    console.error("Webhook handler failed:", err);
+    return new Response(`Server Error: ${err.message}`, { status: 500 });
+  }
 }
