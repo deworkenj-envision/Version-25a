@@ -1,13 +1,16 @@
-import DesignerStudio from '../components/DesignerStudio';
+import TemplateBrowser from "../components/TemplateBrowser";
 
 export default function DesignerPage() {
   return (
-    <main className="section">
-      <div className="container">
-        <h1 className="section-title">Designer Studio</h1>
-        <p className="section-subtitle">This page includes live content and downloadable concept artwork so your preview does not look empty.</p>
-        <DesignerStudio />
+    <div className="stack">
+      <div className="page-head">
+        <div>
+          <div className="badge">Designer</div>
+          <h1 style={{margin:"10px 0 6px"}}>Template-based design system</h1>
+          <div className="subtle">Cleaner customer flow with starter templates plus upload-your-own-design support.</div>
+        </div>
       </div>
-    </main>
+      <TemplateBrowser />
+    </div>
   );
 }
