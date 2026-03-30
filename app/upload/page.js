@@ -6,7 +6,7 @@ export default function UploadPage() {
         <div>
           <div className="badge">Upload Artwork</div>
           <h1 style={{ margin: "10px 0 6px" }}>Upload finished files and move quickly to checkout</h1>
-          <div className="subtle">A cleaner upload-first order page built for real print jobs.</div>
+          <div className="subtle">A cleaner upload-first order page with more premium spacing and product feel.</div>
         </div>
       </div>
       <UploadStorefront />

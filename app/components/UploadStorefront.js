@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { acceptedFiles, products } from "../lib/products";
+import ProductVisual from "./ProductVisual";
 
 export default function UploadStorefront() {
   const [product, setProduct] = useState(products[0].slug);
@@ -9,17 +10,16 @@ export default function UploadStorefront() {
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
   const [uploadName, setUploadName] = useState("");
-
   const currentProduct = useMemo(() => products.find((p) => p.slug === product) || products[0], [product]);
 
   function saveDraft() {
     if (typeof window === "undefined") return;
-    localStorage.setItem("printluxe-v31-upload-draft", JSON.stringify({ product, quantity, notes, contactName, email, uploadName }));
+    localStorage.setItem("printluxe-v35-upload-draft", JSON.stringify({ product, quantity, notes, contactName, email, uploadName }));
     alert("Draft saved locally in this browser.");
   }
   function loadDraft() {
     if (typeof window === "undefined") return;
-    const raw = localStorage.getItem("printluxe-v31-upload-draft");
+    const raw = localStorage.getItem("printluxe-v35-upload-draft");
     if (!raw) return alert("No saved draft found.");
     const d = JSON.parse(raw);
     setProduct(d.product || products[0].slug);
@@ -110,6 +110,7 @@ export default function UploadStorefront() {
         </div>
         <div className="preview-stage">
           <div className="preview-art">
+            <ProductVisual type={currentProduct.visual} />
             <div>
               <div className="badge">{currentProduct.size}</div>
               <h3 style={{ margin: "12px 0 6px", fontSize: 30 }}>{currentProduct.name}</h3>
@@ -125,10 +126,6 @@ export default function UploadStorefront() {
             <div className="grid grid-2">
               <div className="card card-pad"><div className="subtle">Quantity</div><strong style={{ fontSize: 28 }}>{quantity}</strong></div>
               <div className="card card-pad"><div className="subtle">Starting Price</div><strong style={{ fontSize: 28 }}>{currentProduct.starting}</strong></div>
-            </div>
-            <div className="card card-pad">
-              <div className="subtle">Job Notes</div>
-              <div style={{ marginTop: 8 }}>{notes || "No special instructions yet."}</div>
             </div>
           </div>
         </div>
