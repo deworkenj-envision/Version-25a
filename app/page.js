@@ -1,241 +1,252 @@
+import { products } from "./lib/products";
+
 export default function HomePage() {
-  const featuredProducts = [
-    {
-      name: "Business Cards",
-      desc: "Premium finishes, fast turnaround, and clean professional presentation.",
-      price: "From $29",
-      image:
-        "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=1200&q=80",
-    },
-    {
-      name: "Flyers",
-      desc: "High-impact promotional prints for events, offers, and local marketing.",
-      price: "From $49",
-      image:
-        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
-    },
-    {
-      name: "Banners",
-      desc: "Large-format prints designed to stand out indoors and outdoors.",
-      price: "From $79",
-      image:
-        "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80",
-    },
-  ];
-
-  const categories = [
-    "Business Cards",
-    "Flyers",
-    "Postcards",
-    "Brochures",
-    "Banners",
-    "Signs",
-  ];
-
   return (
-    <main className="min-h-screen bg-white text-neutral-900">
-      <section className="relative overflow-hidden">
+    <div className="grid" style={{ gap: 28 }}>
+      {/* HERO */}
+      <section
+        className="card"
+        style={{
+          overflow: "hidden",
+          background:
+            "linear-gradient(135deg, #0f172a 0%, #1e293b 45%, #2563eb 100%)",
+          color: "#fff",
+        }}
+      >
         <div
-          className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1600&q=80')",
+            display: "grid",
+            gridTemplateColumns: "1.1fr 0.9fr",
+            gap: 24,
+            padding: 32,
           }}
-        />
-        <div className="absolute inset-0 bg-black/45" />
-        <div className="relative mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32 lg:py-40">
-          <div className="max-w-3xl">
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-white/80">
-              Premium Print Shop
-            </p>
-            <h1 className="text-4xl font-semibold leading-tight text-white md:text-6xl">
-              Print products that look premium before they even leave the box.
+        >
+          {/* LEFT */}
+          <div style={{ display: "grid", alignContent: "center", gap: 16 }}>
+            <div
+              style={{
+                display: "inline-flex",
+                padding: "7px 11px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,.12)",
+                border: "1px solid rgba(255,255,255,.14)",
+                fontSize: 12,
+                fontWeight: 800,
+              }}
+            >
+              Premium Print • Upload Ready Files
+            </div>
+
+            <h1 style={{ fontSize: 64, lineHeight: 0.95, margin: 0 }}>
+              Print-ready files?
+              <br />
+              Get them printed fast.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/85 md:text-xl">
-              Business cards, flyers, banners, and branded materials with a polished
-              storefront experience your customers can trust.
+
+            <p
+              style={{
+                fontSize: 18,
+                color: "rgba(255,255,255,.8)",
+                maxWidth: 600,
+              }}
+            >
+              Business cards, flyers, banners, and more. Upload your finished
+              artwork and place your order in minutes.
             </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <a
-                href="#products"
-                className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-neutral-900 shadow-lg transition hover:scale-[1.02]"
-              >
-                Shop Products
+
+            <div style={{ display: "flex", gap: 12 }}>
+              <a className="btn btn-primary" href="/upload">
+                Upload Artwork
               </a>
               <a
-                href="#how-it-works"
-                className="rounded-full border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                className="btn"
+                href="/products"
+                style={{
+                  background: "rgba(255,255,255,.08)",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,.2)",
+                }}
               >
-                How It Works
+                Browse Products
               </a>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <div className="finish">Fast turnaround</div>
+              <div className="finish">Upload print-ready artwork</div>
+              <div className="finish">Simple ordering</div>
+              <div className="finish">Premium print quality</div>
+            </div>
+          </div>
+
+          {/* RIGHT */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 16,
+              alignContent: "center",
+            }}
+          >
+            <div
+              style={{
+                background: "#fff",
+                color: "#0f172a",
+                borderRadius: 24,
+                padding: 20,
+                boxShadow: "0 20px 40px rgba(0,0,0,.15)",
+              }}
+            >
+              <div className="badge">Business Cards</div>
+              <h3>Premium Business Cards</h3>
+              <div className="subtle">Matte, gloss, soft-touch</div>
+              <div style={{ fontWeight: 800, marginTop: 10 }}>
+                From $54
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: "#fff",
+                color: "#0f172a",
+                borderRadius: 24,
+                padding: 20,
+                boxShadow: "0 20px 40px rgba(0,0,0,.15)",
+              }}
+            >
+              <div className="badge">Flyers</div>
+              <h3>Marketing Flyers</h3>
+              <div className="subtle">High-quality promo prints</div>
+              <div style={{ fontWeight: 800, marginTop: 10 }}>
+                From $79
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: "rgba(255,255,255,.08)",
+                borderRadius: 20,
+                padding: 18,
+              }}
+            >
+              <div style={{ color: "rgba(255,255,255,.7)" }}>
+                Fast Turnaround
+              </div>
+              <strong style={{ fontSize: 24 }}>2–4 Days</strong>
+            </div>
+
+            <div
+              style={{
+                background: "rgba(255,255,255,.08)",
+                borderRadius: 20,
+                padding: 18,
+              }}
+            >
+              <div style={{ color: "rgba(255,255,255,.7)" }}>
+                File Types
+              </div>
+              <strong style={{ fontSize: 24 }}>PDF, PNG, JPG</strong>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-b border-neutral-200 bg-neutral-50">
-        <div className="mx-auto max-w-7xl px-6 py-6 md:px-10">
-          <div className="flex flex-wrap items-center gap-3">
-            {categories.map((item) => (
-              <span
-                key={item}
-                className="rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm text-neutral-700 shadow-sm"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="products" className="mx-auto max-w-7xl px-6 py-20 md:px-10">
-        <div className="mb-12 flex items-end justify-between gap-6">
+      {/* PRODUCTS */}
+      <section className="section-band">
+        <div className="page-head">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-neutral-500">
-              Featured Products
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">
-              Built for brands that want to look serious
-            </h2>
+            <div className="badge">Featured Products</div>
+            <h2>Popular print products</h2>
+            <div className="subtle">
+              Choose your product and upload your artwork.
+            </div>
           </div>
-          <a
-            href="#"
-            className="hidden text-sm font-semibold text-neutral-700 md:inline-block"
-          >
-            View all products →
-          </a>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-3">
-          {featuredProducts.map((product) => (
-            <article
-              key={product.name}
-              className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.08)] transition duration-300 hover:-translate-y-1"
-            >
-              <div className="h-64 w-full overflow-hidden">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="h-full w-full object-cover"
+        <div className="grid grid-4">
+          {products.map((item) => (
+            <div className="card product-card" key={item.slug}>
+              {/* VISUAL MOCKUP */}
+              <div
+                style={{
+                  height: 120,
+                  borderRadius: 16,
+                  background:
+                    "linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 12,
+                  boxShadow: "0 10px 25px rgba(0,0,0,.08)",
+                }}
+              >
+                <div
+                  style={{
+                    width: 90,
+                    height: 55,
+                    background: "#fff",
+                    borderRadius: 6,
+                    boxShadow: "0 8px 20px rgba(0,0,0,.15)",
+                    transform: "rotate(-6deg)",
+                  }}
                 />
               </div>
-              <div className="p-7">
-                <div className="flex items-start justify-between gap-4">
-                  <h3 className="text-xl font-semibold">{product.name}</h3>
-                  <span className="rounded-full bg-neutral-100 px-3 py-1 text-sm font-medium text-neutral-700">
-                    {product.price}
-                  </span>
-                </div>
-                <p className="mt-4 text-sm leading-7 text-neutral-600">
-                  {product.desc}
-                </p>
-                <button className="mt-6 inline-flex rounded-full bg-neutral-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-neutral-700">
-                  Customize Now
-                </button>
+
+              <div className="product-top">
+                <div className="badge">{item.badge}</div>
+                <div className="subtle">{item.size}</div>
               </div>
-            </article>
-          ))}
-        </div>
-      </section>
 
-      <section className="bg-neutral-950 text-white">
-        <div className="mx-auto max-w-7xl px-6 py-20 md:px-10">
-          <div className="grid gap-8 md:grid-cols-3">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-              <p className="text-sm uppercase tracking-[0.2em] text-white/60">
-                Premium Quality
-              </p>
-              <h3 className="mt-4 text-2xl font-semibold">Sharp color, better stock</h3>
-              <p className="mt-4 text-sm leading-7 text-white/70">
-                Present your brand with print materials that feel high-end and
-                professional from the first touch.
-              </p>
-            </div>
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-              <p className="text-sm uppercase tracking-[0.2em] text-white/60">
-                Easy Ordering
-              </p>
-              <h3 className="mt-4 text-2xl font-semibold">A storefront that converts</h3>
-              <p className="mt-4 text-sm leading-7 text-white/70">
-                Cleaner product discovery, clearer pricing, and modern sections that
-                feel like a real customer-facing site.
-              </p>
-            </div>
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-              <p className="text-sm uppercase tracking-[0.2em] text-white/60">
-                Fast Turnaround
-              </p>
-              <h3 className="mt-4 text-2xl font-semibold">From design to delivery</h3>
-              <p className="mt-4 text-sm leading-7 text-white/70">
-                Keep orders moving with a polished experience that makes your print
-                business feel credible and established.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+              <h3>{item.name}</h3>
+              <div className="subtle">{item.lead}</div>
 
-      <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-20 md:px-10">
-        <div className="mb-12 max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-neutral-500">
-            How It Works
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold md:text-4xl">
-            A smoother print ordering experience
-          </h2>
-        </div>
+              <div className="finish-row">
+                {item.finishes.map((finish) => (
+                  <div key={finish} className="finish">
+                    {finish}
+                  </div>
+                ))}
+              </div>
 
-        <div className="grid gap-8 md:grid-cols-3">
-          {[
-            {
-              step: "01",
-              title: "Choose your product",
-              text: "Select from premium print categories designed for businesses, events, and promotions.",
-            },
-            {
-              step: "02",
-              title: "Upload or customize",
-              text: "Submit artwork, request edits, or begin with a simple guided design flow.",
-            },
-            {
-              step: "03",
-              title: "Approve and print",
-              text: "Review your order details, confirm the job, and move into production with confidence.",
-            },
-          ].map((item) => (
-            <div
-              key={item.step}
-              className="rounded-3xl border border-neutral-200 bg-neutral-50 p-8"
-            >
-              <span className="text-sm font-semibold text-neutral-400">{item.step}</span>
-              <h3 className="mt-4 text-2xl font-semibold">{item.title}</h3>
-              <p className="mt-4 text-sm leading-7 text-neutral-600">{item.text}</p>
+              <div className="price">From {item.starting}</div>
+
+              <a className="btn btn-primary" href="/upload">
+                Upload Artwork
+              </a>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="px-6 pb-20 md:px-10">
-        <div className="mx-auto max-w-7xl rounded-[2rem] bg-neutral-100 px-8 py-14 md:px-14">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-neutral-500">
-              Ready to start?
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-5xl">
-              Launch a print storefront that feels established from day one.
-            </h2>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-neutral-600">
-              This version is designed to look polished immediately without needing
-              extra component files or local image assets.
-            </p>
-            <div className="mt-8">
-              <button className="rounded-full bg-neutral-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-700">
-                Start Your Order
-              </button>
+      {/* HOW IT WORKS */}
+      <section className="section-band">
+        <div className="page-head">
+          <div>
+            <div className="badge">How It Works</div>
+            <h2>Simple print ordering</h2>
+            <div className="subtle">
+              Built for customers with ready-to-print files.
             </div>
           </div>
         </div>
+
+        <div className="how-grid">
+          <div className="how-card">
+            <div className="how-number">1</div>
+            <h3>Choose product</h3>
+          </div>
+
+          <div className="how-card">
+            <div className="how-number">2</div>
+            <h3>Upload artwork</h3>
+          </div>
+
+          <div className="how-card">
+            <div className="how-number">3</div>
+            <h3>Checkout</h3>
+          </div>
+        </div>
       </section>
-    </main>
+    </div>
   );
 }
