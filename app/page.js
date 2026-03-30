@@ -26,7 +26,6 @@ export default function HomePage() {
             <div
               style={{
                 display: "inline-flex",
-                width: "fit-content",
                 padding: "7px 11px",
                 borderRadius: 999,
                 background: "rgba(255,255,255,.12)",
@@ -38,14 +37,7 @@ export default function HomePage() {
               Premium Print • Upload Ready Files
             </div>
 
-            <h1
-              style={{
-                fontSize: 64,
-                lineHeight: 0.95,
-                margin: 0,
-                maxWidth: 700,
-              }}
-            >
+            <h1 style={{ fontSize: 64, lineHeight: 0.95, margin: 0 }}>
               Print-ready files?
               <br />
               Get them printed fast.
@@ -54,7 +46,6 @@ export default function HomePage() {
             <p
               style={{
                 fontSize: 18,
-                lineHeight: 1.6,
                 color: "rgba(255,255,255,.8)",
                 maxWidth: 600,
               }}
@@ -88,7 +79,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* RIGHT (PRODUCT STYLE) */}
+          {/* RIGHT */}
           <div
             style={{
               display: "grid",
@@ -107,9 +98,7 @@ export default function HomePage() {
               }}
             >
               <div className="badge">Business Cards</div>
-              <h3 style={{ margin: "12px 0 6px" }}>
-                Premium Business Cards
-              </h3>
+              <h3>Premium Business Cards</h3>
               <div className="subtle">Matte, gloss, soft-touch</div>
               <div style={{ fontWeight: 800, marginTop: 10 }}>
                 From $54
@@ -126,9 +115,7 @@ export default function HomePage() {
               }}
             >
               <div className="badge">Flyers</div>
-              <h3 style={{ margin: "12px 0 6px" }}>
-                Marketing Flyers
-              </h3>
+              <h3>Marketing Flyers</h3>
               <div className="subtle">High-quality promo prints</div>
               <div style={{ fontWeight: 800, marginTop: 10 }}>
                 From $79
@@ -166,12 +153,10 @@ export default function HomePage() {
 
       {/* PRODUCTS */}
       <section className="section-band">
-        <div className="page-head" style={{ marginTop: 0 }}>
+        <div className="page-head">
           <div>
             <div className="badge">Featured Products</div>
-            <h2 style={{ margin: "10px 0 6px" }}>
-              Popular print products
-            </h2>
+            <h2>Popular print products</h2>
             <div className="subtle">
               Choose your product and upload your artwork.
             </div>
@@ -181,6 +166,32 @@ export default function HomePage() {
         <div className="grid grid-4">
           {products.map((item) => (
             <div className="card product-card" key={item.slug}>
+              {/* VISUAL MOCKUP */}
+              <div
+                style={{
+                  height: 120,
+                  borderRadius: 16,
+                  background:
+                    "linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 12,
+                  boxShadow: "0 10px 25px rgba(0,0,0,.08)",
+                }}
+              >
+                <div
+                  style={{
+                    width: 90,
+                    height: 55,
+                    background: "#fff",
+                    borderRadius: 6,
+                    boxShadow: "0 8px 20px rgba(0,0,0,.15)",
+                    transform: "rotate(-6deg)",
+                  }}
+                />
+              </div>
+
               <div className="product-top">
                 <div className="badge">{item.badge}</div>
                 <div className="subtle">{item.size}</div>
@@ -209,7 +220,7 @@ export default function HomePage() {
 
       {/* HOW IT WORKS */}
       <section className="section-band">
-        <div className="page-head" style={{ marginTop: 0 }}>
+        <div className="page-head">
           <div>
             <div className="badge">How It Works</div>
             <h2>Simple print ordering</h2>
@@ -223,25 +234,16 @@ export default function HomePage() {
           <div className="how-card">
             <div className="how-number">1</div>
             <h3>Choose product</h3>
-            <div className="subtle">
-              Select business cards, flyers, banners, or postcards.
-            </div>
           </div>
 
           <div className="how-card">
             <div className="how-number">2</div>
             <h3>Upload artwork</h3>
-            <div className="subtle">
-              Upload your finished file directly with your order.
-            </div>
           </div>
 
           <div className="how-card">
             <div className="how-number">3</div>
             <h3>Checkout</h3>
-            <div className="subtle">
-              Review and complete your order in minutes.
-            </div>
           </div>
         </div>
       </section>
