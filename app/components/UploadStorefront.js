@@ -14,12 +14,12 @@ export default function UploadStorefront() {
 
   function saveDraft() {
     if (typeof window === "undefined") return;
-    localStorage.setItem("printluxe-v30-upload-draft", JSON.stringify({ product, quantity, notes, contactName, email, uploadName }));
+    localStorage.setItem("printluxe-v31-upload-draft", JSON.stringify({ product, quantity, notes, contactName, email, uploadName }));
     alert("Draft saved locally in this browser.");
   }
   function loadDraft() {
     if (typeof window === "undefined") return;
-    const raw = localStorage.getItem("printluxe-v30-upload-draft");
+    const raw = localStorage.getItem("printluxe-v31-upload-draft");
     if (!raw) return alert("No saved draft found.");
     const d = JSON.parse(raw);
     setProduct(d.product || products[0].slug);
@@ -38,7 +38,7 @@ export default function UploadStorefront() {
           <div>
             <div className="badge">Step 1</div>
             <h2 className="section-title" style={{ marginTop: 10 }}>Choose a product</h2>
-            <div className="subtle">A clean product-first experience with no design tool clutter.</div>
+            <div className="subtle">Pick the print item you need, then upload finished artwork.</div>
           </div>
           <div className="list">
             {products.map((item) => (
@@ -46,7 +46,7 @@ export default function UploadStorefront() {
                 <div className="badge">{item.badge}</div>
                 <div style={{ fontWeight: 800, marginTop: 10 }}>{item.name}</div>
                 <div className="subtle" style={{ fontSize: 13 }}>{item.size}</div>
-                <div className="subtle" style={{ marginTop: 6 }}>{item.description}</div>
+                <div className="subtle" style={{ marginTop: 6 }}>{item.lead}</div>
                 <div style={{ marginTop: 10, fontWeight: 800 }}>Starting at {item.starting}</div>
               </button>
             ))}
@@ -65,7 +65,7 @@ export default function UploadStorefront() {
           </div>
           <div className="upload-box">
             <p style={{ marginTop: 0, fontSize: 20, fontWeight: 800 }}>Upload your finished design</p>
-            <div className="subtle" style={{ marginBottom: 14 }}>Fast, clean, and easy for customers who already have artwork ready.</div>
+            <div className="subtle" style={{ marginBottom: 14 }}>Designed for customers who already have a file ready to print.</div>
             <input className="input" type="file" accept=".pdf,.png,.jpg,.jpeg,.svg" onChange={(e) => setUploadName(e.target.files?.[0]?.name || "")} />
             <p className="subtle" style={{ marginBottom: 0, marginTop: 14 }}>{uploadName ? `Selected file: ${uploadName}` : "Choose a file to continue."}</p>
           </div>
@@ -76,7 +76,7 @@ export default function UploadStorefront() {
             <div>
               <div className="badge">Step 3</div>
               <h2 className="section-title" style={{ marginTop: 10 }}>Order details</h2>
-              <div className="subtle">Only the fields visitors actually need to complete the order.</div>
+              <div className="subtle">Only the fields visitors need to complete the order.</div>
             </div>
           </div>
           <div className="controls">
@@ -104,8 +104,8 @@ export default function UploadStorefront() {
         <div className="page-head" style={{ margin: "0 0 16px" }}>
           <div>
             <div className="badge">Order Preview</div>
-            <h2 className="section-title" style={{ marginTop: 10 }}>Simple, polished order summary</h2>
-            <div className="subtle">Clear enough for customers to trust and continue.</div>
+            <h2 className="section-title" style={{ marginTop: 10 }}>A clearer order summary</h2>
+            <div className="subtle">Show visitors the product, file status, and job details in one place.</div>
           </div>
         </div>
         <div className="preview-stage">
@@ -114,6 +114,9 @@ export default function UploadStorefront() {
               <div className="badge">{currentProduct.size}</div>
               <h3 style={{ margin: "12px 0 6px", fontSize: 30 }}>{currentProduct.name}</h3>
               <div className="subtle">{currentProduct.description}</div>
+            </div>
+            <div className="finish-row">
+              {currentProduct.finishes.map((finish) => <div key={finish} className="finish">{finish}</div>)}
             </div>
             <div className="preview-file">
               <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>Artwork Upload</div>

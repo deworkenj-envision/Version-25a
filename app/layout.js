@@ -1,12 +1,12 @@
 import "./globals.css";
-export const metadata = { title: "PrintLuxe V30", description: "Premium storefront polish for upload-only print ordering." };
+export const metadata = { title: "PrintLuxe V31", description: "Real print storefront with upload-only ordering." };
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
         <header className="topbar">
           <div className="topbar-inner">
-            <div className="brand">Print<span>Luxe</span> V30</div>
+            <div className="brand">Print<span>Luxe</span> V31</div>
             <nav className="nav">
               <a href="/">Home</a>
               <a href="/products">Products</a>
@@ -17,7 +17,7 @@ export default function RootLayout({ children }) {
           </div>
         </header>
         <main className="shell">{children}</main>
-        <footer className="shell">Premium storefront styling • simple upload-only ordering • built for finished artwork.</footer>
+        <footer className="shell">Real print storefront • upload-only ordering • built for finished artwork.</footer>
       </body>
     </html>
   );
