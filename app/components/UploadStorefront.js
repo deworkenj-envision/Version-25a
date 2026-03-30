@@ -95,7 +95,7 @@ export default function UploadStorefront() {
             <div className="toolbar">
               <button className="btn btn-secondary" onClick={saveDraft}>Save Draft</button>
               <button className="btn btn-secondary" onClick={loadDraft}>Load Draft</button>
-              <a className="btn btn-primary" href="/dashboard">Continue to Checkout</a>
+              <a className="btn btn-primary" href="/checkout">Continue to Checkout</a>
             </div>
           </div>
         </div>
