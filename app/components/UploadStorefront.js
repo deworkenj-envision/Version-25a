@@ -14,12 +14,12 @@ export default function UploadStorefront() {
 
   function saveDraft() {
     if (typeof window === "undefined") return;
-    localStorage.setItem("printluxe-v29-upload-draft", JSON.stringify({ product, quantity, notes, contactName, email, uploadName }));
+    localStorage.setItem("printluxe-v30-upload-draft", JSON.stringify({ product, quantity, notes, contactName, email, uploadName }));
     alert("Draft saved locally in this browser.");
   }
   function loadDraft() {
     if (typeof window === "undefined") return;
-    const raw = localStorage.getItem("printluxe-v29-upload-draft");
+    const raw = localStorage.getItem("printluxe-v30-upload-draft");
     if (!raw) return alert("No saved draft found.");
     const d = JSON.parse(raw);
     setProduct(d.product || products[0].slug);
@@ -38,7 +38,7 @@ export default function UploadStorefront() {
           <div>
             <div className="badge">Step 1</div>
             <h2 className="section-title" style={{ marginTop: 10 }}>Choose a product</h2>
-            <div className="subtle">No design tool. Just pick the product and upload finished artwork.</div>
+            <div className="subtle">A clean product-first experience with no design tool clutter.</div>
           </div>
           <div className="list">
             {products.map((item) => (
@@ -47,6 +47,7 @@ export default function UploadStorefront() {
                 <div style={{ fontWeight: 800, marginTop: 10 }}>{item.name}</div>
                 <div className="subtle" style={{ fontSize: 13 }}>{item.size}</div>
                 <div className="subtle" style={{ marginTop: 6 }}>{item.description}</div>
+                <div style={{ marginTop: 10, fontWeight: 800 }}>Starting at {item.starting}</div>
               </button>
             ))}
           </div>
@@ -63,7 +64,8 @@ export default function UploadStorefront() {
             </div>
           </div>
           <div className="upload-box">
-            <p style={{ marginTop: 0, fontSize: 18, fontWeight: 700 }}>Upload your finished design</p>
+            <p style={{ marginTop: 0, fontSize: 20, fontWeight: 800 }}>Upload your finished design</p>
+            <div className="subtle" style={{ marginBottom: 14 }}>Fast, clean, and easy for customers who already have artwork ready.</div>
             <input className="input" type="file" accept=".pdf,.png,.jpg,.jpeg,.svg" onChange={(e) => setUploadName(e.target.files?.[0]?.name || "")} />
             <p className="subtle" style={{ marginBottom: 0, marginTop: 14 }}>{uploadName ? `Selected file: ${uploadName}` : "Choose a file to continue."}</p>
           </div>
@@ -74,7 +76,7 @@ export default function UploadStorefront() {
             <div>
               <div className="badge">Step 3</div>
               <h2 className="section-title" style={{ marginTop: 10 }}>Order details</h2>
-              <div className="subtle">Keep the form simple so customers can move quickly.</div>
+              <div className="subtle">Only the fields visitors actually need to complete the order.</div>
             </div>
           </div>
           <div className="controls">
@@ -84,10 +86,7 @@ export default function UploadStorefront() {
             </div>
             <div className="grid grid-2">
               <select className="select" value={quantity} onChange={(e) => setQuantity(e.target.value)}>
-                <option value="100">100</option>
-                <option value="250">250</option>
-                <option value="500">500</option>
-                <option value="1000">1000</option>
+                <option value="100">100</option><option value="250">250</option><option value="500">500</option><option value="1000">1000</option>
               </select>
               <input className="input" value={currentProduct.name} readOnly />
             </div>
@@ -95,7 +94,7 @@ export default function UploadStorefront() {
             <div className="toolbar">
               <button className="btn btn-secondary" onClick={saveDraft}>Save Draft</button>
               <button className="btn btn-secondary" onClick={loadDraft}>Load Draft</button>
-              <a className="btn btn-primary" href="/checkout">Continue to Checkout</a>
+              <a className="btn btn-primary" href="/dashboard">Continue to Checkout</a>
             </div>
           </div>
         </div>
@@ -105,15 +104,15 @@ export default function UploadStorefront() {
         <div className="page-head" style={{ margin: "0 0 16px" }}>
           <div>
             <div className="badge">Order Preview</div>
-            <h2 className="section-title" style={{ marginTop: 10 }}>Clean and easy for visitors</h2>
-            <div className="subtle">Show the product, the uploaded file, and a short summary. Nothing more.</div>
+            <h2 className="section-title" style={{ marginTop: 10 }}>Simple, polished order summary</h2>
+            <div className="subtle">Clear enough for customers to trust and continue.</div>
           </div>
         </div>
         <div className="preview-stage">
           <div className="preview-art">
             <div>
               <div className="badge">{currentProduct.size}</div>
-              <h3 style={{ margin: "12px 0 6px", fontSize: 28 }}>{currentProduct.name}</h3>
+              <h3 style={{ margin: "12px 0 6px", fontSize: 30 }}>{currentProduct.name}</h3>
               <div className="subtle">{currentProduct.description}</div>
             </div>
             <div className="preview-file">
@@ -121,8 +120,8 @@ export default function UploadStorefront() {
               <div className="subtle">{uploadName || "No file selected yet"}</div>
             </div>
             <div className="grid grid-2">
-              <div className="card card-pad"><div className="subtle">Quantity</div><strong style={{ fontSize: 26 }}>{quantity}</strong></div>
-              <div className="card card-pad"><div className="subtle">Starting Price</div><strong style={{ fontSize: 26 }}>{currentProduct.starting}</strong></div>
+              <div className="card card-pad"><div className="subtle">Quantity</div><strong style={{ fontSize: 28 }}>{quantity}</strong></div>
+              <div className="card card-pad"><div className="subtle">Starting Price</div><strong style={{ fontSize: 28 }}>{currentProduct.starting}</strong></div>
             </div>
             <div className="card card-pad">
               <div className="subtle">Job Notes</div>

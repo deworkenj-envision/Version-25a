@@ -5,8 +5,8 @@ export default function UploadPage() {
       <div className="page-head">
         <div>
           <div className="badge">Upload Artwork</div>
-          <h1 style={{ margin: "10px 0 6px" }}>Product first. Upload second. Easy for customers.</h1>
-          <div className="subtle">This replaces the old design flow with a cleaner upload-only ordering experience.</div>
+          <h1 style={{ margin: "10px 0 6px" }}>Fast ordering for customers with finished files</h1>
+          <div className="subtle">Simple, polished, and easy to understand from the first glance.</div>
         </div>
       </div>
       <UploadStorefront />
