@@ -1,40 +1,18 @@
-import { dashboardMetrics, mockOrders } from '../../lib/data';
-import DesignLibrary from '../components/DesignLibrary';
-
 export default function DashboardPage() {
   return (
-    <main className="section">
-      <div className="container">
-        <h1 className="section-title">Customer Dashboard</h1>
-        <p className="section-subtitle">Populated dashboard metrics and order history are included in the real preview build.</p>
-        <div className="grid grid-4">
-          {dashboardMetrics.map((metric) => (
-            <div className="metric" key={metric.label}>
-              <strong>{metric.value}</strong>
-              <span className="muted">{metric.label}</span>
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-2" style={{ marginTop: 18 }}>
-          <div className="panel">
-            <h2 style={{ marginTop: 0 }}>Recent Orders</h2>
-            <table className="table">
-              <thead><tr><th>ID</th><th>Product</th><th>Status</th><th>Total</th></tr></thead>
-              <tbody>
-                {mockOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td>{order.id}</td>
-                    <td>{order.product}</td>
-                    <td><span className={`badge ${order.status === 'Shipped' ? 'success' : order.status === 'Printing' ? 'warn' : 'info'}`}>{order.status}</span></td>
-                    <td>${order.total}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <DesignLibrary />
+    <div className="grid" style={{ gap: 22 }}>
+      <div className="page-head">
+        <div>
+          <div className="badge">Dashboard</div>
+          <h1 style={{ margin: "10px 0 6px" }}>What changed in V29</h1>
+          <div className="subtle">The site is now focused on simple product selection and print-ready uploads only.</div>
         </div>
       </div>
-    </main>
+      <div className="grid grid-3">
+        <div className="card card-pad"><div className="subtle">Design interface</div><strong style={{ fontSize: 30 }}>Removed</strong></div>
+        <div className="card card-pad"><div className="subtle">Customer path</div><strong style={{ fontSize: 30 }}>Simplified</strong></div>
+        <div className="card card-pad"><div className="subtle">Primary action</div><strong style={{ fontSize: 30 }}>Upload Artwork</strong></div>
+      </div>
+    </div>
   );
 }
