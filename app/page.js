@@ -54,7 +54,7 @@ export default function HomePage() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <a
                   href="/products"
-                  className="rounded-xl bg-white px-6 py-3 text-base font-semibold text-blue-700"
+                  className="rounded-xl bg-white px-6 py-3 text-base font-semibold text-blue-700 shadow"
                 >
                   Start Your Order
                 </a>
@@ -68,7 +68,7 @@ export default function HomePage() {
               </div>
 
               <div className="mt-8 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl bg-blue-600 p-5">
+                <div className="rounded-2xl bg-blue-600 p-5 shadow-lg">
                   <h2 className="text-lg font-semibold text-white">Popular Products</h2>
                   <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-white">
                     <div className="rounded-lg bg-blue-500 px-3 py-2">Business Cards</div>
@@ -80,7 +80,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl bg-blue-600 p-5">
+                <div className="rounded-2xl bg-blue-600 p-5 shadow-lg">
                   <h2 className="text-lg font-semibold text-white">We make it easy:</h2>
                   <ul className="mt-4 space-y-3 text-sm text-white">
                     {steps.map((step) => (
