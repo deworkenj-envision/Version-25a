@@ -116,35 +116,57 @@ export default function HomePage() {
     },
     heroTitle: {
       marginTop: "22px",
-      marginBottom: "18px",
+      marginBottom: "22px",
       color: "#fff",
-      fontSize: "72px",
-      lineHeight: 0.95,
+      fontSize: "64px",
+      lineHeight: 0.96,
       letterSpacing: "-0.05em",
       fontWeight: 900,
     },
-    heroSubWrap: {
-      textAlign: "center",
-      marginTop: "14px",
-      marginBottom: "18px",
+    productPills: {
+      display: "flex",
+      gap: "12px",
+      flexWrap: "wrap",
+      marginTop: "18px",
+      marginBottom: "24px",
     },
-    heroSub1: {
+    productPillStrong: {
+      display: "inline-block",
+      padding: "10px 16px",
+      borderRadius: "999px",
+      background: "rgba(255,255,255,0.14)",
+      border: "1px solid rgba(255,255,255,0.22)",
       color: "#fff",
-      fontSize: "30px",
       fontWeight: 800,
+      fontSize: "15px",
+      boxShadow: "0 8px 18px rgba(0,0,0,0.12)",
+    },
+    processWrap: {
+      marginTop: "8px",
+      marginBottom: "24px",
+      maxWidth: "620px",
+    },
+    processTitle: {
+      color: "#fff",
+      fontSize: "28px",
+      fontWeight: 900,
+      margin: "0 0 14px 0",
+    },
+    processList: {
       margin: 0,
+      paddingLeft: "22px",
+      color: "rgba(255,255,255,0.96)",
+      fontSize: "22px",
+      lineHeight: 1.45,
+      fontWeight: 600,
     },
-    heroSub2: {
-      color: "#fff",
-      fontSize: "30px",
-      fontWeight: 800,
-      margin: "10px 0 0 0",
+    processItem: {
+      marginBottom: "6px",
     },
     heroActions: {
       display: "flex",
       gap: "14px",
       flexWrap: "wrap",
-      justifyContent: "center",
       marginTop: "22px",
     },
     primaryBtn: {
@@ -167,20 +189,6 @@ export default function HomePage() {
       fontSize: "17px",
       fontWeight: 700,
       cursor: "pointer",
-    },
-    productPills: {
-      display: "flex",
-      gap: "10px",
-      flexWrap: "wrap",
-      justifyContent: "center",
-      marginTop: "22px",
-    },
-    smallPills: {
-      display: "flex",
-      gap: "10px",
-      flexWrap: "wrap",
-      justifyContent: "center",
-      marginTop: "18px",
     },
     rightCol: {
       display: "flex",
@@ -416,30 +424,31 @@ export default function HomePage() {
                 <div style={styles.pill}>Premium Print • Upload Ready Files</div>
 
                 <h1 style={styles.heroTitle}>
-                  Top Quality Printing with the Best Prices
+                  Top Quality Printing at the Best Prices
                 </h1>
 
-                <div style={styles.heroSubWrap}>
-                  <p style={styles.heroSub1}>Top Quality Printing with the Best Prices</p>
-                  <p style={styles.heroSub2}>Fast Turnaround</p>
+                <div style={styles.productPills}>
+                  <span style={styles.productPillStrong}>Postcards</span>
+                  <span style={styles.productPillStrong}>Flyers</span>
+                  <span style={styles.productPillStrong}>Business Cards</span>
+                  <span style={styles.productPillStrong}>Banners</span>
                 </div>
 
-                <div style={styles.productPills}>
-                  <span style={styles.pill}>Postcards</span>
-                  <span style={styles.pill}>Flyers</span>
-                  <span style={styles.pill}>Business Cards</span>
-                  <span style={styles.pill}>Banners</span>
+                <div style={styles.processWrap}>
+                  <h2 style={styles.processTitle}>We make it easy:</h2>
+                  <ol style={styles.processList}>
+                    <li style={styles.processItem}>Pick the product you want.</li>
+                    <li style={styles.processItem}>
+                      Choose the paper type, quantity and finishes.
+                    </li>
+                    <li style={styles.processItem}>Upload your print ready artwork.</li>
+                    <li style={styles.processItem}>Place your order.</li>
+                  </ol>
                 </div>
 
                 <div style={styles.heroActions}>
                   <button style={styles.primaryBtn}>Upload Artwork</button>
                   <button style={styles.secondaryBtn}>Browse Products</button>
-                </div>
-
-                <div style={styles.smallPills}>
-                  <span style={styles.pill}>Top Quality Printing</span>
-                  <span style={styles.pill}>Best Prices</span>
-                  <span style={styles.pill}>Fast Turnaround</span>
                 </div>
               </div>
 
