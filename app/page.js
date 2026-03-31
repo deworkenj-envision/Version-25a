@@ -34,88 +34,87 @@ export default function HomePage() {
 
   return (
     <main className="bg-white text-slate-900">
-      <section className="relative overflow-hidden bg-gradient-to-r from-[#0b4ea2] via-[#0d5ec4] to-[#1273eb] text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.10),transparent_24%)]" />
+      <section className="bg-blue-700 text-white">
+        <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 lg:px-16 lg:py-14">
+          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
+            <div>
+              <div className="inline-block rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white">
+                Premium Printing • Fast Turnaround • Professional Quality
+              </div>
 
-        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-6 py-10 md:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:px-16 lg:py-14">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-medium text-white/90 shadow-sm backdrop-blur">
-              Premium Printing • Fast Turnaround • Professional Quality
-            </div>
+              <h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">
+                Top Quality Printing at the Best Prices
+              </h1>
 
-            <h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">
-              Top Quality Printing at the Best Prices
-            </h1>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-blue-50 sm:text-lg">
+                Business cards, postcards, flyers, banners and more — printed beautifully
+                and delivered with the professional finish your brand deserves.
+              </p>
 
-            <p className="mt-5 max-w-2xl text-base leading-7 text-blue-50 sm:text-lg">
-              Business cards, postcards, flyers, banners and more — printed beautifully
-              and delivered with the professional finish your brand deserves.
-            </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a
+                  href="/products"
+                  className="rounded-xl bg-white px-6 py-3 text-base font-semibold text-blue-700"
+                >
+                  Start Your Order
+                </a>
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href="/products"
-                className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 text-base font-semibold text-blue-700 shadow-lg transition hover:bg-blue-50"
-              >
-                Start Your Order
-              </a>
+                <a
+                  href="/contact"
+                  className="rounded-xl border border-white px-6 py-3 text-base font-semibold text-white"
+                >
+                  Request a Quote
+                </a>
+              </div>
 
-              <a
-                href="/contact"
-                className="inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/15"
-              >
-                Request a Quote
-              </a>
-            </div>
+              <div className="mt-8 grid gap-4 md:grid-cols-2">
+                <div className="rounded-2xl bg-blue-600 p-5">
+                  <h2 className="text-lg font-semibold text-white">Popular Products</h2>
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-white">
+                    <div className="rounded-lg bg-blue-500 px-3 py-2">Business Cards</div>
+                    <div className="rounded-lg bg-blue-500 px-3 py-2">Postcards</div>
+                    <div className="rounded-lg bg-blue-500 px-3 py-2">Flyers</div>
+                    <div className="rounded-lg bg-blue-500 px-3 py-2">Banners</div>
+                    <div className="rounded-lg bg-blue-500 px-3 py-2">Brochures</div>
+                    <div className="rounded-lg bg-blue-500 px-3 py-2">Yard Signs</div>
+                  </div>
+                </div>
 
-            <div className="mt-8 grid gap-4 lg:grid-cols-[1fr_1fr]">
-              <div className="rounded-2xl border border-white/18 bg-white/10 p-5 shadow-xl backdrop-blur-sm">
-                <h2 className="text-lg font-semibold text-white">Popular Products</h2>
-                <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-blue-50">
-                  <div className="rounded-lg bg-white/10 px-3 py-2">Business Cards</div>
-                  <div className="rounded-lg bg-white/10 px-3 py-2">Postcards</div>
-                  <div className="rounded-lg bg-white/10 px-3 py-2">Flyers</div>
-                  <div className="rounded-lg bg-white/10 px-3 py-2">Banners</div>
-                  <div className="rounded-lg bg-white/10 px-3 py-2">Brochures</div>
-                  <div className="rounded-lg bg-white/10 px-3 py-2">Yard Signs</div>
+                <div className="rounded-2xl bg-blue-600 p-5">
+                  <h2 className="text-lg font-semibold text-white">We make it easy:</h2>
+                  <ul className="mt-4 space-y-3 text-sm text-white">
+                    {steps.map((step) => (
+                      <li key={step} className="flex items-start gap-3">
+                        <span className="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-white" />
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-
-              <div className="rounded-2xl border border-white/18 bg-white/10 p-5 shadow-xl backdrop-blur-sm">
-                <h2 className="text-lg font-semibold text-white">We make it easy:</h2>
-                <ul className="mt-4 space-y-3 text-sm text-blue-50">
-                  {steps.map((step) => (
-                    <li key={step} className="flex items-start gap-3">
-                      <span className="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-white" />
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </div>
-          </div>
 
-          <div className="relative">
-            <div className="absolute -inset-4 rounded-[2rem] bg-white/15 blur-2xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/20 bg-white/10 shadow-2xl backdrop-blur-sm">
-              <picture>
-                <source
-                  media="(max-width: 768px)"
-                  srcSet="/hero_mobile.webp"
-                  type="image/webp"
-                />
-                <source
-                  media="(max-width: 1280px)"
-                  srcSet="/hero_tablet.webp"
-                  type="image/webp"
-                />
-                <source srcSet="/hero_desktop.webp" type="image/webp" />
-                <img
-                  src="/hero_desktop_fallback.jpg"
-                  alt="Printed products including postcards, business cards, flyers, and banners"
-                  className="h-full w-full object-cover"
-                />
-              </picture>
+            <div>
+              <div className="overflow-hidden rounded-[2rem] border border-blue-500 bg-white shadow-2xl">
+                <picture>
+                  <source
+                    media="(max-width: 768px)"
+                    srcSet="/hero_mobile.webp"
+                    type="image/webp"
+                  />
+                  <source
+                    media="(max-width: 1280px)"
+                    srcSet="/hero_tablet.webp"
+                    type="image/webp"
+                  />
+                  <source srcSet="/hero_desktop.webp" type="image/webp" />
+                  <img
+                    src="/hero_desktop_fallback.jpg"
+                    alt="Printed products including postcards, business cards, flyers, and banners"
+                    className="block h-full w-full object-cover"
+                  />
+                </picture>
+              </div>
             </div>
           </div>
         </div>
