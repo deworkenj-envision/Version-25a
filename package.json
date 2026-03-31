@@ -19,6 +19,7 @@
     "node": "24.x"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.2"
