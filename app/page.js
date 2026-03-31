@@ -2,32 +2,37 @@ export default function HomePage() {
   return (
     <main className="bg-white text-gray-900">
 
-      {/* HERO SECTION */}
+      {/* HERO SECTION (FIXED HEADER ONLY) */}
       <section className="bg-gradient-to-r from-blue-700 to-blue-500 text-white py-20 px-6 text-center">
         
+        {/* HEADLINE */}
         <h1 className="text-5xl font-bold mb-6">
           Top Quality Printing with the Best Prices
         </h1>
 
-        <p className="text-2xl font-medium mb-10">
+        {/* SUBHEAD */}
+        <p className="text-2xl font-medium mb-8">
           Fast Turnaround
         </p>
 
-        <div className="mt-8">
-          <button className="bg-white text-blue-700 px-8 py-4 rounded-xl text-lg font-semibold shadow-lg hover:scale-105 transition">
-            Start Order
-          </button>
+        {/* PRODUCT LIST (PROMINENT + ORDERED) */}
+        <div className="flex flex-wrap justify-center gap-6 text-lg font-semibold mb-10">
+          <span className="border-b border-white pb-1">Postcards</span>
+          <span className="border-b border-white pb-1">Flyers</span>
+          <span className="border-b border-white pb-1">Business Cards</span>
+          <span className="border-b border-white pb-1">Banners</span>
         </div>
+
+        {/* CTA */}
+        <button className="bg-white text-blue-700 px-8 py-4 rounded-xl text-lg font-semibold shadow-lg hover:scale-105 transition">
+          Start Order
+        </button>
 
       </section>
 
 
-      {/* SPACING BETWEEN HERO + NEXT SECTION */}
-      <div className="h-16"></div>
-
-
-      {/* PRODUCT SECTION */}
-      <section className="max-w-6xl mx-auto px-6 py-10">
+      {/* SHOP PRODUCTS SECTION (UNCHANGED STRUCTURE) */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
 
         <h2 className="text-3xl font-bold mb-10 text-center">
           Shop Products
@@ -80,11 +85,8 @@ export default function HomePage() {
           </div>
 
         </div>
+
       </section>
-
-
-      {/* EXTRA SPACING */}
-      <div className="h-20"></div>
 
     </main>
   );
