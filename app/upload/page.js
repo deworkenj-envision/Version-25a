@@ -10,6 +10,10 @@ const productOptions = [
     description:
       "Perfect for networking, storefronts, and service businesses.",
     price: "$54",
+    sizes: ["3.5 x 2 in"],
+    papers: ["14pt Matte", "16pt Gloss", "16pt Soft Touch"],
+    finishes: ["Matte", "Gloss", "Soft Touch", "UV Coated"],
+    sides: ["Front Only", "Front and Back"],
   },
   {
     name: "Flyers",
@@ -17,6 +21,10 @@ const productOptions = [
     size: "8.5 x 11 in",
     description: "Great for events, menus, promotions, and handouts.",
     price: "$79",
+    sizes: ["8.5 x 11 in", "5.5 x 8.5 in", "11 x 17 in"],
+    papers: ["100lb Gloss Text", "100lb Matte Text", "14pt Cover"],
+    finishes: ["Gloss", "Matte", "No Coating"],
+    sides: ["Front Only", "Front and Back"],
   },
   {
     name: "Banners",
@@ -24,6 +32,10 @@ const productOptions = [
     size: "6 x 3 ft",
     description: "Ideal for storefronts, events, and temporary signage.",
     price: "$129",
+    sizes: ["2 x 4 ft", "3 x 6 ft", "4 x 8 ft", "6 x 3 ft"],
+    papers: ["13oz Vinyl", "15oz Heavy Duty Vinyl", "Mesh Banner"],
+    finishes: ["Hemmed", "Grommets", "Pole Pockets"],
+    sides: ["Single Sided"],
   },
   {
     name: "Postcards",
@@ -31,6 +43,10 @@ const productOptions = [
     size: "6 x 4 in",
     description: "Built for local marketing, promotions, and announcements.",
     price: "$69",
+    sizes: ["4 x 6 in", "5 x 7 in", "6 x 9 in"],
+    papers: ["14pt Matte", "16pt Gloss", "16pt AQ"],
+    finishes: ["Matte", "Gloss", "AQ Coated", "UV Coated"],
+    sides: ["Front Only", "Front and Back"],
   },
 ];
 
@@ -46,6 +62,23 @@ export default function UploadPage() {
     );
   }, [selectedProduct]);
 
+  const [size, setSize] = useState(currentProduct.sizes[0]);
+  const [paper, setPaper] = useState(currentProduct.papers[0]);
+  const [finish, setFinish] = useState(currentProduct.finishes[0]);
+  const [sides, setSides] = useState(currentProduct.sides[0]);
+
+  function handleProductChange(productName) {
+    const product =
+      productOptions.find((item) => item.name === productName) ||
+      productOptions[0];
+
+    setSelectedProduct(product.name);
+    setSize(product.sizes[0]);
+    setPaper(product.papers[0]);
+    setFinish(product.finishes[0]);
+    setSides(product.sides[0]);
+  }
+
   return (
     <main className="bg-slate-50 text-slate-900">
       <section className="border-b border-slate-200 bg-white">
@@ -58,8 +91,8 @@ export default function UploadPage() {
               Start your print order
             </h1>
             <p className="mt-4 text-lg leading-8 text-slate-600">
-              Choose your product, upload your print-ready file, and move
-              quickly to checkout with a cleaner premium ordering flow.
+              Choose your product, select your print options, upload your
+              artwork, and continue to checkout.
             </p>
           </div>
         </div>
@@ -77,7 +110,7 @@ export default function UploadPage() {
                   Choose a product
                 </h2>
                 <p className="mt-2 text-slate-600">
-                  Pick the print item you need, then continue to the order form.
+                  Pick the print item you need, then configure the order.
                 </p>
               </div>
 
@@ -89,7 +122,7 @@ export default function UploadPage() {
                     <button
                       key={item.name}
                       type="button"
-                      onClick={() => setSelectedProduct(item.name)}
+                      onClick={() => handleProductChange(item.name)}
                       className={`rounded-2xl border p-5 text-left transition ${
                         active
                           ? "border-blue-600 bg-blue-50 shadow-md"
@@ -126,6 +159,81 @@ export default function UploadPage() {
                   Step 2
                 </div>
                 <h2 className="mt-2 text-2xl font-bold text-slate-900">
+                  Choose print details
+                </h2>
+                <p className="mt-2 text-slate-600">
+                  Select the size, paper, finish, sides, and quantity for your order.
+                </p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <select
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
+                >
+                  {currentProduct.sizes.map((option) => (
+                    <option key={option} value={option}>
+                      Size: {option}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={paper}
+                  onChange={(e) => setPaper(e.target.value)}
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
+                >
+                  {currentProduct.papers.map((option) => (
+                    <option key={option} value={option}>
+                      Paper: {option}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={finish}
+                  onChange={(e) => setFinish(e.target.value)}
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
+                >
+                  {currentProduct.finishes.map((option) => (
+                    <option key={option} value={option}>
+                      Finish: {option}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={sides}
+                  onChange={(e) => setSides(e.target.value)}
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
+                >
+                  {currentProduct.sides.map((option) => (
+                    <option key={option} value={option}>
+                      Sides: {option}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 md:col-span-2"
+                >
+                  <option value="250">Quantity: 250</option>
+                  <option value="500">Quantity: 500</option>
+                  <option value="1000">Quantity: 1000</option>
+                  <option value="2500">Quantity: 2500</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-5">
+                <div className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
+                  Step 3
+                </div>
+                <h2 className="mt-2 text-2xl font-bold text-slate-900">
                   Upload print-ready artwork
                 </h2>
                 <p className="mt-2 text-slate-600">
@@ -160,13 +268,13 @@ export default function UploadPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-5">
                 <div className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-                  Step 3
+                  Step 4
                 </div>
                 <h2 className="mt-2 text-2xl font-bold text-slate-900">
-                  Order details
+                  Customer details
                 </h2>
                 <p className="mt-2 text-slate-600">
-                  Only the fields customers need to complete the order.
+                  Complete the order and continue to checkout.
                 </p>
               </div>
 
@@ -174,34 +282,13 @@ export default function UploadPage() {
                 <input
                   type="text"
                   placeholder="Contact name"
-                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none ring-0 transition focus:border-blue-500"
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
                 />
                 <input
                   type="email"
                   placeholder="Email address"
-                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none ring-0 transition focus:border-blue-500"
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
                 />
-                <select
-                  value={selectedProduct}
-                  onChange={(e) => setSelectedProduct(e.target.value)}
-                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
-                >
-                  {productOptions.map((item) => (
-                    <option key={item.name} value={item.name}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
-                >
-                  <option value="250">250</option>
-                  <option value="500">500</option>
-                  <option value="1000">1000</option>
-                  <option value="2500">2500</option>
-                </select>
                 <textarea
                   placeholder="Special instructions, finishing notes, or delivery details"
                   rows={4}
@@ -232,8 +319,7 @@ export default function UploadPage() {
                 A clearer order summary
               </h2>
               <p className="mt-2 text-slate-600">
-                Show visitors the product, file status, and job details in one
-                place.
+                Show visitors the product, file status, and job details in one place.
               </p>
 
               <div className="mt-6 rounded-2xl bg-slate-50 p-5">
@@ -243,7 +329,7 @@ export default function UploadPage() {
                       {currentProduct.name}
                     </div>
                     <div className="text-sm text-slate-500">
-                      {currentProduct.badge} • {currentProduct.size}
+                      {currentProduct.badge} • {size}
                     </div>
                   </div>
                   <div className="text-right">
@@ -255,6 +341,18 @@ export default function UploadPage() {
                 </div>
 
                 <div className="mt-5 space-y-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Paper</span>
+                    <span className="font-semibold text-slate-900">{paper}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Finish</span>
+                    <span className="font-semibold text-slate-900">{finish}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Sides</span>
+                    <span className="font-semibold text-slate-900">{sides}</span>
+                  </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">Quantity</span>
                     <span className="font-semibold text-slate-900">{quantity}</span>
@@ -278,8 +376,8 @@ export default function UploadPage() {
             <div className="rounded-3xl border border-slate-200 bg-slate-900 p-6 text-white shadow-sm">
               <h3 className="text-xl font-bold">Need help before ordering?</h3>
               <p className="mt-3 text-sm leading-7 text-slate-300">
-                Contact us if you want help choosing sizes, finishes, or checking
-                your artwork before checkout.
+                Contact us if you want help choosing sizes, paper stocks, finishes,
+                or checking your artwork before checkout.
               </p>
               <a
                 href="/contact"
