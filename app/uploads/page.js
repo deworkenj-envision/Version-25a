@@ -50,7 +50,7 @@ const productOptions = [
   },
 ];
 
-export default function UploadPage() {
+export default function UploadsPage() {
   const router = useRouter();
 
   const [selectedProduct, setSelectedProduct] = useState("Business Cards");
@@ -85,8 +85,6 @@ export default function UploadPage() {
   }
 
   function handlePlaceOrder() {
-    console.log("Place Order clicked");
-
     if (!contactName.trim()) {
       alert("Please enter your contact name.");
       return;
@@ -191,31 +189,59 @@ export default function UploadPage() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <select value={size} onChange={(e) => setSize(e.target.value)} className="rounded-xl border border-slate-300 px-4 py-3 text-sm">
+                <select
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm"
+                >
                   {currentProduct.sizes.map((option) => (
-                    <option key={option} value={option}>Size: {option}</option>
+                    <option key={option} value={option}>
+                      Size: {option}
+                    </option>
                   ))}
                 </select>
 
-                <select value={paper} onChange={(e) => setPaper(e.target.value)} className="rounded-xl border border-slate-300 px-4 py-3 text-sm">
+                <select
+                  value={paper}
+                  onChange={(e) => setPaper(e.target.value)}
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm"
+                >
                   {currentProduct.papers.map((option) => (
-                    <option key={option} value={option}>Paper: {option}</option>
+                    <option key={option} value={option}>
+                      Paper: {option}
+                    </option>
                   ))}
                 </select>
 
-                <select value={finish} onChange={(e) => setFinish(e.target.value)} className="rounded-xl border border-slate-300 px-4 py-3 text-sm">
+                <select
+                  value={finish}
+                  onChange={(e) => setFinish(e.target.value)}
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm"
+                >
                   {currentProduct.finishes.map((option) => (
-                    <option key={option} value={option}>Finish: {option}</option>
+                    <option key={option} value={option}>
+                      Finish: {option}
+                    </option>
                   ))}
                 </select>
 
-                <select value={sides} onChange={(e) => setSides(e.target.value)} className="rounded-xl border border-slate-300 px-4 py-3 text-sm">
+                <select
+                  value={sides}
+                  onChange={(e) => setSides(e.target.value)}
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm"
+                >
                   {currentProduct.sides.map((option) => (
-                    <option key={option} value={option}>Sides: {option}</option>
+                    <option key={option} value={option}>
+                      Sides: {option}
+                    </option>
                   ))}
                 </select>
 
-                <select value={quantity} onChange={(e) => setQuantity(e.target.value)} className="rounded-xl border border-slate-300 px-4 py-3 text-sm md:col-span-2">
+                <select
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-sm md:col-span-2"
+                >
                   <option value="250">Quantity: 250</option>
                   <option value="500">Quantity: 500</option>
                   <option value="1000">Quantity: 1000</option>
