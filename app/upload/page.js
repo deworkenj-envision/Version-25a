@@ -8,7 +8,7 @@ const productOptions = [
     badge: "Best Seller",
     size: "3.5 x 2 in",
     description: "Perfect for networking, storefronts, and service businesses.",
-    price: "$54",
+    price: 54,
     sizes: ["3.5 x 2 in"],
     papers: ["14pt Matte", "16pt Gloss", "16pt Soft Touch"],
     finishes: ["Matte", "Gloss", "Soft Touch", "UV Coated"],
@@ -19,7 +19,7 @@ const productOptions = [
     badge: "Promo Ready",
     size: "8.5 x 11 in",
     description: "Great for events, menus, promotions, and handouts.",
-    price: "$79",
+    price: 79,
     sizes: ["8.5 x 11 in", "5.5 x 8.5 in", "11 x 17 in"],
     papers: ["100lb Gloss Text", "100lb Matte Text", "14pt Cover"],
     finishes: ["Gloss", "Matte", "No Coating"],
@@ -30,7 +30,7 @@ const productOptions = [
     badge: "Large Format",
     size: "6 x 3 ft",
     description: "Ideal for storefronts, events, and temporary signage.",
-    price: "$129",
+    price: 129,
     sizes: ["2 x 4 ft", "3 x 6 ft", "4 x 8 ft", "6 x 3 ft"],
     papers: ["13oz Vinyl", "15oz Heavy Duty Vinyl", "Mesh Banner"],
     finishes: ["Hemmed", "Grommets", "Pole Pockets"],
@@ -41,7 +41,7 @@ const productOptions = [
     badge: "Direct Mail",
     size: "6 x 4 in",
     description: "Built for local marketing, promotions, and announcements.",
-    price: "$69",
+    price: 69,
     sizes: ["4 x 6 in", "5 x 7 in", "6 x 9 in"],
     papers: ["14pt Matte", "16pt Gloss", "16pt AQ"],
     finishes: ["Matte", "Gloss", "AQ Coated", "UV Coated"],
@@ -101,7 +101,7 @@ export default function UploadsPage() {
     try {
       setSubmitting(true);
 
-      const response = await fetch("/api/orders", {
+      const orderResponse = await fetch("/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -120,21 +120,42 @@ export default function UploadsPage() {
         }),
       });
 
-      const data = await response.json();
+      const orderData = await orderResponse.json();
 
-      if (!response.ok) {
-        alert(data.error || "Failed to place order.");
+      if (!orderResponse.ok) {
+        alert(orderData.error || "Failed to create order.");
         return;
       }
 
-      window.location.href = `/order-success?order=${encodeURIComponent(
-        data.order.order_number
-      )}&product=${encodeURIComponent(
-        data.order.product_name
-      )}&qty=${encodeURIComponent(data.order.quantity)}`;
+      const checkoutResponse = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: orderData.order.order_number,
+          productName: orderData.order.product_name,
+          quantity: 1,
+          price: currentProduct.price,
+        }),
+      });
+
+      const checkoutData = await checkoutResponse.json();
+
+      if (!checkoutResponse.ok) {
+        alert(checkoutData.error || "Failed to start Stripe checkout.");
+        return;
+      }
+
+      if (!checkoutData.url) {
+        alert("Stripe checkout URL was not returned.");
+        return;
+      }
+
+      window.location.href = checkoutData.url;
     } catch (error) {
       console.error(error);
-      alert("Something went wrong while placing the order.");
+      alert("Something went wrong while starting checkout.");
     } finally {
       setSubmitting(false);
     }
@@ -153,7 +174,7 @@ export default function UploadsPage() {
             </h1>
             <p className="mt-4 text-lg leading-8 text-slate-600">
               Choose your product, select your print options, upload your artwork,
-              and place your order.
+              and continue to payment.
             </p>
           </div>
         </div>
@@ -201,7 +222,7 @@ export default function UploadsPage() {
                         {item.description}
                       </p>
                       <div className="mt-4 text-lg font-bold text-slate-900">
-                        Starting at {item.price}
+                        Starting at ${item.price}
                       </div>
                     </button>
                   );
@@ -352,7 +373,7 @@ export default function UploadsPage() {
                   disabled={submitting}
                   className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {submitting ? "Placing Order..." : "Place Order"}
+                  {submitting ? "Starting Payment..." : "Continue to Payment"}
                 </button>
               </div>
             </div>
@@ -396,6 +417,12 @@ export default function UploadsPage() {
                   <span className="text-slate-500">Artwork file</span>
                   <span className="font-semibold text-slate-900">
                     {fileName || "Not uploaded yet"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Price</span>
+                  <span className="font-semibold text-slate-900">
+                    ${currentProduct.price}
                   </span>
                 </div>
               </div>
