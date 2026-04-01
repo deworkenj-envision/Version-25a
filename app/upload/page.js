@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 
 const productOptions = [
   {
@@ -51,8 +50,6 @@ const productOptions = [
 ];
 
 export default function UploadsPage() {
-  const router = useRouter();
-
   const [selectedProduct, setSelectedProduct] = useState("Business Cards");
   const [quantity, setQuantity] = useState("500");
   const [fileName, setFileName] = useState("");
@@ -101,12 +98,11 @@ export default function UploadsPage() {
     }
 
     const fakeOrderNumber = `PL-${Date.now().toString().slice(-6)}`;
+    const target = `/order-success?order=${fakeOrderNumber}&product=${encodeURIComponent(
+      selectedProduct
+    )}&qty=${encodeURIComponent(quantity)}`;
 
-    router.push(
-      `/order-success?order=${fakeOrderNumber}&product=${encodeURIComponent(
-        selectedProduct
-      )}&qty=${quantity}`
-    );
+    window.location.href = target;
   }
 
   return (
@@ -139,6 +135,9 @@ export default function UploadsPage() {
                 <h2 className="mt-2 text-2xl font-bold text-slate-900">
                   Choose a product
                 </h2>
+                <p className="mt-2 text-slate-600">
+                  Pick the print item you need, then configure the order.
+                </p>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -186,6 +185,9 @@ export default function UploadsPage() {
                 <h2 className="mt-2 text-2xl font-bold text-slate-900">
                   Choose print details
                 </h2>
+                <p className="mt-2 text-slate-600">
+                  Select the size, paper, finish, sides, and quantity for your order.
+                </p>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
