@@ -11,11 +11,11 @@ export default function ProductsPage() {
               Products
             </div>
             <h1 className="mt-5 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-              Print products with stronger visual feel
+              Choose your print product and start your order
             </h1>
             <p className="mt-4 text-lg leading-8 text-slate-600">
-              Choose the product, review finishes, and move straight into the
-              upload-first order flow.
+              Review sizes, finishes, and pricing, then move into a simple order
+              flow built for customers with print-ready artwork.
             </p>
           </div>
         </div>
@@ -77,10 +77,10 @@ export default function ProductsPage() {
                     </div>
 
                     <a
-                      href="/upload"
+                      href={`/upload?product=${encodeURIComponent(item.name)}`}
                       className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-blue-700"
                     >
-                      Upload Artwork
+                      Order Now
                     </a>
                   </div>
                 </div>
