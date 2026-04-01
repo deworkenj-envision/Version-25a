@@ -56,6 +56,7 @@ export default function UploadsPage() {
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const currentProduct = useMemo(() => {
     return (
@@ -81,7 +82,7 @@ export default function UploadsPage() {
     setSides(product.sides[0]);
   }
 
-  function handlePlaceOrder() {
+  async function handlePlaceOrder() {
     if (!contactName.trim()) {
       alert("Please enter your contact name.");
       return;
@@ -97,12 +98,46 @@ export default function UploadsPage() {
       return;
     }
 
-    const fakeOrderNumber = `PL-${Date.now().toString().slice(-6)}`;
-    const target = `/order-success?order=${fakeOrderNumber}&product=${encodeURIComponent(
-      selectedProduct
-    )}&qty=${encodeURIComponent(quantity)}`;
+    try {
+      setSubmitting(true);
 
-    window.location.href = target;
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customerName: contactName,
+          customerEmail: email,
+          productName: selectedProduct,
+          size,
+          paper,
+          finish,
+          sides,
+          quantity,
+          fileName,
+          notes,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "Failed to place order.");
+        return;
+      }
+
+      window.location.href = `/order-success?order=${encodeURIComponent(
+        data.order.order_number
+      )}&product=${encodeURIComponent(
+        data.order.product_name
+      )}&qty=${encodeURIComponent(data.order.quantity)}`;
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong while placing the order.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -135,9 +170,6 @@ export default function UploadsPage() {
                 <h2 className="mt-2 text-2xl font-bold text-slate-900">
                   Choose a product
                 </h2>
-                <p className="mt-2 text-slate-600">
-                  Pick the print item you need, then configure the order.
-                </p>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -185,9 +217,6 @@ export default function UploadsPage() {
                 <h2 className="mt-2 text-2xl font-bold text-slate-900">
                   Choose print details
                 </h2>
-                <p className="mt-2 text-slate-600">
-                  Select the size, paper, finish, sides, and quantity for your order.
-                </p>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -320,9 +349,10 @@ export default function UploadsPage() {
                 <button
                   type="button"
                   onClick={handlePlaceOrder}
-                  className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+                  disabled={submitting}
+                  className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Place Order
+                  {submitting ? "Placing Order..." : "Place Order"}
                 </button>
               </div>
             </div>
