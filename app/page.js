@@ -6,8 +6,6 @@ export default function HomePage() {
     "Banners",
     "Brochures",
     "Yard Signs",
-    "Stickers",
-    "Booklets",
   ];
 
   const steps = [
@@ -36,13 +34,13 @@ export default function HomePage() {
     <main className="bg-white text-slate-900">
       <section className="bg-blue-700 text-white">
         <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 lg:px-16 lg:py-14">
-          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_1.4fr] lg:gap-12">
             <div>
               <div className="inline-block rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white">
                 Premium Printing • Fast Turnaround • Professional Quality
               </div>
 
-              <h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">
+              <h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                 Top Quality Printing at the Best Prices
               </h1>
 
@@ -71,12 +69,11 @@ export default function HomePage() {
                 <div className="rounded-2xl bg-blue-600 p-5 shadow-lg">
                   <h2 className="text-lg font-semibold text-white">Popular Products</h2>
                   <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-white">
-                    <div className="rounded-lg bg-blue-500 px-3 py-2">Business Cards</div>
-                    <div className="rounded-lg bg-blue-500 px-3 py-2">Postcards</div>
-                    <div className="rounded-lg bg-blue-500 px-3 py-2">Flyers</div>
-                    <div className="rounded-lg bg-blue-500 px-3 py-2">Banners</div>
-                    <div className="rounded-lg bg-blue-500 px-3 py-2">Brochures</div>
-                    <div className="rounded-lg bg-blue-500 px-3 py-2">Yard Signs</div>
+                    {products.map((product) => (
+                      <div key={product} className="rounded-lg bg-blue-500 px-3 py-2">
+                        {product}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -95,25 +92,12 @@ export default function HomePage() {
             </div>
 
             <div>
-              <div className="overflow-hidden rounded-[2rem] border border-blue-500 bg-white shadow-2xl">
-                <picture>
-                  <source
-                    media="(max-width: 768px)"
-                    srcSet="/hero_mobile.webp"
-                    type="image/webp"
-                  />
-                  <source
-                    media="(max-width: 1280px)"
-                    srcSet="/hero_tablet.webp"
-                    type="image/webp"
-                  />
-                  <source srcSet="/hero_desktop.webp" type="image/webp" />
-                  <img
-                    src="/hero_desktop_fallback.jpg"
-                    alt="Printed products including postcards, business cards, flyers, and banners"
-                    className="block h-full w-full object-cover"
-                  />
-                </picture>
+              <div className="overflow-hidden rounded-[2rem] border border-blue-500 bg-white shadow-2xl h-[320px] md:h-[380px] lg:h-[440px]">
+                <img
+                  src="/hero.jpg"
+                  alt="Printed products including postcards, business cards, flyers, and banners"
+                  className="block h-full w-full object-cover scale-105"
+                />
               </div>
             </div>
           </div>
@@ -141,7 +125,16 @@ export default function HomePage() {
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {products.map((product) => (
+            {[
+              "Business Cards",
+              "Postcards",
+              "Flyers",
+              "Banners",
+              "Brochures",
+              "Yard Signs",
+              "Stickers",
+              "Booklets",
+            ].map((product) => (
               <a
                 key={product}
                 href="/products"
