@@ -130,3 +130,47 @@ export async function POST(request) {
     );
   }
 }
+
+export async function PATCH(request) {
+  try {
+    const body = await request.json();
+    const { id, status } = body;
+
+    if (!id) {
+      return Response.json(
+        { error: "Order id is required." },
+        { status: 400 }
+      );
+    }
+
+    if (!status?.trim()) {
+      return Response.json(
+        { error: "Status is required." },
+        { status: 400 }
+      );
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("orders")
+      .update({ status: status.trim() })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase PATCH error:", error);
+      return Response.json(
+        { error: "Failed to update status." },
+        { status: 500 }
+      );
+    }
+
+    return Response.json({ success: true, order: data }, { status: 200 });
+  } catch (error) {
+    console.error("Orders PATCH route error:", error);
+    return Response.json(
+      { error: "Unexpected server error." },
+      { status: 500 }
+    );
+  }
+}

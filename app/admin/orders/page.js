@@ -1,3 +1,5 @@
+import StatusSelect from "./status-select";
+
 async function getOrders() {
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -15,7 +17,8 @@ async function getOrders() {
 
 export default async function AdminOrdersPage() {
   const data = await getOrders();
-  const orders = data.orders || [];
+  const allOrders = data.orders || [];
+  const orders = allOrders.filter((order) => order.order_number);
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-900 md:px-10 lg:px-16">
@@ -28,7 +31,7 @@ export default async function AdminOrdersPage() {
             Orders Dashboard
           </h1>
           <p className="mt-3 text-lg text-slate-600">
-            Review the most recent customer orders.
+            Review the most recent customer print orders.
           </p>
         </div>
 
@@ -41,7 +44,10 @@ export default async function AdminOrdersPage() {
                   <th className="px-4 py-3 font-semibold">Customer</th>
                   <th className="px-4 py-3 font-semibold">Email</th>
                   <th className="px-4 py-3 font-semibold">Product</th>
-                  <th className="px-4 py-3 font-semibold">Quantity</th>
+                  <th className="px-4 py-3 font-semibold">Size</th>
+                  <th className="px-4 py-3 font-semibold">Paper</th>
+                  <th className="px-4 py-3 font-semibold">Finish</th>
+                  <th className="px-4 py-3 font-semibold">Qty</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
                   <th className="px-4 py-3 font-semibold">Created</th>
                 </tr>
@@ -49,8 +55,8 @@ export default async function AdminOrdersPage() {
               <tbody>
                 {orders.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-4 py-6 text-center text-slate-500">
-                      No orders found yet.
+                    <td colSpan="10" className="px-4 py-6 text-center text-slate-500">
+                      No print orders found yet.
                     </td>
                   </tr>
                 ) : (
@@ -62,11 +68,12 @@ export default async function AdminOrdersPage() {
                       <td className="px-4 py-3">{order.customer_name}</td>
                       <td className="px-4 py-3">{order.customer_email}</td>
                       <td className="px-4 py-3">{order.product_name}</td>
+                      <td className="px-4 py-3">{order.size}</td>
+                      <td className="px-4 py-3">{order.paper}</td>
+                      <td className="px-4 py-3">{order.finish}</td>
                       <td className="px-4 py-3">{order.quantity}</td>
                       <td className="px-4 py-3">
-                        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                          {order.status}
-                        </span>
+                        <StatusSelect id={order.id} currentStatus={order.status} />
                       </td>
                       <td className="px-4 py-3 text-slate-500">
                         {new Date(order.created_at).toLocaleString()}
