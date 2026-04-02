@@ -59,6 +59,8 @@ export default function UploadsPage() {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState("No artwork uploaded yet.");
+  const [uploadError, setUploadError] = useState("");
 
   const currentProduct = useMemo(() => {
     return (
@@ -90,8 +92,10 @@ export default function UploadsPage() {
 
     try {
       setUploading(true);
+      setUploadError("");
       setFileName(file.name);
       setStoredFilePath("");
+      setUploadMessage(`Uploading ${file.name}...`);
 
       const formData = new FormData();
       formData.append("file", file);
@@ -104,16 +108,19 @@ export default function UploadsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.error || "Failed to upload artwork.");
+        setUploadError(data.error || "Failed to upload artwork.");
+        setUploadMessage("Upload failed.");
         setFileName("");
         return;
       }
 
       setStoredFilePath(data.filePath);
       setFileName(data.fileName);
+      setUploadMessage(`Artwork uploaded successfully: ${data.fileName}`);
     } catch (error) {
       console.error(error);
-      alert("Something went wrong while uploading the artwork.");
+      setUploadError("Something went wrong while uploading the artwork.");
+      setUploadMessage("Upload failed.");
       setFileName("");
     } finally {
       setUploading(false);
@@ -357,13 +364,33 @@ export default function UploadsPage() {
                   className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-3 file:font-semibold file:text-white hover:file:bg-blue-700"
                 />
 
-                <p className="mt-4 text-sm text-slate-500">
-                  {uploading
-                    ? "Uploading artwork..."
-                    : fileName
-                    ? `Uploaded file: ${fileName}`
-                    : "Choose a file to continue."}
-                </p>
+                <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                  <div className="text-sm font-semibold text-slate-900">
+                    Artwork Status
+                  </div>
+
+                  <div className="mt-2 text-sm text-slate-600">
+                    {uploadMessage}
+                  </div>
+
+                  {uploading && (
+                    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                      <div className="h-full w-1/2 animate-pulse rounded-full bg-blue-600" />
+                    </div>
+                  )}
+
+                  {uploadError && (
+                    <div className="mt-3 text-sm font-medium text-red-600">
+                      {uploadError}
+                    </div>
+                  )}
+
+                  {!!storedFilePath && !uploading && !uploadError && (
+                    <div className="mt-3 text-sm font-medium text-green-700">
+                      File saved successfully and ready for checkout.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -415,7 +442,11 @@ export default function UploadsPage() {
                   disabled={submitting || uploading}
                   className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {submitting ? "Starting Payment..." : "Continue to Payment"}
+                  {uploading
+                    ? "Uploading Artwork..."
+                    : submitting
+                    ? "Starting Payment..."
+                    : "Continue to Payment"}
                 </button>
               </div>
             </div>
