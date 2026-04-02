@@ -17,7 +17,8 @@ async function getOrder(orderNumber) {
 }
 
 export default async function OrderSuccessPage({ searchParams }) {
-  const orderNumber = searchParams?.order || "";
+  const params = await searchParams;
+  const orderNumber = params?.order || "";
   const order = orderNumber ? await getOrder(orderNumber) : null;
 
   return (
