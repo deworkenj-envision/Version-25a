@@ -33,20 +33,31 @@ export async function POST(request) {
       const session = event.data.object;
       const orderNumber = session.metadata?.orderId;
 
-      if (orderNumber) {
-        const { error } = await supabaseAdmin
-          .from("orders")
-          .update({
-            status: "paid",
-            stripe_session_id: session.id,
-          })
-          .eq("order_number", orderNumber);
-
-        if (error) {
-          console.error("Failed to update paid order:", error);
-          return new Response("Database update failed", { status: 500 });
-        }
+      if (!orderNumber) {
+        console.error("Missing orderId in Stripe metadata");
+        return new Response("Missing orderId in metadata", { status: 400 });
       }
+
+      const { data, error } = await supabaseAdmin
+        .from("orders")
+        .update({
+          status: "paid",
+          stripe_session_id: session.id,
+        })
+        .eq("order_number", orderNumber)
+        .select();
+
+      if (error) {
+        console.error("Failed to update paid order:", error);
+        return new Response("Database update failed", { status: 500 });
+      }
+
+      if (!data || data.length === 0) {
+        console.error("No order matched order_number:", orderNumber);
+        return new Response("No matching order found", { status: 404 });
+      }
+
+      console.log("Order marked paid:", orderNumber);
     }
 
     return new Response("OK", { status: 200 });
