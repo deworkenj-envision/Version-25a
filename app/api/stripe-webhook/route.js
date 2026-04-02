@@ -76,7 +76,7 @@ export async function POST(request) {
       console.log("Order marked paid:", updatedOrder.order_number);
     }
 
-    return new Response("OK", { status: 200 });
+    return new Response("WEBHOOK-V2", { status: 200 });
   } catch (error) {
     console.error("Stripe webhook handler error:", error);
     return new Response("Webhook handler failed", { status: 500 });
