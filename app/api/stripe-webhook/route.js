@@ -34,30 +34,46 @@ export async function POST(request) {
       const orderNumber = session.metadata?.orderId;
 
       if (!orderNumber) {
-        console.error("Missing orderId in Stripe metadata");
         return new Response("Missing orderId in metadata", { status: 400 });
       }
 
-      const { data, error } = await supabaseAdmin
+      const { data: existingOrder, error: findError } = await supabaseAdmin
+        .from("orders")
+        .select("id, order_number, status")
+        .eq("order_number", orderNumber)
+        .maybeSingle();
+
+      if (findError) {
+        console.error("Order lookup failed:", findError);
+        return new Response("Order lookup failed", { status: 500 });
+      }
+
+      if (!existingOrder) {
+        console.error("No order found for:", orderNumber);
+        return new Response("No matching order found", { status: 404 });
+      }
+
+      const { data: updatedOrder, error: updateError } = await supabaseAdmin
         .from("orders")
         .update({
           status: "paid",
           stripe_session_id: session.id,
         })
         .eq("order_number", orderNumber)
-        .select();
+        .select("id, order_number, status")
+        .maybeSingle();
 
-      if (error) {
-        console.error("Failed to update paid order:", error);
+      if (updateError) {
+        console.error("Order update failed:", updateError);
         return new Response("Database update failed", { status: 500 });
       }
 
-      if (!data || data.length === 0) {
-        console.error("No order matched order_number:", orderNumber);
-        return new Response("No matching order found", { status: 404 });
+      if (!updatedOrder) {
+        console.error("Update returned no row for:", orderNumber);
+        return new Response("Update returned no row", { status: 500 });
       }
 
-      console.log("Order marked paid:", orderNumber);
+      console.log("Order marked paid:", updatedOrder.order_number);
     }
 
     return new Response("OK", { status: 200 });
