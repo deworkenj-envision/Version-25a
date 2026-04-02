@@ -21,7 +21,32 @@ export async function GET() {
       );
     }
 
-    return Response.json({ orders: data || [] }, { status: 200 });
+    const ordersWithLinks = await Promise.all(
+      (data || []).map(async (order) => {
+        if (!order.file_name) {
+          return order;
+        }
+
+        const { data: signedData, error: signedError } = await supabaseAdmin.storage
+          .from("order-artwork")
+          .createSignedUrl(order.file_name, 60 * 60);
+
+        if (signedError) {
+          console.error("Signed URL error:", signedError);
+          return {
+            ...order,
+            artwork_url: null,
+          };
+        }
+
+        return {
+          ...order,
+          artwork_url: signedData?.signedUrl || null,
+        };
+      })
+    );
+
+    return Response.json({ orders: ordersWithLinks }, { status: 200 });
   } catch (error) {
     console.error("Orders GET route error:", error);
     return Response.json(
