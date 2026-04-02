@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
+import { sendOrderEmails } from "../../lib/sendOrderEmails";
 
 function makeOrderNumber() {
   const stamp = Date.now().toString().slice(-8);
@@ -144,6 +145,12 @@ export async function POST(request) {
         { error: "Failed to create order." },
         { status: 500 }
       );
+    }
+
+    try {
+      await sendOrderEmails(data);
+    } catch (emailError) {
+      console.error("Order email send error:", emailError);
     }
 
     return Response.json({ success: true, order: data }, { status: 201 });
