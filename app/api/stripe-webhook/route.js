@@ -73,10 +73,10 @@ export async function POST(request) {
         return new Response("Update returned no row", { status: 500 });
       }
 
-      console.log("Order marked paid:", updatedOrder.order_number);
+      return new Response(`PAID:${updatedOrder.order_number}`, { status: 200 });
     }
 
-return new Response("WEBHOOK-V2", { status: 200 });
+    return new Response(`IGNORED:${event.type}`, { status: 200 });
   } catch (error) {
     console.error("Stripe webhook handler error:", error);
     return new Response("Webhook handler failed", { status: 500 });
