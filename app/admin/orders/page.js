@@ -48,6 +48,7 @@ export default async function AdminOrdersPage() {
                   <th className="px-4 py-3 font-semibold">Paper</th>
                   <th className="px-4 py-3 font-semibold">Finish</th>
                   <th className="px-4 py-3 font-semibold">Qty</th>
+                  <th className="px-4 py-3 font-semibold">Artwork</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
                   <th className="px-4 py-3 font-semibold">Created</th>
                 </tr>
@@ -55,7 +56,7 @@ export default async function AdminOrdersPage() {
               <tbody>
                 {orders.length === 0 ? (
                   <tr>
-                    <td colSpan="10" className="px-4 py-6 text-center text-slate-500">
+                    <td colSpan="11" className="px-4 py-6 text-center text-slate-500">
                       No print orders found yet.
                     </td>
                   </tr>
@@ -72,6 +73,20 @@ export default async function AdminOrdersPage() {
                       <td className="px-4 py-3">{order.paper}</td>
                       <td className="px-4 py-3">{order.finish}</td>
                       <td className="px-4 py-3">{order.quantity}</td>
+                      <td className="px-4 py-3">
+                        {order.artwork_url ? (
+                          <a
+                            href={order.artwork_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                          >
+                            View File
+                          </a>
+                        ) : (
+                          <span className="text-slate-400">No file</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <StatusSelect id={order.id} currentStatus={order.status} />
                       </td>
