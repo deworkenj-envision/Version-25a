@@ -53,10 +53,12 @@ export default function UploadsPage() {
   const [selectedProduct, setSelectedProduct] = useState("Business Cards");
   const [quantity, setQuantity] = useState("500");
   const [fileName, setFileName] = useState("");
+  const [storedFilePath, setStoredFilePath] = useState("");
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const currentProduct = useMemo(() => {
     return (
@@ -82,6 +84,42 @@ export default function UploadsPage() {
     setSides(product.sides[0]);
   }
 
+  async function handleFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      setFileName(file.name);
+      setStoredFilePath("");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload-artwork", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "Failed to upload artwork.");
+        setFileName("");
+        return;
+      }
+
+      setStoredFilePath(data.filePath);
+      setFileName(data.fileName);
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong while uploading the artwork.");
+      setFileName("");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function handlePlaceOrder() {
     if (!contactName.trim()) {
       alert("Please enter your contact name.");
@@ -93,7 +131,7 @@ export default function UploadsPage() {
       return;
     }
 
-    if (!fileName.trim()) {
+    if (!storedFilePath.trim()) {
       alert("Please upload your artwork file.");
       return;
     }
@@ -115,7 +153,7 @@ export default function UploadsPage() {
           finish,
           sides,
           quantity,
-          fileName,
+          fileName: storedFilePath,
           notes,
         }),
       });
@@ -315,12 +353,16 @@ export default function UploadsPage() {
               <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-6">
                 <input
                   type="file"
-                  onChange={(e) => setFileName(e.target.files?.[0]?.name || "")}
+                  onChange={handleFileChange}
                   className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-3 file:font-semibold file:text-white hover:file:bg-blue-700"
                 />
 
                 <p className="mt-4 text-sm text-slate-500">
-                  {fileName ? `Selected file: ${fileName}` : "Choose a file to continue."}
+                  {uploading
+                    ? "Uploading artwork..."
+                    : fileName
+                    ? `Uploaded file: ${fileName}`
+                    : "Choose a file to continue."}
                 </p>
               </div>
             </div>
@@ -370,7 +412,7 @@ export default function UploadsPage() {
                 <button
                   type="button"
                   onClick={handlePlaceOrder}
-                  disabled={submitting}
+                  disabled={submitting || uploading}
                   className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {submitting ? "Starting Payment..." : "Continue to Payment"}
