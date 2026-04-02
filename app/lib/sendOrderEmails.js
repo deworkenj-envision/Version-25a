@@ -1,15 +1,16 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function sendOrderEmails(order) {
+  const apiKey = process.env.RESEND_API_KEY;
   const adminEmail = process.env.ORDER_ALERT_EMAIL;
   const fromEmail = process.env.FROM_EMAIL;
 
-  if (!process.env.RESEND_API_KEY || !adminEmail || !fromEmail) {
+  if (!apiKey || !adminEmail || !fromEmail) {
     console.warn("Email env vars are missing. Skipping email send.");
     return;
   }
+
+  const resend = new Resend(apiKey);
 
   const customerHtml = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
