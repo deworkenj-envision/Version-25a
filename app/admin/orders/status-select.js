@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const statuses = [
   "pending_review",
+  "paid",
   "approved",
   "in_production",
   "shipped",
@@ -13,6 +14,10 @@ const statuses = [
 export default function StatusSelect({ id, currentStatus }) {
   const [status, setStatus] = useState(currentStatus);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setStatus(currentStatus);
+  }, [currentStatus]);
 
   async function handleChange(e) {
     const newStatus = e.target.value;
@@ -36,6 +41,8 @@ export default function StatusSelect({ id, currentStatus }) {
       if (!response.ok) {
         alert(data.error || "Failed to update status.");
         setStatus(currentStatus);
+      } else {
+        window.location.reload();
       }
     } catch (error) {
       console.error(error);
