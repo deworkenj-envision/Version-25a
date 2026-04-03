@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
 import { sendOrderEmails } from "../../lib/sendOrderEmails";
+import { calculatePrice } from "../../lib/pricing";
 
 function makeOrderNumber() {
   const stamp = Date.now().toString().slice(-8);
@@ -24,21 +25,11 @@ export async function GET() {
 
     const ordersWithLinks = await Promise.all(
       (data || []).map(async (order) => {
-        if (!order.file_name) {
-          return order;
-        }
+        if (!order.file_name) return order;
 
-        const { data: signedData, error: signedError } = await supabaseAdmin.storage
+        const { data: signedData } = await supabaseAdmin.storage
           .from("order-artwork")
           .createSignedUrl(order.file_name, 60 * 60);
-
-        if (signedError) {
-          console.error("Signed URL error:", signedError);
-          return {
-            ...order,
-            artwork_url: null,
-          };
-        }
 
         return {
           ...order,
@@ -74,73 +65,41 @@ export async function POST(request) {
       notes,
     } = body;
 
-    if (!customerName?.trim()) {
-      return Response.json(
-        { error: "Customer name is required." },
-        { status: 400 }
-      );
-    }
-
-    if (!customerEmail?.trim()) {
-      return Response.json(
-        { error: "Customer email is required." },
-        { status: 400 }
-      );
-    }
-
-    if (!productName?.trim()) {
-      return Response.json(
-        { error: "Product name is required." },
-        { status: 400 }
-      );
-    }
-
-    if (!size?.trim() || !paper?.trim() || !finish?.trim() || !sides?.trim()) {
-      return Response.json(
-        { error: "Print options are required." },
-        { status: 400 }
-      );
-    }
-
-    if (!quantity || Number(quantity) <= 0) {
-      return Response.json(
-        { error: "Quantity must be greater than 0." },
-        { status: 400 }
-      );
-    }
-
-    if (!fileName?.trim()) {
-      return Response.json(
-        { error: "Artwork file is required." },
-        { status: 400 }
-      );
-    }
-
     const orderNumber = makeOrderNumber();
+
+    // 🔥 CALCULATE PRICE HERE
+    const total = calculatePrice({
+      productName,
+      quantity,
+      paper,
+      finish,
+      sides,
+    });
 
     const { data, error } = await supabaseAdmin
       .from("orders")
       .insert([
         {
           order_number: orderNumber,
-          customer_name: customerName.trim(),
-          customer_email: customerEmail.trim(),
-          product_name: productName.trim(),
-          size: size.trim(),
-          paper: paper.trim(),
-          finish: finish.trim(),
-          sides: sides.trim(),
+          customer_name: customerName,
+          customer_email: customerEmail,
+          product_name: productName,
+          size,
+          paper,
+          finish,
+          sides,
           quantity: Number(quantity),
-          file_name: fileName.trim(),
-          notes: notes?.trim() || null,
+          file_name: fileName,
+          notes,
           status: "pending_review",
+          total, // ✅ SAVED HERE
         },
       ])
       .select()
       .single();
 
     if (error) {
-      console.error("Supabase POST error:", error);
+      console.error(error);
       return Response.json(
         { error: "Failed to create order." },
         { status: 500 }
@@ -150,14 +109,14 @@ export async function POST(request) {
     try {
       await sendOrderEmails(data);
     } catch (emailError) {
-      console.error("Order email send error:", emailError);
+      console.error("Email error:", emailError);
     }
 
-    return Response.json({ success: true, order: data }, { status: 201 });
+    return Response.json({ success: true, order: data });
   } catch (error) {
-    console.error("Orders POST route error:", error);
+    console.error(error);
     return Response.json(
-      { error: "Unexpected server error." },
+      { error: "Unexpected error." },
       { status: 500 }
     );
   }
@@ -168,40 +127,24 @@ export async function PATCH(request) {
     const body = await request.json();
     const { id, status } = body;
 
-    if (!id) {
-      return Response.json(
-        { error: "Order id is required." },
-        { status: 400 }
-      );
-    }
-
-    if (!status?.trim()) {
-      return Response.json(
-        { error: "Status is required." },
-        { status: 400 }
-      );
-    }
-
     const { data, error } = await supabaseAdmin
       .from("orders")
-      .update({ status: status.trim() })
+      .update({ status })
       .eq("id", id)
       .select()
       .single();
 
     if (error) {
-      console.error("Supabase PATCH error:", error);
       return Response.json(
         { error: "Failed to update status." },
         { status: 500 }
       );
     }
 
-    return Response.json({ success: true, order: data }, { status: 200 });
+    return Response.json({ success: true, order: data });
   } catch (error) {
-    console.error("Orders PATCH route error:", error);
     return Response.json(
-      { error: "Unexpected server error." },
+      { error: "Unexpected error." },
       { status: 500 }
     );
   }
