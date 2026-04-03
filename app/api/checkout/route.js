@@ -1,57 +1,81 @@
 import Stripe from "stripe";
+import { NextResponse } from "next/server";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-
-    const { orderId, productName, quantity, price = 50 } = body;
-
     if (!process.env.STRIPE_SECRET_KEY) {
-      return Response.json(
+      return NextResponse.json(
         { error: "Missing STRIPE_SECRET_KEY" },
         { status: 500 }
       );
     }
 
     if (!process.env.NEXT_PUBLIC_SITE_URL) {
-      return Response.json(
+      return NextResponse.json(
         { error: "Missing NEXT_PUBLIC_SITE_URL" },
         { status: 500 }
       );
     }
 
+    const body = await request.json();
+
+    const orderId = String(body.orderId || "").trim();
+    const productName = String(body.productName || "Print Order").trim();
+    const quantity = Number(body.quantity || 1);
+    const price = Number(body.price || 0);
+
     if (!orderId) {
-      return Response.json({ error: "Missing order ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing order ID" },
+        { status: 400 }
+      );
     }
 
+    if (price <= 0) {
+      return NextResponse.json(
+        { error: "Invalid price amount" },
+        { status: 400 }
+      );
+    }
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
       mode: "payment",
+      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
             currency: "usd",
             product_data: {
-              name: productName || "Print Order",
+              name: productName,
             },
-            unit_amount: Math.round(Number(price) * 100),
+            unit_amount: Math.round(price * 100),
           },
-          quantity: quantity || 1,
+          quantity,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order-success?paid=true&order=${orderId}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order?cancelled=true`,
+      success_url: `${siteUrl}/order-success?paid=true&order=${encodeURIComponent(orderId)}`,
+      cancel_url: `${siteUrl}/order?cancelled=true`,
       metadata: {
         orderId,
+        productName,
       },
     });
 
-    return Response.json({ url: session.url });
+    if (!session.url) {
+      return NextResponse.json(
+        { error: "Stripe checkout URL was not returned." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error("Stripe checkout route error:", error);
-    return Response.json(
+    return NextResponse.json(
       { error: error.message || "Stripe checkout failed" },
       { status: 500 }
     );
