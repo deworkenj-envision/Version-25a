@@ -6,12 +6,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
-    const {
-      orderId,
-      productName,
-      quantity,
-      price = 50,
-    } = body;
+    const { orderId, productName, quantity, price = 50 } = body;
 
     if (!process.env.STRIPE_SECRET_KEY) {
       return Response.json(
@@ -28,10 +23,7 @@ export async function POST(request) {
     }
 
     if (!orderId) {
-      return Response.json(
-        { error: "Missing order ID" },
-        { status: 400 }
-      );
+      return Response.json({ error: "Missing order ID" }, { status: 400 });
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -50,7 +42,7 @@ export async function POST(request) {
         },
       ],
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order-success?paid=true&order=${orderId}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/uploads`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order?cancelled=true`,
       metadata: {
         orderId,
       },

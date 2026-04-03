@@ -46,7 +46,7 @@ export default async function OrderSuccessPage({ searchParams }) {
             : "We could not load the full order details, but your request was submitted."}
         </p>
 
-        <div className="mt-8 rounded-2xl bg-slate-50 p-6 space-y-3 text-sm">
+        <div className="mt-8 space-y-3 rounded-2xl bg-slate-50 p-6 text-sm">
           <div className="flex justify-between">
             <span className="text-slate-500">Order Number</span>
             <span className="font-semibold text-slate-900">
@@ -98,7 +98,7 @@ export default async function OrderSuccessPage({ searchParams }) {
 
         <div className="mt-8 flex flex-wrap gap-3">
           <a
-            href="/products"
+            href="/order"
             className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
           >
             Start Another Order

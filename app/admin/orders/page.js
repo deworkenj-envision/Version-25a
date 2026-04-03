@@ -95,7 +95,9 @@ export default async function AdminOrdersPage() {
                         <StatusSelect id={order.id} currentStatus={order.status} />
                       </td>
                       <td className="px-4 py-3 text-slate-500">
-                        {new Date(order.created_at).toLocaleString()}
+                        {order.created_at
+                          ? new Date(order.created_at).toLocaleString()
+                          : "—"}
                       </td>
                     </tr>
                   ))
