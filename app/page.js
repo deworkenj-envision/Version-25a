@@ -11,34 +11,15 @@ const products = [
   "Booklets",
 ];
 
-const collageItems = [
-  {
-    title: "Postcards",
-    image:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: "Business Cards",
-    image:
-      "https://images.unsplash.com/photo-1586953208448-b95a79798f07?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: "Flyers",
-    image:
-      "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: "Banners",
-    image:
-      "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=900&q=80",
-  },
-];
-
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#f5f7fb] text-slate-900">
+      
+      {/* HERO SECTION */}
       <section className="bg-[#1f4be3] text-white">
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 lg:grid-cols-2 lg:items-center lg:py-16">
+          
+          {/* LEFT SIDE */}
           <div>
             <div className="inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/95 ring-1 ring-white/10">
               Premium Printing · Fast Turnaround · Professional Quality
@@ -74,7 +55,9 @@ export default function HomePage() {
               </Link>
             </div>
 
+            {/* PRODUCT + PROCESS BOXES */}
             <div className="mt-10 grid gap-4 md:grid-cols-2">
+              
               <div className="rounded-3xl bg-white/8 p-5 shadow-xl ring-1 ring-white/10 backdrop-blur-sm">
                 <h2 className="text-2xl font-bold">Popular Products</h2>
 
@@ -120,31 +103,32 @@ export default function HomePage() {
                   </li>
                 </ul>
               </div>
+
             </div>
           </div>
 
+          {/* RIGHT SIDE — YOUR REAL IMAGE */}
           <div className="lg:pl-4">
-            <div className="grid grid-cols-2 gap-3 rounded-[2rem] bg-white/10 p-3 shadow-2xl ring-1 ring-white/10">
-              {collageItems.map((item) => (
-                <div
-                  key={item.title}
-                  className="relative overflow-hidden rounded-[1.5rem] bg-slate-200"
-                >
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="h-[220px] w-full object-cover md:h-[250px]"
-                  />
-                  <div className="absolute left-3 top-3 rounded-xl bg-white/85 px-3 py-1.5 text-sm font-semibold text-slate-900 shadow">
-                    {item.title}
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-hidden rounded-[2rem] bg-white/10 p-3 shadow-2xl ring-1 ring-white/10">
+              
+              <picture>
+                <source media="(max-width: 640px)" srcSet="/hero_mobile.webp" />
+                <source media="(max-width: 1024px)" srcSet="/hero_tablet.webp" />
+                <source srcSet="/hero_desktop.webp" />
+                <img
+                  src="/hero_desktop_fallback.jpg"
+                  alt="Print samples"
+                  className="w-full h-full object-cover rounded-[1.5rem]"
+                />
+              </picture>
+
             </div>
           </div>
+
         </div>
       </section>
 
+      {/* PRODUCTS SECTION */}
       <section className="mx-auto max-w-7xl px-6 py-14 md:py-20">
         <div className="flex items-end justify-between gap-6">
           <div>
@@ -180,6 +164,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* WHY US */}
       <section className="mx-auto max-w-7xl px-6 pb-16 md:pb-24">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.3em] text-[#1f4be3]">
@@ -220,6 +205,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
     </main>
   );
 }
