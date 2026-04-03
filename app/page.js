@@ -3,11 +3,14 @@
 import { useMemo, useState } from "react";
 
 export default function Page() {
+  const [customerName, setCustomerName] = useState("");
   const [product, setProduct] = useState("Business Cards");
   const [paperType, setPaperType] = useState("Standard");
   const [quantity, setQuantity] = useState(500);
   const [finishes, setFinishes] = useState([]);
   const [shippingMethod, setShippingMethod] = useState("Ground");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
 
   function toggleFinish(finish) {
     setFinishes((prev) =>
@@ -81,6 +84,7 @@ export default function Page() {
   const total = subtotal + shipping + tax;
 
   const orderData = {
+    customerName: customerName || "New Customer",
     product,
     paperType,
     quantity,
@@ -90,11 +94,36 @@ export default function Page() {
     shippingPrice: shipping,
     tax,
     total,
+    status: "Pending",
   };
 
-  function handleCheckout() {
-    console.log("Order ready for checkout:", orderData);
-    alert("Next step: wire this button to Stripe checkout.");
+  async function handleCheckout() {
+    try {
+      setIsSubmitting(true);
+      setMessage("");
+
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to save order");
+      }
+
+      setMessage(`Order ${result.id} created successfully. Next step: connect Stripe checkout.`);
+      console.log("Saved order:", result);
+    } catch (error) {
+      console.error(error);
+      setMessage(error.message || "Something went wrong while saving the order.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -117,6 +146,19 @@ export default function Page() {
             </h2>
 
             <div className="mt-6 space-y-6">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Customer Name
+                </label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Enter customer name"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                />
+              </div>
+
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Product
@@ -211,6 +253,13 @@ export default function Page() {
 
             <div className="mt-6 space-y-4 text-sm text-slate-700">
               <div className="flex justify-between gap-4">
+                <span>Customer</span>
+                <span className="font-medium text-slate-900">
+                  {customerName || "New Customer"}
+                </span>
+              </div>
+
+              <div className="flex justify-between gap-4">
                 <span>Product</span>
                 <span className="font-medium text-slate-900">{product}</span>
               </div>
@@ -270,10 +319,17 @@ export default function Page() {
 
             <button
               onClick={handleCheckout}
-              className="mt-6 w-full rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+              disabled={isSubmitting}
+              className="mt-6 w-full rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Continue to Checkout
+              {isSubmitting ? "Saving Order..." : "Continue to Checkout"}
             </button>
+
+            {message ? (
+              <div className="mt-4 rounded-xl bg-slate-100 p-4 text-sm text-slate-700">
+                {message}
+              </div>
+            ) : null}
 
             <div className="mt-6 rounded-xl bg-slate-100 p-4">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
