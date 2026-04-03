@@ -107,22 +107,20 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* RIGHT SIDE — YOUR REAL IMAGE */}
-          <div className="lg:pl-4">
-            <div className="overflow-hidden rounded-[2rem] bg-white/10 p-3 shadow-2xl ring-1 ring-white/10">
-              
-              <picture>
-                <source media="(max-width: 640px)" srcSet="/hero_mobile.webp" />
-                <source media="(max-width: 1024px)" srcSet="/hero_tablet.webp" />
-                <source srcSet="/hero_desktop.webp" />
-                <img
-                  src="/hero_desktop_fallback.jpg"
-                  alt="Print samples"
-                  className="w-full h-full object-cover rounded-[1.5rem]"
-                />
-              </picture>
+          {/* RIGHT SIDE — LARGE HERO IMAGE */}
+          <div className="relative h-[420px] w-full overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-white/10 lg:h-[650px]">
 
-            </div>
+            <picture className="absolute inset-0 h-full w-full">
+              <source media="(max-width: 640px)" srcSet="/hero_mobile.webp" />
+              <source media="(max-width: 1024px)" srcSet="/hero_tablet.webp" />
+              <source srcSet="/hero_desktop.webp" />
+              <img
+                src="/hero_desktop_fallback.jpg"
+                alt="Print samples"
+                className="h-full w-full object-cover"
+              />
+            </picture>
+
           </div>
 
         </div>
