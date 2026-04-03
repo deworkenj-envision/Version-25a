@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
 import { sendOrderEmails } from "../../lib/sendOrderEmails";
 import { calculatePrice } from "../../lib/pricing";
+import { calculateShipping } from "../../lib/shipping";
 
 function makeOrderNumber() {
   const stamp = Date.now().toString().slice(-8);
@@ -67,7 +68,7 @@ export async function POST(request) {
 
     const orderNumber = makeOrderNumber();
 
-    // 🔥 CALCULATE PRICE HERE
+    // 🔥 CALCULATE PRICE + SHIPPING
     const total = calculatePrice({
       productName,
       quantity,
@@ -75,6 +76,13 @@ export async function POST(request) {
       finish,
       sides,
     });
+
+    const shipping = calculateShipping({
+      productName,
+      quantity,
+    });
+
+    const grandTotal = total + shipping;
 
     const { data, error } = await supabaseAdmin
       .from("orders")
@@ -92,7 +100,8 @@ export async function POST(request) {
           file_name: fileName,
           notes,
           status: "pending_review",
-          total, // ✅ SAVED HERE
+          total: grandTotal,
+          shipping, // ✅ saved
         },
       ])
       .select()
