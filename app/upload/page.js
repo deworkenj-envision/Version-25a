@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { calculatePrice } from "../lib/pricing";
+import { calculateShipping } from "../lib/shipping";
 
 const productOptions = [
   {
@@ -88,6 +89,17 @@ export default function UploadsPage() {
       sides,
     });
   }, [selectedProduct, quantity, paper, finish, sides]);
+
+  const shippingPrice = useMemo(() => {
+    return calculateShipping({
+      productName: selectedProduct,
+      quantity,
+    });
+  }, [selectedProduct, quantity]);
+
+  const grandTotal = useMemo(() => {
+    return calculatedPrice + shippingPrice;
+  }, [calculatedPrice, shippingPrice]);
 
   function handleProductChange(productName) {
     const product =
@@ -197,7 +209,7 @@ export default function UploadsPage() {
           orderId: orderData.order.order_number,
           productName: orderData.order.product_name,
           quantity: 1,
-          price: calculatedPrice,
+          price: grandTotal,
         }),
       });
 
@@ -510,9 +522,21 @@ export default function UploadsPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between border-t border-slate-200 pt-3">
-                  <span className="text-slate-500">Calculated Price</span>
-                  <span className="text-lg font-bold text-slate-900">
+                  <span className="text-slate-500">Print Price</span>
+                  <span className="font-semibold text-slate-900">
                     ${calculatedPrice.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Shipping</span>
+                  <span className="font-semibold text-slate-900">
+                    ${shippingPrice.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between border-t border-slate-200 pt-3">
+                  <span className="text-slate-500">Grand Total</span>
+                  <span className="text-lg font-bold text-slate-900">
+                    ${grandTotal.toFixed(2)}
                   </span>
                 </div>
               </div>

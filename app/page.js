@@ -1,206 +1,288 @@
-export default function HomePage() {
-  const products = [
-    "Business Cards",
-    "Postcards",
-    "Flyers",
-    "Banners",
-    "Brochures",
-    "Yard Signs",
-  ];
+"use client";
 
-  const steps = [
-    "Pick the product you want.",
-    "Choose the paper type, quantity and finishes.",
-    "Upload your print-ready artwork.",
-    "Place your order.",
-  ];
+import { useMemo, useState } from "react";
 
-  const features = [
-    {
-      title: "Premium Print Quality",
-      text: "Sharp color, clean finishes, and professional results for every order.",
-    },
-    {
-      title: "Easy Ordering",
-      text: "Simple product selection, fast uploads, and a smooth checkout experience.",
-    },
-    {
-      title: "Fast Turnaround",
-      text: "Order quickly and keep your business moving with dependable production.",
-    },
-  ];
+export default function Page() {
+  const [product, setProduct] = useState("Business Cards");
+  const [paperType, setPaperType] = useState("Standard");
+  const [quantity, setQuantity] = useState(500);
+  const [finishes, setFinishes] = useState([]);
+  const [shippingMethod, setShippingMethod] = useState("Ground");
+
+  function toggleFinish(finish) {
+    setFinishes((prev) =>
+      prev.includes(finish)
+        ? prev.filter((item) => item !== finish)
+        : [...prev, finish]
+    );
+  }
+
+  const printPrice = useMemo(() => {
+    let basePrice = 0;
+
+    if (product === "Business Cards") {
+      if (quantity === 100) basePrice = 19.99;
+      if (quantity === 250) basePrice = 29.99;
+      if (quantity === 500) basePrice = 39.99;
+      if (quantity === 1000) basePrice = 59.99;
+    }
+
+    if (product === "Flyers") {
+      if (quantity === 100) basePrice = 34.99;
+      if (quantity === 250) basePrice = 49.99;
+      if (quantity === 500) basePrice = 69.99;
+      if (quantity === 1000) basePrice = 99.99;
+    }
+
+    if (product === "Postcards") {
+      if (quantity === 100) basePrice = 29.99;
+      if (quantity === 250) basePrice = 44.99;
+      if (quantity === 500) basePrice = 64.99;
+      if (quantity === 1000) basePrice = 94.99;
+    }
+
+    if (paperType === "Premium") {
+      basePrice += 10;
+    }
+
+    if (paperType === "Luxury") {
+      basePrice += 20;
+    }
+
+    if (finishes.includes("Gloss")) {
+      basePrice += 8;
+    }
+
+    if (finishes.includes("Matte")) {
+      basePrice += 8;
+    }
+
+    if (finishes.includes("Soft Touch")) {
+      basePrice += 14;
+    }
+
+    if (finishes.includes("Rounded Corners")) {
+      basePrice += 6;
+    }
+
+    return basePrice;
+  }, [product, paperType, quantity, finishes]);
+
+  const shippingPrice = useMemo(() => {
+    if (shippingMethod === "Ground") return 8.99;
+    if (shippingMethod === "Express") return 19.99;
+    if (shippingMethod === "Overnight") return 34.99;
+    return 0;
+  }, [shippingMethod]);
+
+  const subtotal = Number(printPrice || 0);
+  const shipping = Number(shippingPrice || 0);
+  const tax = 0;
+  const total = subtotal + shipping + tax;
+
+  const orderData = {
+    product,
+    paperType,
+    quantity,
+    finishes,
+    printPrice: subtotal,
+    shippingMethod,
+    shippingPrice: shipping,
+    tax,
+    total,
+  };
+
+  function handleCheckout() {
+    console.log("Order ready for checkout:", orderData);
+    alert("Next step: wire this button to Stripe checkout.");
+  }
 
   return (
-    <main className="bg-white text-slate-900">
-      {/* HERO SECTION */}
-      <section className="bg-blue-700 text-white">
-        <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 lg:px-16 lg:py-14">
-          <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_1.4fr] lg:gap-12">
-
-            {/* LEFT SIDE */}
-            <div>
-              <div className="inline-block rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white">
-                Premium Printing • Fast Turnaround • Professional Quality
-              </div>
-
-              <h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                Top Quality Printing at the Best Prices
-              </h1>
-
-              <p className="mt-5 max-w-2xl text-base leading-7 text-blue-50 sm:text-lg">
-                Business cards, postcards, flyers, banners and more — printed beautifully
-                and delivered with the professional finish your brand deserves.
-              </p>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                <a
-                  href="/products"
-                  className="rounded-xl bg-white px-6 py-3 text-base font-semibold text-blue-700 shadow"
-                >
-                  Start Your Order
-                </a>
-
-                <a
-                  href="/contact"
-                  className="rounded-xl border border-white px-6 py-3 text-base font-semibold text-white"
-                >
-                  Request a Quote
-                </a>
-              </div>
-
-              {/* INFO BOXES */}
-              <div className="mt-8 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl bg-blue-600 p-5 shadow-lg">
-                  <h2 className="text-lg font-semibold text-white">Popular Products</h2>
-                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-white">
-                    {products.map((product) => (
-                      <div key={product} className="rounded-lg bg-blue-500 px-3 py-2">
-                        {product}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-blue-600 p-5 shadow-lg">
-                  <h2 className="text-lg font-semibold text-white">We make it easy:</h2>
-                  <ul className="mt-4 space-y-3 text-sm text-white">
-                    {steps.map((step) => (
-                      <li key={step} className="flex items-start gap-3">
-                        <span className="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-white" />
-                        <span>{step}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT SIDE IMAGE */}
-            <div>
-              <div className="overflow-hidden rounded-[2rem] border border-blue-500 bg-white shadow-2xl h-[320px] md:h-[380px] lg:h-[440px]">
-
-                <picture>
-                  <source
-                    media="(max-width: 768px)"
-                    srcSet="/hero_mobile.webp"
-                    type="image/webp"
-                  />
-                  <source
-                    media="(max-width: 1280px)"
-                    srcSet="/hero_tablet.webp"
-                    type="image/webp"
-                  />
-                  <source
-                    srcSet="/hero_desktop.webp"
-                    type="image/webp"
-                  />
-                  <img
-                    src="/hero_desktop_fallback.jpg"
-                    alt="Printed products including postcards, business cards, flyers, and banners"
-                    className="block h-full w-full object-cover scale-105"
-                  />
-                </picture>
-
-              </div>
-            </div>
-
-          </div>
+    <main className="min-h-screen bg-slate-50">
+      <section className="mx-auto max-w-6xl px-6 py-12">
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold tracking-tight text-slate-900">
+            Start Your Order
+          </h1>
+          <p className="mt-3 max-w-2xl text-slate-600">
+            Choose your product, paper, quantity, finishes, and shipping.
+            Your order summary updates automatically.
+          </p>
         </div>
-      </section>
 
-      {/* PRODUCTS SECTION */}
-      <section className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 lg:px-16">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-                Popular Products
-              </p>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-                Print essentials for every business
-              </h2>
-            </div>
-
-            <a
-              href="/products"
-              className="inline-flex items-center text-sm font-semibold text-slate-700 hover:text-blue-600"
-            >
-              View all products →
-            </a>
-          </div>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              "Business Cards",
-              "Postcards",
-              "Flyers",
-              "Banners",
-              "Brochures",
-              "Yard Signs",
-              "Stickers",
-              "Booklets",
-            ].map((product) => (
-              <a
-                key={product}
-                href="/products"
-                className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
-              >
-                <div className="text-lg font-semibold text-slate-900 group-hover:text-blue-700">
-                  {product}
-                </div>
-                <p className="mt-2 text-sm text-slate-600">
-                  Premium quality printing with clean, professional presentation.
-                </p>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* WHY CHOOSE US */}
-      <section className="bg-slate-50">
-        <div className="mx-auto max-w-7xl px-6 py-14 md:px-10 lg:px-16">
-          <div className="max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-              Why Choose Us
-            </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-              A smoother, better print ordering experience
+        <div className="grid gap-8 lg:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-2xl font-semibold text-slate-900">
+              Order Details
             </h2>
+
+            <div className="mt-6 space-y-6">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Product
+                </label>
+                <select
+                  value={product}
+                  onChange={(e) => setProduct(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                >
+                  <option>Business Cards</option>
+                  <option>Flyers</option>
+                  <option>Postcards</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Paper Type
+                </label>
+                <select
+                  value={paperType}
+                  onChange={(e) => setPaperType(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                >
+                  <option>Standard</option>
+                  <option>Premium</option>
+                  <option>Luxury</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Quantity
+                </label>
+                <select
+                  value={quantity}
+                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                >
+                  <option value={100}>100</option>
+                  <option value={250}>250</option>
+                  <option value={500}>500</option>
+                  <option value={1000}>1000</option>
+                </select>
+              </div>
+
+              <div>
+                <span className="mb-3 block text-sm font-medium text-slate-700">
+                  Finishes
+                </span>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {["Gloss", "Matte", "Soft Touch", "Rounded Corners"].map(
+                    (finish) => (
+                      <label
+                        key={finish}
+                        className="flex items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm text-slate-700"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={finishes.includes(finish)}
+                          onChange={() => toggleFinish(finish)}
+                        />
+                        {finish}
+                      </label>
+                    )
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Shipping Method
+                </label>
+                <select
+                  value={shippingMethod}
+                  onChange={(e) => setShippingMethod(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                >
+                  <option>Ground</option>
+                  <option>Express</option>
+                  <option>Overnight</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-3">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"
-              >
-                <h3 className="text-xl font-semibold text-slate-900">
-                  {feature.title}
-                </h3>
-                <p className="mt-3 leading-7 text-slate-600">{feature.text}</p>
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-2xl font-semibold text-slate-900">
+              Order Summary
+            </h2>
+
+            <div className="mt-6 space-y-4 text-sm text-slate-700">
+              <div className="flex justify-between gap-4">
+                <span>Product</span>
+                <span className="font-medium text-slate-900">{product}</span>
               </div>
-            ))}
+
+              <div className="flex justify-between gap-4">
+                <span>Paper</span>
+                <span className="font-medium text-slate-900">{paperType}</span>
+              </div>
+
+              <div className="flex justify-between gap-4">
+                <span>Quantity</span>
+                <span className="font-medium text-slate-900">{quantity}</span>
+              </div>
+
+              <div className="flex justify-between gap-4 items-start">
+                <span>Finishes</span>
+                <span className="max-w-[60%] text-right font-medium text-slate-900">
+                  {finishes.length ? finishes.join(", ") : "None"}
+                </span>
+              </div>
+
+              <div className="flex justify-between gap-4">
+                <span>Print Price</span>
+                <span className="font-medium text-slate-900">
+                  ${subtotal.toFixed(2)}
+                </span>
+              </div>
+
+              <div className="flex justify-between gap-4">
+                <span>Shipping Method</span>
+                <span className="font-medium text-slate-900">
+                  {shippingMethod}
+                </span>
+              </div>
+
+              <div className="flex justify-between gap-4">
+                <span>Shipping</span>
+                <span className="font-medium text-slate-900">
+                  ${shipping.toFixed(2)}
+                </span>
+              </div>
+
+              <div className="flex justify-between gap-4">
+                <span>Tax</span>
+                <span className="font-medium text-slate-900">
+                  ${tax.toFixed(2)}
+                </span>
+              </div>
+
+              <div className="border-t border-slate-200 pt-4">
+                <div className="flex justify-between gap-4 text-base font-bold text-slate-900">
+                  <span>Total</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleCheckout}
+              className="mt-6 w-full rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Continue to Checkout
+            </button>
+
+            <div className="mt-6 rounded-xl bg-slate-100 p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Saved Order Object
+              </p>
+              <pre className="overflow-x-auto text-xs text-slate-700">
+                {JSON.stringify(orderData, null, 2)}
+              </pre>
+            </div>
           </div>
         </div>
       </section>
