@@ -67,7 +67,7 @@ export default function HomePage() {
               </Link>
 
               <Link
-                href="/orders"
+                href="/order"
                 className="inline-flex items-center justify-center rounded-2xl border border-white/40 px-7 py-4 text-lg font-semibold text-white transition hover:bg-white/10"
               >
                 Request a Quote
@@ -89,7 +89,7 @@ export default function HomePage() {
                   ].map((item) => (
                     <Link
                       key={item}
-                      href={`/orders?product=${encodeURIComponent(item)}`}
+                      href={`/order?product=${encodeURIComponent(item)}`}
                       className="rounded-xl bg-white/10 px-4 py-3 text-base font-medium text-white transition hover:bg-white/20"
                     >
                       {item}
@@ -157,7 +157,7 @@ export default function HomePage() {
           </div>
 
           <Link
-            href="/orders"
+            href="/order"
             className="hidden text-lg font-semibold text-slate-800 hover:text-[#1f4be3] md:inline-flex"
           >
             View all products →
