@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { calculatePrice } from "../lib/pricing";
 
 const productOptions = [
   {
@@ -13,6 +14,7 @@ const productOptions = [
     papers: ["14pt Matte", "16pt Gloss", "16pt Soft Touch"],
     finishes: ["Matte", "Gloss", "Soft Touch", "UV Coated"],
     sides: ["Front Only", "Front and Back"],
+    quantities: ["250", "500", "1000", "2500"],
   },
   {
     name: "Flyers",
@@ -24,6 +26,7 @@ const productOptions = [
     papers: ["100lb Gloss Text", "100lb Matte Text", "14pt Cover"],
     finishes: ["Gloss", "Matte", "No Coating"],
     sides: ["Front Only", "Front and Back"],
+    quantities: ["250", "500", "1000", "2500"],
   },
   {
     name: "Banners",
@@ -35,6 +38,7 @@ const productOptions = [
     papers: ["13oz Vinyl", "15oz Heavy Duty Vinyl", "Mesh Banner"],
     finishes: ["Hemmed", "Grommets", "Pole Pockets"],
     sides: ["Single Sided"],
+    quantities: ["1", "2", "5", "10"],
   },
   {
     name: "Postcards",
@@ -46,6 +50,7 @@ const productOptions = [
     papers: ["14pt Matte", "16pt Gloss", "16pt AQ"],
     finishes: ["Matte", "Gloss", "AQ Coated", "UV Coated"],
     sides: ["Front Only", "Front and Back"],
+    quantities: ["250", "500", "1000", "2500"],
   },
 ];
 
@@ -74,6 +79,16 @@ export default function UploadsPage() {
   const [finish, setFinish] = useState(currentProduct.finishes[0]);
   const [sides, setSides] = useState(currentProduct.sides[0]);
 
+  const calculatedPrice = useMemo(() => {
+    return calculatePrice({
+      productName: selectedProduct,
+      quantity,
+      paper,
+      finish,
+      sides,
+    });
+  }, [selectedProduct, quantity, paper, finish, sides]);
+
   function handleProductChange(productName) {
     const product =
       productOptions.find((item) => item.name === productName) ||
@@ -84,6 +99,7 @@ export default function UploadsPage() {
     setPaper(product.papers[0]);
     setFinish(product.finishes[0]);
     setSides(product.sides[0]);
+    setQuantity(product.quantities[0]);
   }
 
   async function handleFileChange(e) {
@@ -181,7 +197,7 @@ export default function UploadsPage() {
           orderId: orderData.order.order_number,
           productName: orderData.order.product_name,
           quantity: 1,
-          price: currentProduct.price,
+          price: calculatedPrice,
         }),
       });
 
@@ -339,10 +355,11 @@ export default function UploadsPage() {
                   onChange={(e) => setQuantity(e.target.value)}
                   className="rounded-xl border border-slate-300 px-4 py-3 text-sm md:col-span-2"
                 >
-                  <option value="250">Quantity: 250</option>
-                  <option value="500">Quantity: 500</option>
-                  <option value="1000">Quantity: 1000</option>
-                  <option value="2500">Quantity: 2500</option>
+                  {currentProduct.quantities.map((option) => (
+                    <option key={option} value={option}>
+                      Quantity: {option}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -492,10 +509,10 @@ export default function UploadsPage() {
                     {fileName || "Not uploaded yet"}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Price</span>
-                  <span className="font-semibold text-slate-900">
-                    ${currentProduct.price}
+                <div className="flex items-center justify-between border-t border-slate-200 pt-3">
+                  <span className="text-slate-500">Calculated Price</span>
+                  <span className="text-lg font-bold text-slate-900">
+                    ${calculatedPrice.toFixed(2)}
                   </span>
                 </div>
               </div>
