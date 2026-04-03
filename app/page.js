@@ -1,343 +1,225 @@
-"use client";
+import Link from "next/link";
 
-import { useMemo, useState } from "react";
+const products = [
+  {
+    name: "Business Cards",
+    description: "Premium business cards with multiple paper stocks and finishes.",
+    href: "/order?product=Business%20Cards",
+  },
+  {
+    name: "Flyers",
+    description: "Fast-turn promotional flyers for events, menus, and handouts.",
+    href: "/order?product=Flyers",
+  },
+  {
+    name: "Postcards",
+    description: "High-impact postcards for direct mail and marketing campaigns.",
+    href: "/order?product=Postcards",
+  },
+];
 
-export default function Page() {
-  const [customerName, setCustomerName] = useState("");
-  const [product, setProduct] = useState("Business Cards");
-  const [paperType, setPaperType] = useState("Standard");
-  const [quantity, setQuantity] = useState(500);
-  const [finishes, setFinishes] = useState([]);
-  const [shippingMethod, setShippingMethod] = useState("Ground");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-
-  function toggleFinish(finish) {
-    setFinishes((prev) =>
-      prev.includes(finish)
-        ? prev.filter((item) => item !== finish)
-        : [...prev, finish]
-    );
-  }
-
-  const printPrice = useMemo(() => {
-    let basePrice = 0;
-
-    if (product === "Business Cards") {
-      if (quantity === 100) basePrice = 19.99;
-      if (quantity === 250) basePrice = 29.99;
-      if (quantity === 500) basePrice = 39.99;
-      if (quantity === 1000) basePrice = 59.99;
-    }
-
-    if (product === "Flyers") {
-      if (quantity === 100) basePrice = 34.99;
-      if (quantity === 250) basePrice = 49.99;
-      if (quantity === 500) basePrice = 69.99;
-      if (quantity === 1000) basePrice = 99.99;
-    }
-
-    if (product === "Postcards") {
-      if (quantity === 100) basePrice = 29.99;
-      if (quantity === 250) basePrice = 44.99;
-      if (quantity === 500) basePrice = 64.99;
-      if (quantity === 1000) basePrice = 94.99;
-    }
-
-    if (paperType === "Premium") {
-      basePrice += 10;
-    }
-
-    if (paperType === "Luxury") {
-      basePrice += 20;
-    }
-
-    if (finishes.includes("Gloss")) {
-      basePrice += 8;
-    }
-
-    if (finishes.includes("Matte")) {
-      basePrice += 8;
-    }
-
-    if (finishes.includes("Soft Touch")) {
-      basePrice += 14;
-    }
-
-    if (finishes.includes("Rounded Corners")) {
-      basePrice += 6;
-    }
-
-    return basePrice;
-  }, [product, paperType, quantity, finishes]);
-
-  const shippingPrice = useMemo(() => {
-    if (shippingMethod === "Ground") return 8.99;
-    if (shippingMethod === "Express") return 19.99;
-    if (shippingMethod === "Overnight") return 34.99;
-    return 0;
-  }, [shippingMethod]);
-
-  const subtotal = Number(printPrice || 0);
-  const shipping = Number(shippingPrice || 0);
-  const tax = 0;
-  const total = subtotal + shipping + tax;
-
-  const orderData = {
-    customerName: customerName || "New Customer",
-    product,
-    paperType,
-    quantity,
-    finishes,
-    printPrice: subtotal,
-    shippingMethod,
-    shippingPrice: shipping,
-    tax,
-    total,
-    status: "Pending",
-  };
-
-  async function handleCheckout() {
-    try {
-      setIsSubmitting(true);
-      setMessage("");
-
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(orderData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to save order");
-      }
-
-      setMessage(`Order ${result.id} created successfully. Next step: connect Stripe checkout.`);
-      console.log("Saved order:", result);
-    } catch (error) {
-      console.error(error);
-      setMessage(error.message || "Something went wrong while saving the order.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
+export default function HomePage() {
   return (
-    <main className="min-h-screen bg-slate-50">
-      <section className="mx-auto max-w-6xl px-6 py-12">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-            Start Your Order
-          </h1>
-          <p className="mt-3 max-w-2xl text-slate-600">
-            Choose your product, paper, quantity, finishes, and shipping.
-            Your order summary updates automatically.
-          </p>
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <div className="text-2xl font-bold tracking-tight">PrintLuxe</div>
+
+          <nav className="hidden gap-6 md:flex">
+            <a href="#products" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+              Products
+            </a>
+            <a href="#how-it-works" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+              Ordering
+            </a>
+            <a href="#pricing" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+              Pricing
+            </a>
+            <a href="#checkout" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+              Checkout
+            </a>
+            <Link href="/admin/orders" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+              Admin
+            </Link>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/order"
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Start Order
+            </Link>
+          </div>
         </div>
+      </header>
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold text-slate-900">
-              Order Details
-            </h2>
+      <section className="bg-gradient-to-b from-slate-900 to-blue-900 text-white">
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 lg:grid-cols-2 lg:items-center">
+          <div>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-blue-200">
+              Top Quality Printing at the Best Prices
+            </p>
 
-            <div className="mt-6 space-y-6">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Customer Name
-                </label>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Enter customer name"
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                />
-              </div>
+            <h1 className="text-4xl font-bold leading-tight md:text-6xl">
+              Premium print products with a simple ordering experience
+            </h1>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Product
-                </label>
-                <select
-                  value={product}
-                  onChange={(e) => setProduct(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                >
-                  <option>Business Cards</option>
-                  <option>Flyers</option>
-                  <option>Postcards</option>
-                </select>
-              </div>
+            <p className="mt-5 max-w-2xl text-lg text-blue-100">
+              Order business cards, flyers, and postcards with premium paper,
+              finishes, shipping options, and a clean customer-friendly process.
+            </p>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Paper Type
-                </label>
-                <select
-                  value={paperType}
-                  onChange={(e) => setPaperType(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                >
-                  <option>Standard</option>
-                  <option>Premium</option>
-                  <option>Luxury</option>
-                </select>
-              </div>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link
+                href="/order"
+                className="rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100"
+              >
+                Start Your Order
+              </Link>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Quantity
-                </label>
-                <select
-                  value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                >
-                  <option value={100}>100</option>
-                  <option value={250}>250</option>
-                  <option value={500}>500</option>
-                  <option value={1000}>1000</option>
-                </select>
-              </div>
-
-              <div>
-                <span className="mb-3 block text-sm font-medium text-slate-700">
-                  Finishes
-                </span>
-
-                <div className="grid grid-cols-2 gap-3">
-                  {["Gloss", "Matte", "Soft Touch", "Rounded Corners"].map(
-                    (finish) => (
-                      <label
-                        key={finish}
-                        className="flex items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm text-slate-700"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={finishes.includes(finish)}
-                          onChange={() => toggleFinish(finish)}
-                        />
-                        {finish}
-                      </label>
-                    )
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Shipping Method
-                </label>
-                <select
-                  value={shippingMethod}
-                  onChange={(e) => setShippingMethod(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                >
-                  <option>Ground</option>
-                  <option>Express</option>
-                  <option>Overnight</option>
-                </select>
-              </div>
+              <a
+                href="#products"
+                className="rounded-2xl border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10"
+              >
+                View Products
+              </a>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold text-slate-900">
-              Order Summary
-            </h2>
+          <div className="rounded-3xl bg-white/10 p-8 backdrop-blur">
+            <h2 className="text-2xl font-semibold">We make it easy</h2>
 
-            <div className="mt-6 space-y-4 text-sm text-slate-700">
-              <div className="flex justify-between gap-4">
-                <span>Customer</span>
-                <span className="font-medium text-slate-900">
-                  {customerName || "New Customer"}
-                </span>
+            <div className="mt-6 space-y-4 text-blue-50">
+              <div className="rounded-2xl border border-white/15 bg-white/5 p-4">
+                1. Pick the product you want
               </div>
-
-              <div className="flex justify-between gap-4">
-                <span>Product</span>
-                <span className="font-medium text-slate-900">{product}</span>
+              <div className="rounded-2xl border border-white/15 bg-white/5 p-4">
+                2. Choose the paper type, quantity, and finishes
               </div>
-
-              <div className="flex justify-between gap-4">
-                <span>Paper</span>
-                <span className="font-medium text-slate-900">{paperType}</span>
+              <div className="rounded-2xl border border-white/15 bg-white/5 p-4">
+                3. Upload your print-ready artwork
               </div>
-
-              <div className="flex justify-between gap-4">
-                <span>Quantity</span>
-                <span className="font-medium text-slate-900">{quantity}</span>
-              </div>
-
-              <div className="flex justify-between gap-4 items-start">
-                <span>Finishes</span>
-                <span className="max-w-[60%] text-right font-medium text-slate-900">
-                  {finishes.length ? finishes.join(", ") : "None"}
-                </span>
-              </div>
-
-              <div className="flex justify-between gap-4">
-                <span>Print Price</span>
-                <span className="font-medium text-slate-900">
-                  ${subtotal.toFixed(2)}
-                </span>
-              </div>
-
-              <div className="flex justify-between gap-4">
-                <span>Shipping Method</span>
-                <span className="font-medium text-slate-900">
-                  {shippingMethod}
-                </span>
-              </div>
-
-              <div className="flex justify-between gap-4">
-                <span>Shipping</span>
-                <span className="font-medium text-slate-900">
-                  ${shipping.toFixed(2)}
-                </span>
-              </div>
-
-              <div className="flex justify-between gap-4">
-                <span>Tax</span>
-                <span className="font-medium text-slate-900">
-                  ${tax.toFixed(2)}
-                </span>
-              </div>
-
-              <div className="border-t border-slate-200 pt-4">
-                <div className="flex justify-between gap-4 text-base font-bold text-slate-900">
-                  <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
-                </div>
+              <div className="rounded-2xl border border-white/15 bg-white/5 p-4">
+                4. Review pricing, shipping, and checkout
               </div>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <button
-              onClick={handleCheckout}
-              disabled={isSubmitting}
-              className="mt-6 w-full rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+      <section id="products" className="mx-auto max-w-7xl px-6 py-16">
+        <div className="mb-10">
+          <h2 className="text-3xl font-bold">Popular Products</h2>
+          <p className="mt-3 max-w-2xl text-slate-600">
+            Choose a product below to start your order with live pricing and shipping.
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          {products.map((product) => (
+            <div
+              key={product.name}
+              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
             >
-              {isSubmitting ? "Saving Order..." : "Continue to Checkout"}
-            </button>
-
-            {message ? (
-              <div className="mt-4 rounded-xl bg-slate-100 p-4 text-sm text-slate-700">
-                {message}
-              </div>
-            ) : null}
-
-            <div className="mt-6 rounded-xl bg-slate-100 p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Saved Order Object
+              <h3 className="text-xl font-semibold">{product.name}</h3>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                {product.description}
               </p>
-              <pre className="overflow-x-auto text-xs text-slate-700">
-                {JSON.stringify(orderData, null, 2)}
-              </pre>
+
+              <div className="mt-6">
+                <Link
+                  href={product.href}
+                  className="inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                >
+                  Order {product.name}
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="how-it-works" className="bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-16">
+          <div className="mb-10">
+            <h2 className="text-3xl font-bold">Ordering Process</h2>
+            <p className="mt-3 max-w-2xl text-slate-600">
+              A simple customer-facing flow built for quick ordering.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-4">
+            {[
+              "Choose product",
+              "Customize paper and finishes",
+              "Review pricing and shipping",
+              "Continue to checkout",
+            ].map((step, index) => (
+              <div
+                key={step}
+                className="rounded-3xl border border-slate-200 bg-slate-50 p-6"
+              >
+                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+                  {index + 1}
+                </div>
+                <h3 className="text-lg font-semibold">{step}</h3>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="mx-auto max-w-7xl px-6 py-16">
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-xl font-semibold">Dynamic Pricing</h3>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Pricing updates live based on product, paper type, quantity, and finishes.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-xl font-semibold">Shipping Options</h3>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Ground, Express, and Overnight options are included in the order flow.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-xl font-semibold">Admin Orders</h3>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Orders submitted through the storefront can be reviewed in the admin dashboard.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="checkout" className="bg-slate-900 text-white">
+        <div className="mx-auto max-w-7xl px-6 py-16">
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
+            <div>
+              <h2 className="text-3xl font-bold">Checkout and Stripe Flow</h2>
+              <p className="mt-4 max-w-2xl text-slate-300">
+                The order page is ready for the next step: saving the order and then wiring
+                the Continue to Checkout button into a real Stripe checkout session.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-4">
+              <Link
+                href="/order"
+                className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+              >
+                Go to Ordering
+              </Link>
+
+              <Link
+                href="/admin/orders"
+                className="rounded-2xl border border-white/20 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10"
+              >
+                View Admin Orders
+              </Link>
             </div>
           </div>
         </div>
