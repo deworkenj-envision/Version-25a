@@ -60,7 +60,7 @@ export default function HomePage() {
 
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
-                href="/orders"
+                href="/order"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-7 py-4 text-lg font-semibold text-[#1f4be3] shadow-sm transition hover:bg-blue-50"
               >
                 Start Your Order
@@ -168,7 +168,7 @@ export default function HomePage() {
           {products.map((product) => (
             <Link
               key={product}
-              href={`/orders?product=${encodeURIComponent(product)}`}
+              href={`/order?product=${encodeURIComponent(product)}`}
               className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
               <h3 className="text-2xl font-bold text-slate-950">{product}</h3>
