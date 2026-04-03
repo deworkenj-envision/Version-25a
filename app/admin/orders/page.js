@@ -1,23 +1,21 @@
+import { supabaseAdmin } from "../../lib/supabaseAdmin";
 import StatusSelect from "./status-select";
 
 async function getOrders() {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const { data, error } = await supabaseAdmin
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-  const response = await fetch(`${baseUrl}/api/orders`, {
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to load orders");
+  if (error) {
+    throw new Error(error.message || "Failed to load orders");
   }
 
-  return response.json();
+  return data || [];
 }
 
 export default async function AdminOrdersPage() {
-  const data = await getOrders();
-  const allOrders = data.orders || [];
+  const allOrders = await getOrders();
   const orders = allOrders.filter((order) => order.order_number);
 
   return (

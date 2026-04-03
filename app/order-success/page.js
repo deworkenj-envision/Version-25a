@@ -1,25 +1,25 @@
+import { supabaseAdmin } from "../lib/supabaseAdmin";
+
 async function getOrder(orderNumber) {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  if (!orderNumber) return null;
 
-  const response = await fetch(`${baseUrl}/api/orders`, {
-    cache: "no-store",
-  });
+  const { data, error } = await supabaseAdmin
+    .from("orders")
+    .select("*")
+    .eq("order_number", orderNumber)
+    .maybeSingle();
 
-  if (!response.ok) {
-    throw new Error("Failed to load order");
+  if (error) {
+    throw new Error(error.message || "Failed to load order");
   }
 
-  const data = await response.json();
-  const orders = data.orders || [];
-
-  return orders.find((order) => order.order_number === orderNumber) || null;
+  return data || null;
 }
 
 export default async function OrderSuccessPage({ searchParams }) {
   const params = await searchParams;
   const orderNumber = params?.order || "";
-  const order = orderNumber ? await getOrder(orderNumber) : null;
+  const order = await getOrder(orderNumber);
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-16 text-slate-900">
