@@ -14,12 +14,8 @@ const products = [
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#f5f7fb] text-slate-900">
-      
-      {/* HERO SECTION */}
       <section className="bg-[#1f4be3] text-white">
-        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 lg:grid-cols-2 lg:items-center lg:py-16">
-          
-          {/* LEFT SIDE */}
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 lg:grid-cols-[1.05fr_1.25fr] lg:items-center lg:py-16">
           <div>
             <div className="inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/95 ring-1 ring-white/10">
               Premium Printing · Fast Turnaround · Professional Quality
@@ -55,9 +51,7 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* PRODUCT + PROCESS BOXES */}
             <div className="mt-10 grid gap-4 md:grid-cols-2">
-              
               <div className="rounded-3xl bg-white/8 p-5 shadow-xl ring-1 ring-white/10 backdrop-blur-sm">
                 <h2 className="text-2xl font-bold">Popular Products</h2>
 
@@ -103,30 +97,26 @@ export default function HomePage() {
                   </li>
                 </ul>
               </div>
-
             </div>
           </div>
 
-          {/* RIGHT SIDE — LARGE HERO IMAGE */}
-          <div className="relative h-[420px] w-full overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-white/10 lg:h-[650px]">
-
-            <picture className="absolute inset-0 h-full w-full">
-              <source media="(max-width: 640px)" srcSet="/hero_mobile.webp" />
-              <source media="(max-width: 1024px)" srcSet="/hero_tablet.webp" />
-              <source srcSet="/hero_desktop.webp" />
-              <img
-                src="/hero_desktop_fallback.jpg"
-                alt="Print samples"
-                className="h-full w-full object-cover"
-              />
-            </picture>
-
+          <div className="w-full">
+            <div className="relative w-full overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-white/10 aspect-[16/10] lg:aspect-[16/9] xl:aspect-[1.75/1]">
+              <picture>
+                <source media="(max-width: 640px)" srcSet="/hero_mobile.webp" />
+                <source media="(max-width: 1024px)" srcSet="/hero_tablet.webp" />
+                <source srcSet="/hero_desktop.webp" />
+                <img
+                  src="/hero_desktop_fallback.jpg"
+                  alt="Print samples"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              </picture>
+            </div>
           </div>
-
         </div>
       </section>
 
-      {/* PRODUCTS SECTION */}
       <section className="mx-auto max-w-7xl px-6 py-14 md:py-20">
         <div className="flex items-end justify-between gap-6">
           <div>
@@ -162,7 +152,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* WHY US */}
       <section className="mx-auto max-w-7xl px-6 pb-16 md:pb-24">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.3em] text-[#1f4be3]">
@@ -203,7 +192,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
     </main>
   );
 }
