@@ -48,6 +48,7 @@ export default async function AdminOrdersPage() {
                   <th className="px-4 py-3 font-semibold">Paper</th>
                   <th className="px-4 py-3 font-semibold">Finish</th>
                   <th className="px-4 py-3 font-semibold">Qty</th>
+                  <th className="px-4 py-3 font-semibold">Total</th>
                   <th className="px-4 py-3 font-semibold">Artwork</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
                   <th className="px-4 py-3 font-semibold">Created</th>
@@ -56,7 +57,7 @@ export default async function AdminOrdersPage() {
               <tbody>
                 {orders.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="px-4 py-6 text-center text-slate-500">
+                    <td colSpan="12" className="px-4 py-6 text-center text-slate-500">
                       No print orders found yet.
                     </td>
                   </tr>
@@ -73,6 +74,9 @@ export default async function AdminOrdersPage() {
                       <td className="px-4 py-3">{order.paper}</td>
                       <td className="px-4 py-3">{order.finish}</td>
                       <td className="px-4 py-3">{order.quantity}</td>
+                      <td className="px-4 py-3 font-semibold text-slate-900">
+                        {order.total != null ? `$${Number(order.total).toFixed(2)}` : "—"}
+                      </td>
                       <td className="px-4 py-3">
                         {order.artwork_url ? (
                           <a
