@@ -31,10 +31,10 @@ export async function POST(req) {
   let event;
 
   try {
-    const body = await req.text();
+    const rawBody = await req.text();
 
     event = stripe.webhooks.constructEvent(
-      body,
+      rawBody,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
@@ -47,57 +47,64 @@ export async function POST(req) {
   }
 
   try {
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
-      const metadata = session.metadata || {};
+    if (event.type !== "checkout.session.completed") {
+      return NextResponse.json({ received: true }, { status: 200 });
+    }
 
-      const orderNumber = `ORD-${Date.now()}`;
+    const session = event.data.object;
+    const metadata = session.metadata || {};
 
-      const payload = {
-        order_number: orderNumber,
-        stripe_session_id: session.id,
-        payment_status: session.payment_status || "paid",
-        status: "paid",
-        customer_name:
-          metadata.customerName || session.customer_details?.name || "",
-        customer_email:
-          metadata.customerEmail || session.customer_details?.email || "",
-        product_name: metadata.productName || "",
-        size: metadata.size || "",
-        paper: metadata.paper || "",
-        finish: metadata.finish || "",
-        sides: metadata.sides || "",
-        quantity: Number(metadata.quantity || 0),
+    const filePath = metadata.filePath || metadata.artworkPath || "";
+    const fileName =
+      metadata.fileName || (filePath ? filePath.split("/").pop() : "");
 
-        artwork_url: metadata.artworkUrl || "",
-        artwork_path: metadata.artworkPath || "",
+    const artworkUrl =
+      metadata.artworkUrl ||
+      (filePath && process.env.NEXT_PUBLIC_SUPABASE_URL
+        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/order-artwork/${filePath}`
+        : "");
 
-        notes: metadata.notes || "",
-        print_price: Number(metadata.printPrice || 0),
-        shipping_price: Number(metadata.shippingPrice || 0),
-        total: Number(metadata.total || 0),
-      };
+    const payload = {
+      stripe_session_id: session.id,
+      status: "paid",
+      customer_name:
+        metadata.customerName || session.customer_details?.name || "",
+      customer_email:
+        metadata.customerEmail || session.customer_details?.email || "",
+      product_name: metadata.productName || "",
+      quantity: Number(metadata.quantity || 0),
+      file_name: fileName,
+      artwork_url: artworkUrl,
+      notes: metadata.notes || "",
+      total: Number(metadata.total || 0),
+    };
 
-      const { error } = await supabaseAdmin
-        .from("orders")
-        .upsert([payload], {
-          onConflict: "stripe_session_id",
-        });
+    console.log("Webhook payload being inserted:", payload);
 
-      if (error) {
-        console.error("Supabase order upsert error:", error);
-        return NextResponse.json(
-          { error: "Failed to save order to database" },
-          { status: 500 }
-        );
-      }
+    const { error } = await supabaseAdmin
+      .from("orders")
+      .insert([payload]);
+
+    if (error) {
+      console.error("Supabase insert error:", error);
+      return NextResponse.json(
+        {
+          error: "Supabase insert failed",
+          details: error.message,
+          payload,
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (error) {
     console.error("Webhook processing error:", error);
     return NextResponse.json(
-      { error: error.message || "Webhook processing failed" },
+      {
+        error: "Webhook processing failed",
+        details: error.message,
+      },
       { status: 500 }
     );
   }
