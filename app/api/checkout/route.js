@@ -1,107 +1,133 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
 export async function POST(req) {
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
       return NextResponse.json(
-        { error: "Missing STRIPE_SECRET_KEY in environment variables." },
+        { error: "Missing STRIPE_SECRET_KEY" },
         { status: 500 }
       );
     }
 
     if (!process.env.NEXT_PUBLIC_SITE_URL) {
       return NextResponse.json(
-        { error: "Missing NEXT_PUBLIC_SITE_URL in environment variables." },
+        { error: "Missing NEXT_PUBLIC_SITE_URL" },
         { status: 500 }
       );
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
     const body = await req.json();
 
-    const productName =
-      body.productName || body.product || body.product_name || "";
-    const quantity = Number(body.quantity || 1);
-    const total = Number(body.total || body.amount || body.price || 0);
-    const customerName =
-      body.customerName || body.name || body.customer_name || "";
-    const customerEmail =
-      body.customerEmail || body.email || body.customer_email || "";
+    const {
+      productName,
+      size,
+      paper,
+      finish,
+      sides,
+      quantity,
+      fileName,
+      filePath,
+      notes,
+      total,
+      printPrice,
+      shippingPrice,
+      customerName,
+      customerEmail,
+    } = body;
 
     if (!productName) {
       return NextResponse.json(
-        { error: "Missing product name." },
+        { error: "Missing product name" },
         { status: 400 }
       );
     }
 
-    if (!Number.isFinite(quantity) || quantity < 1) {
+    if (!quantity || Number(quantity) < 1) {
       return NextResponse.json(
-        { error: "Invalid quantity." },
+        { error: "Invalid quantity" },
         { status: 400 }
       );
     }
 
-    if (!Number.isFinite(total) || total <= 0) {
+    if (total === undefined || total === null || Number(total) <= 0) {
       return NextResponse.json(
-        { error: "Invalid total." },
+        { error: "Invalid total" },
         { status: 400 }
       );
     }
 
-    const unitAmount = Math.round((total / quantity) * 100);
-
-    if (!Number.isFinite(unitAmount) || unitAmount < 50) {
+    if (!customerName) {
       return NextResponse.json(
-        { error: "Calculated Stripe amount is invalid." },
+        { error: "Missing customer name" },
         { status: 400 }
       );
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+    if (!customerEmail) {
+      return NextResponse.json(
+        { error: "Missing customer email" },
+        { status: 400 }
+      );
+    }
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+    const unitAmount = Math.round(Number(total) * 100);
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      customer_email: customerEmail,
       payment_method_types: ["card"],
-      customer_email: customerEmail || undefined,
       line_items: [
         {
           price_data: {
             currency: "usd",
             product_data: {
-              name: productName,
-              description: customerName
-                ? `Order for ${customerName}`
-                : "Print order",
+              name: `${productName} Order`,
+              description: [
+                size ? `Size: ${size}` : null,
+                paper ? `Paper: ${paper}` : null,
+                finish ? `Finish: ${finish}` : null,
+                sides ? `Sides: ${sides}` : null,
+              ]
+                .filter(Boolean)
+                .join(" • "),
             },
             unit_amount: unitAmount,
           },
-          quantity,
+          quantity: 1,
         },
       ],
-      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/orders`,
+      success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/order?canceled=1`,
       metadata: {
-        product_name: productName,
-        quantity: String(quantity),
-        total: String(total),
-        customer_name: customerName,
-        customer_email: customerEmail,
+        productName: String(productName || ""),
+        size: String(size || ""),
+        paper: String(paper || ""),
+        finish: String(finish || ""),
+        sides: String(sides || ""),
+        quantity: String(quantity || ""),
+        fileName: String(fileName || ""),
+        filePath: String(filePath || ""),
+        notes: String(notes || ""),
+        total: String(total || ""),
+        printPrice: String(printPrice || ""),
+        shippingPrice: String(shippingPrice || ""),
+        customerName: String(customerName || ""),
+        customerEmail: String(customerEmail || ""),
       },
     });
 
-    return NextResponse.json({
-      url: session.url,
-    });
+    return NextResponse.json({ url: session.url }, { status: 200 });
   } catch (error) {
-    console.error("Checkout error:", error);
+    console.error("Stripe checkout error:", error);
 
     return NextResponse.json(
       {
         error:
-          error?.message || "Something went wrong creating checkout session.",
+          error?.message || "Something went wrong while creating Stripe checkout.",
       },
       { status: 500 }
     );
