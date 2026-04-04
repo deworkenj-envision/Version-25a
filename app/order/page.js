@@ -162,7 +162,7 @@ export default function OrdersPage() {
         return;
       }
 
-      setStoredFilePath(data.filePath);
+      setStoredFilePath(data.publicUrl);
       setFileName(data.fileName);
       setUploadMessage(`Artwork uploaded successfully: ${data.fileName}`);
     } catch (error) {
