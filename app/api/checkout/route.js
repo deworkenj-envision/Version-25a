@@ -1,58 +1,70 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export async function POST(req) {
   try {
-    const body = await req.json();
-
-    const {
-      productName,
-      quantity,
-      total,
-      customerName,
-      customerEmail,
-    } = body;
-
-    if (!productName) {
-      return NextResponse.json(
-        { error: "Missing product name" },
-        { status: 400 }
-      );
-    }
-
-    if (!quantity || Number(quantity) < 1) {
-      return NextResponse.json(
-        { error: "Invalid quantity" },
-        { status: 400 }
-      );
-    }
-
-    if (total === undefined || total === null || Number(total) <= 0) {
-      return NextResponse.json(
-        { error: "Invalid total" },
-        { status: 400 }
-      );
-    }
-
     if (!process.env.STRIPE_SECRET_KEY) {
       return NextResponse.json(
-        { error: "Missing STRIPE_SECRET_KEY" },
+        { error: "Missing STRIPE_SECRET_KEY in environment variables." },
         { status: 500 }
       );
     }
 
     if (!process.env.NEXT_PUBLIC_SITE_URL) {
       return NextResponse.json(
-        { error: "Missing NEXT_PUBLIC_SITE_URL" },
+        { error: "Missing NEXT_PUBLIC_SITE_URL in environment variables." },
         { status: 500 }
       );
     }
 
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+    const body = await req.json();
+
+    const productName =
+      body.productName || body.product || body.product_name || "";
+    const quantity = Number(body.quantity || 1);
+    const total = Number(body.total || body.amount || body.price || 0);
+    const customerName =
+      body.customerName || body.name || body.customer_name || "";
+    const customerEmail =
+      body.customerEmail || body.email || body.customer_email || "";
+
+    if (!productName) {
+      return NextResponse.json(
+        { error: "Missing product name." },
+        { status: 400 }
+      );
+    }
+
+    if (!Number.isFinite(quantity) || quantity < 1) {
+      return NextResponse.json(
+        { error: "Invalid quantity." },
+        { status: 400 }
+      );
+    }
+
+    if (!Number.isFinite(total) || total <= 0) {
+      return NextResponse.json(
+        { error: "Invalid total." },
+        { status: 400 }
+      );
+    }
+
+    const unitAmount = Math.round((total / quantity) * 100);
+
+    if (!Number.isFinite(unitAmount) || unitAmount < 50) {
+      return NextResponse.json(
+        { error: "Calculated Stripe amount is invalid." },
+        { status: 400 }
+      );
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
       mode: "payment",
+      payment_method_types: ["card"],
       customer_email: customerEmail || undefined,
       line_items: [
         {
@@ -64,28 +76,32 @@ export async function POST(req) {
                 ? `Order for ${customerName}`
                 : "Print order",
             },
-            unit_amount: Math.round((Number(total) / Number(quantity)) * 100),
+            unit_amount: unitAmount,
           },
-          quantity: Number(quantity),
+          quantity,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order`,
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/orders`,
       metadata: {
-        product_name: productName || "",
-        quantity: String(quantity || ""),
-        total: String(total || ""),
-        customer_name: customerName || "",
-        customer_email: customerEmail || "",
+        product_name: productName,
+        quantity: String(quantity),
+        total: String(total),
+        customer_name: customerName,
+        customer_email: customerEmail,
       },
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({
+      url: session.url,
+    });
   } catch (error) {
     console.error("Checkout error:", error);
+
     return NextResponse.json(
       {
-        error: error?.message || "Something went wrong creating checkout session",
+        error:
+          error?.message || "Something went wrong creating checkout session.",
       },
       { status: 500 }
     );
