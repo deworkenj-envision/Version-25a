@@ -3,48 +3,26 @@ import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-function getFileNameFromPath(path) {
-  if (!path) return "";
-  const parts = String(path).split("/");
-  return parts[parts.length - 1] || "";
+const ARTWORK_BUCKET = "order-artwork";
+
+function buildArtworkUrl(value) {
+  if (!value || typeof value !== "string") return "";
+
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return "";
+
+  return `${supabaseUrl}/storage/v1/object/public/${ARTWORK_BUCKET}/${trimmed}`;
 }
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-
-    const {
-      productName,
-      quantity,
-      total,
-      customerName,
-      customerEmail,
-      artworkUrl,
-      artworkPath,
-      notes,
-    } = body;
-
-    if (!productName) {
-      return NextResponse.json(
-        { error: "Missing product name" },
-        { status: 400 }
-      );
-    }
-
-    if (!quantity || Number(quantity) < 1) {
-      return NextResponse.json(
-        { error: "Invalid quantity" },
-        { status: 400 }
-      );
-    }
-
-    if (total === undefined || total === null || Number(total) <= 0) {
-      return NextResponse.json(
-        { error: "Invalid total" },
-        { status: 400 }
-      );
-    }
-
     if (!process.env.STRIPE_SECRET_KEY) {
       return NextResponse.json(
         { error: "Missing STRIPE_SECRET_KEY" },
@@ -59,56 +37,91 @@ export async function POST(req) {
       );
     }
 
-    const productData = {
-      name: productName,
-    };
+    const body = await req.json();
 
-    if (notes && notes.trim() !== "") {
-      productData.description = notes.trim();
+    const {
+      productName,
+      quantity,
+      total,
+      customerName,
+      customerEmail,
+      artworkUrl,
+      publicUrl,
+      filePath,
+      file_path,
+      artwork,
+      artwork_path,
+    } = body;
+
+    if (!productName || typeof productName !== "string") {
+      return NextResponse.json(
+        { error: "Missing product name" },
+        { status: 400 }
+      );
     }
 
-    const safeArtworkPath = artworkPath || "";
-    const safeArtworkUrl = artworkUrl || "";
-    const derivedFileName = getFileNameFromPath(safeArtworkPath);
+    const parsedQuantity = Number(quantity);
+    if (!parsedQuantity || parsedQuantity < 1) {
+      return NextResponse.json(
+        { error: "Invalid quantity" },
+        { status: 400 }
+      );
+    }
+
+    const parsedTotal = Number(total);
+    if (!parsedTotal || parsedTotal <= 0) {
+      return NextResponse.json(
+        { error: "Invalid total" },
+        { status: 400 }
+      );
+    }
+
+    const finalArtworkUrl = buildArtworkUrl(
+      artworkUrl ||
+        publicUrl ||
+        filePath ||
+        file_path ||
+        artwork ||
+        artwork_path ||
+        ""
+    );
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
-      customer_email: customerEmail || undefined,
       line_items: [
         {
+          quantity: parsedQuantity,
           price_data: {
             currency: "usd",
-            product_data: productData,
-            unit_amount: Math.round((Number(total) / Number(quantity)) * 100),
+            product_data: {
+              name: productName,
+            },
+            unit_amount: Math.round((parsedTotal * 100) / parsedQuantity),
           },
-          quantity: Number(quantity),
         },
       ],
+      customer_email: customerEmail || undefined,
       metadata: {
-        productName: productName || "",
-        quantity: String(quantity || ""),
-        total: String(total || ""),
-        customerName: customerName || "",
-        customerEmail: customerEmail || "",
-
-        artworkUrl: safeArtworkUrl,
-        artworkPath: safeArtworkPath,
-
-        fileName: derivedFileName,
-        filePath: safeArtworkPath,
-
-        notes: notes || "",
+        productName: String(productName || ""),
+        quantity: String(parsedQuantity),
+        total: String(parsedTotal),
+        customerName: String(customerName || ""),
+        customerEmail: String(customerEmail || ""),
+        artworkUrl: finalArtworkUrl,
       },
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order/success`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order`,
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({
+      url: session.url,
+      sessionId: session.id,
+    });
   } catch (error) {
-    console.error("Stripe checkout error:", error);
+    console.error("Checkout session creation error:", error);
     return NextResponse.json(
-      { error: error.message || "Checkout failed" },
+      { error: "Failed to create checkout session" },
       { status: 500 }
     );
   }
