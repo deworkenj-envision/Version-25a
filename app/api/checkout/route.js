@@ -92,11 +92,9 @@ export async function POST(req) {
         customerName: customerName || "",
         customerEmail: customerEmail || "",
 
-        // new names
         artworkUrl: safeArtworkUrl,
         artworkPath: safeArtworkPath,
 
-        // legacy names for older webhook code
         fileName: derivedFileName,
         filePath: safeArtworkPath,
 

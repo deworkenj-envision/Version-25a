@@ -53,20 +53,15 @@ export async function POST(req) {
 
       const orderNumber = `ORD-${Date.now()}`;
 
-      // 🔥 THIS IS THE KEY FIX
-      const filePath =
-        metadata.filePath ||
-        metadata.artworkPath ||
-        "";
-
+      const filePath = metadata.filePath || metadata.artworkPath || "";
       const fileName =
-        metadata.fileName ||
-        (filePath ? filePath.split("-").pop() : "");
+        metadata.fileName || (filePath ? filePath.split("/").pop() : "");
 
       const artworkUrl =
-        filePath
+        metadata.artworkUrl ||
+        (filePath && process.env.NEXT_PUBLIC_SUPABASE_URL
           ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/order-artwork/${filePath}`
-          : "";
+          : "");
 
       const payload = {
         order_number: orderNumber,
