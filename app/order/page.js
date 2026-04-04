@@ -162,9 +162,9 @@ export default function OrdersPage() {
         return;
       }
 
-      setStoredFilePath(data.publicUrl);
-      setFileName(data.fileName);
-      setUploadMessage(`Artwork uploaded successfully: ${data.fileName}`);
+      setStoredFilePath(data.publicUrl || data.filePath || "");
+      setFileName(data.fileName || file.name);
+      setUploadMessage(`Artwork uploaded successfully: ${data.fileName || file.name}`);
     } catch (error) {
       console.error(error);
       setUploadError("Something went wrong while uploading the artwork.");
@@ -207,8 +207,9 @@ export default function OrdersPage() {
           paper,
           finish,
           sides,
-          quantity,
-          fileName: storedFilePath,
+          quantity: Number(quantity),
+          fileName,
+          filePath: storedFilePath,
           notes,
           printPrice: calculatedPrice,
           shippingPrice,
@@ -229,10 +230,12 @@ export default function OrdersPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          orderId: orderData.order.order_number,
-          productName: orderData.order.product_name,
-          quantity: 1,
-          price: grandTotal,
+          orderId: orderData?.order?.order_number || orderData?.order?.id || "",
+          productName: selectedProduct,
+          quantity: Number(quantity),
+          total: grandTotal,
+          customerName: contactName,
+          customerEmail: email,
         }),
       });
 
