@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -39,20 +40,30 @@ export async function POST(req) {
       );
     }
 
-    if (!process.env.STRIPE_SECRET_KEY) {
+    // ✅ SAVE ORDER TO DATABASE FIRST
+    const { error: insertError } = await supabaseAdmin.from("orders").insert([
+      {
+        product_name: productName,
+        quantity: Number(quantity),
+        total: Number(total),
+        customer_name: customerName,
+        customer_email: customerEmail,
+        artwork_url: artworkUrl || "",
+        artwork_path: artworkPath || "",
+        notes: notes || "",
+        status: "pending",
+      },
+    ]);
+
+    if (insertError) {
+      console.error("Supabase insert error:", insertError);
       return NextResponse.json(
-        { error: "Missing STRIPE_SECRET_KEY" },
+        { error: "Failed to save order" },
         { status: 500 }
       );
     }
 
-    if (!process.env.NEXT_PUBLIC_SITE_URL) {
-      return NextResponse.json(
-        { error: "Missing NEXT_PUBLIC_SITE_URL" },
-        { status: 500 }
-      );
-    }
-
+    // ✅ STRIPE SESSION
     const productData = {
       name: productName,
     };
@@ -75,16 +86,6 @@ export async function POST(req) {
           quantity: Number(quantity),
         },
       ],
-      metadata: {
-        productName: productName || "",
-        quantity: String(quantity || ""),
-        total: String(total || ""),
-        customerName: customerName || "",
-        customerEmail: customerEmail || "",
-        artworkUrl: artworkUrl || "",
-        artworkPath: artworkPath || "",
-        notes: notes || "",
-      },
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order/success`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order`,
     });
