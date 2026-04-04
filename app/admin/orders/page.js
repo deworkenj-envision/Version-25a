@@ -62,9 +62,7 @@ export default function AdminOrdersPage() {
               Loading orders...
             </div>
           ) : error ? (
-            <div className="px-6 py-10 text-sm text-red-600">
-              {error}
-            </div>
+            <div className="px-6 py-10 text-sm text-red-600">{error}</div>
           ) : orders.length === 0 ? (
             <div className="px-6 py-10 text-sm text-slate-600">
               No orders found.
