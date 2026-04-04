@@ -91,7 +91,7 @@ export default async function OrderSuccessPage({ searchParams }) {
                   : "text-amber-700"
               }`}
             >
-              {order?.status || "pending_review"}
+              {order?.status || "Paid"}
             </span>
           </div>
         </div>
