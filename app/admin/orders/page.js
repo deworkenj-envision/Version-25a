@@ -73,20 +73,25 @@ export default function AdminOrdersPage() {
                 </thead>
                 <tbody>
                   {orders.map((order) => (
-                    <tr key={order.id || order.stripe_session_id} className="border-b border-slate-100">
+                    <tr
+                      key={order.id || order.stripe_session_id}
+                      className="border-b border-slate-100"
+                    >
                       <td className="px-4 py-3">{order.order_number || "-"}</td>
                       <td className="px-4 py-3">{order.customer_name || "-"}</td>
                       <td className="px-4 py-3">{order.customer_email || "-"}</td>
                       <td className="px-4 py-3">{order.product_name || "-"}</td>
                       <td className="px-4 py-3">{order.quantity || "-"}</td>
                       <td className="px-4 py-3">
-                        {typeof order.total === "number" ? `$${order.total.toFixed(2)}` : "-"}
+                        {typeof order.total === "number"
+                          ? `$${order.total.toFixed(2)}`
+                          : "-"}
                       </td>
                       <td className="px-4 py-3">{order.status || "-"}</td>
                       <td className="px-4 py-3">
-                        {order.file_path ? (
+                        {order.artwork_url ? (
                           <a
-                            href={order.file_path}
+                            href={order.artwork_url}
                             target="_blank"
                             rel="noreferrer"
                             className="font-medium text-blue-600 hover:underline"
