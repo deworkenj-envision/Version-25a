@@ -13,21 +13,25 @@ export default function AdminOrdersPage() {
         setLoading(true);
         setError("");
 
-        const response = await fetch("/api/orders", {
+        const res = await fetch("/api/orders", {
           cache: "no-store",
         });
 
-        const data = await response.json();
+        const data = await res.json();
 
-        if (!response.ok) {
-          setError(data.error || "Failed to load orders.");
-          return;
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to load orders.");
         }
 
-        setOrders(data.orders || []);
+        if (Array.isArray(data)) {
+          setOrders(data);
+        } else if (Array.isArray(data.orders)) {
+          setOrders(data.orders);
+        } else {
+          setOrders([]);
+        }
       } catch (err) {
-        console.error(err);
-        setError("Something went wrong while loading orders.");
+        setError(err.message || "Failed to load orders.");
       } finally {
         setLoading(false);
       }
@@ -36,79 +40,133 @@ export default function AdminOrdersPage() {
     loadOrders();
   }, []);
 
+  function formatDate(value) {
+    if (!value) return "Not available";
+
+    try {
+      return new Date(value).toLocaleString();
+    } catch {
+      return "Not available";
+    }
+  }
+
+  function displayValue(value, fallback = "Not provided") {
+    if (value === null || value === undefined) return fallback;
+    if (typeof value === "string" && value.trim() === "") return fallback;
+    return value;
+  }
+
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10">
+    <main className="min-h-screen bg-white px-6 py-10">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <div className="inline-flex items-center rounded-full bg-blue-100 px-4 py-1.5 text-sm font-semibold text-blue-700">
-            Admin
-          </div>
-          <h1 className="mt-4 text-3xl font-bold text-slate-900">Orders</h1>
-          <p className="mt-2 text-slate-600">
-            View paid orders received from Stripe checkout.
+          <h1 className="text-3xl font-bold">Admin Orders</h1>
+          <p className="text-gray-600 mt-2">
+            View customer orders and uploaded artwork.
           </p>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          {loading ? (
-            <div className="text-slate-600">Loading orders...</div>
-          ) : error ? (
-            <div className="font-medium text-red-600">{error}</div>
-          ) : orders.length === 0 ? (
-            <div className="text-slate-600">No orders found.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 text-left">
-                    <th className="px-4 py-3 font-semibold text-slate-900">Order #</th>
-                    <th className="px-4 py-3 font-semibold text-slate-900">Customer</th>
-                    <th className="px-4 py-3 font-semibold text-slate-900">Email</th>
-                    <th className="px-4 py-3 font-semibold text-slate-900">Product</th>
-                    <th className="px-4 py-3 font-semibold text-slate-900">Qty</th>
-                    <th className="px-4 py-3 font-semibold text-slate-900">Total</th>
-                    <th className="px-4 py-3 font-semibold text-slate-900">Status</th>
-                    <th className="px-4 py-3 font-semibold text-slate-900">Artwork</th>
+        {loading && (
+          <div className="rounded-xl border border-gray-200 p-6 text-gray-700">
+            Loading orders...
+          </div>
+        )}
+
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-700">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && orders.length === 0 && (
+          <div className="rounded-xl border border-gray-200 p-6 text-gray-700">
+            No orders found.
+          </div>
+        )}
+
+        {!loading && !error && orders.length > 0 && (
+          <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
+            <table className="min-w-full bg-white">
+              <thead className="bg-gray-50">
+                <tr className="text-left text-sm text-gray-700">
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Product</th>
+                  <th className="px-4 py-3">Qty</th>
+                  <th className="px-4 py-3">Total</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Artwork</th>
+                  <th className="px-4 py-3">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((order, index) => (
+                  <tr
+                    key={order.id || index}
+                    className="border-t border-gray-200 text-sm"
+                  >
+                    <td className="px-4 py-3">
+                      {formatDate(
+                        order.created_at ||
+                          order.createdAt ||
+                          order.date ||
+                          order.order_date
+                      )}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {displayValue(order.customer_name || order.customerName)}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {displayValue(order.customer_email || order.customerEmail)}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {displayValue(order.product_name || order.productName)}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {displayValue(order.quantity)}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {order.total !== null &&
+                      order.total !== undefined &&
+                      order.total !== ""
+                        ? `$${Number(order.total).toFixed(2)}`
+                        : "Not provided"}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {displayValue(order.status, "Pending")}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {order.artwork_url || order.artworkUrl ? (
+                        <a
+                          href={order.artwork_url || order.artworkUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 underline"
+                        >
+                          View File
+                        </a>
+                      ) : (
+                        "No file"
+                      )}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {displayValue(order.notes, "None")}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {orders.map((order) => (
-                    <tr
-                      key={order.id || order.stripe_session_id}
-                      className="border-b border-slate-100"
-                    >
-                      <td className="px-4 py-3">{order.order_number || "-"}</td>
-                      <td className="px-4 py-3">{order.customer_name || "-"}</td>
-                      <td className="px-4 py-3">{order.customer_email || "-"}</td>
-                      <td className="px-4 py-3">{order.product_name || "-"}</td>
-                      <td className="px-4 py-3">{order.quantity || "-"}</td>
-                      <td className="px-4 py-3">
-                        {typeof order.total === "number"
-                          ? `$${order.total.toFixed(2)}`
-                          : "-"}
-                      </td>
-                      <td className="px-4 py-3">{order.status || "-"}</td>
-                      <td className="px-4 py-3">
-                        {order.artwork_url ? (
-                          <a
-                            href={order.artwork_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="font-medium text-blue-600 hover:underline"
-                          >
-                            View File
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </main>
   );
