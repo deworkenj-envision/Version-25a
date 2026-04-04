@@ -1,10 +1,41 @@
-import Stripe from "stripe";
 import { NextResponse } from "next/server";
+import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export async function POST(request) {
+export async function POST(req) {
   try {
+    const body = await req.json();
+
+    const {
+      productName,
+      quantity,
+      total,
+      customerName,
+      customerEmail,
+    } = body;
+
+    if (!productName) {
+      return NextResponse.json(
+        { error: "Missing product name" },
+        { status: 400 }
+      );
+    }
+
+    if (!quantity || Number(quantity) < 1) {
+      return NextResponse.json(
+        { error: "Invalid quantity" },
+        { status: 400 }
+      );
+    }
+
+    if (total === undefined || total === null || Number(total) <= 0) {
+      return NextResponse.json(
+        { error: "Invalid total" },
+        { status: 400 }
+      );
+    }
+
     if (!process.env.STRIPE_SECRET_KEY) {
       return NextResponse.json(
         { error: "Missing STRIPE_SECRET_KEY" },
@@ -19,64 +50,43 @@ export async function POST(request) {
       );
     }
 
-    const body = await request.json();
-
-    const orderId = String(body.orderId || "").trim();
-    const productName = String(body.productName || "Print Order").trim();
-    const quantity = Number(body.quantity || 1);
-    const price = Number(body.price || 0);
-
-    if (!orderId) {
-      return NextResponse.json(
-        { error: "Missing order ID" },
-        { status: 400 }
-      );
-    }
-
-    if (price <= 0) {
-      return NextResponse.json(
-        { error: "Invalid price amount" },
-        { status: 400 }
-      );
-    }
-
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-
     const session = await stripe.checkout.sessions.create({
-      mode: "payment",
       payment_method_types: ["card"],
+      mode: "payment",
+      customer_email: customerEmail || undefined,
       line_items: [
         {
           price_data: {
             currency: "usd",
             product_data: {
               name: productName,
+              description: customerName
+                ? `Order for ${customerName}`
+                : "Print order",
             },
-            unit_amount: Math.round(price * 100),
+            unit_amount: Math.round((Number(total) / Number(quantity)) * 100),
           },
-          quantity,
+          quantity: Number(quantity),
         },
       ],
-      success_url: `${siteUrl}/order-success?paid=true&order=${encodeURIComponent(orderId)}`,
-      cancel_url: `${siteUrl}/order?cancelled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order`,
       metadata: {
-        orderId,
-        productName,
+        product_name: productName || "",
+        quantity: String(quantity || ""),
+        total: String(total || ""),
+        customer_name: customerName || "",
+        customer_email: customerEmail || "",
       },
     });
 
-    if (!session.url) {
-      return NextResponse.json(
-        { error: "Stripe checkout URL was not returned." },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error("Stripe checkout route error:", error);
+    console.error("Checkout error:", error);
     return NextResponse.json(
-      { error: error.message || "Stripe checkout failed" },
+      {
+        error: error?.message || "Something went wrong creating checkout session",
+      },
       { status: 500 }
     );
   }
