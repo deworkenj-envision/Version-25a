@@ -53,6 +53,7 @@ export async function POST(req) {
 
       const orderNumber = `ORD-${Date.now()}`;
 
+      // 🔥 THIS IS THE KEY FIX
       const filePath =
         metadata.filePath ||
         metadata.artworkPath ||
@@ -60,23 +61,23 @@ export async function POST(req) {
 
       const fileName =
         metadata.fileName ||
-        (filePath ? filePath.split("/").pop() : "");
+        (filePath ? filePath.split("-").pop() : "");
 
       const artworkUrl =
-        metadata.artworkUrl ||
-        (filePath
+        filePath
           ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/order-artwork/${filePath}`
-          : "");
+          : "";
 
       const payload = {
         order_number: orderNumber,
         stripe_session_id: session.id,
-        payment_status: session.payment_status || "paid",
         status: "paid",
+
         customer_name:
           metadata.customerName || session.customer_details?.name || "",
         customer_email:
           metadata.customerEmail || session.customer_details?.email || "",
+
         product_name: metadata.productName || "",
         size: metadata.size || "",
         paper: metadata.paper || "",
@@ -85,13 +86,11 @@ export async function POST(req) {
         quantity: Number(metadata.quantity || 0),
 
         file_name: fileName,
-        file_path: filePath,
         artwork_url: artworkUrl,
-        artwork_path: metadata.artworkPath || "",
 
         notes: metadata.notes || "",
-        print_price: Number(metadata.printPrice || 0),
-        shipping_price: Number(metadata.shippingPrice || 0),
+        shipping: Number(metadata.shippingPrice || 0),
+        subtotal: Number(metadata.printPrice || 0),
         total: Number(metadata.total || 0),
       };
 
@@ -102,9 +101,9 @@ export async function POST(req) {
         });
 
       if (error) {
-        console.error("Supabase order upsert error:", error);
+        console.error("Supabase error:", error);
         return NextResponse.json(
-          { error: "Failed to save order to database" },
+          { error: error.message },
           { status: 500 }
         );
       }
@@ -114,7 +113,7 @@ export async function POST(req) {
   } catch (error) {
     console.error("Webhook processing error:", error);
     return NextResponse.json(
-      { error: error.message || "Webhook processing failed" },
+      { error: error.message },
       { status: 500 }
     );
   }
