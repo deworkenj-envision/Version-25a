@@ -3,6 +3,12 @@ import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+function getFileNameFromPath(path) {
+  if (!path) return "";
+  const parts = String(path).split("/");
+  return parts[parts.length - 1] || "";
+}
+
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -61,6 +67,10 @@ export async function POST(req) {
       productData.description = notes.trim();
     }
 
+    const safeArtworkPath = artworkPath || "";
+    const safeArtworkUrl = artworkUrl || "";
+    const derivedFileName = getFileNameFromPath(safeArtworkPath);
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -81,8 +91,15 @@ export async function POST(req) {
         total: String(total || ""),
         customerName: customerName || "",
         customerEmail: customerEmail || "",
-        artworkUrl: artworkUrl || "",
-        artworkPath: artworkPath || "",
+
+        // new names
+        artworkUrl: safeArtworkUrl,
+        artworkPath: safeArtworkPath,
+
+        // legacy names for older webhook code
+        fileName: derivedFileName,
+        filePath: safeArtworkPath,
+
         notes: notes || "",
       },
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order/success`,

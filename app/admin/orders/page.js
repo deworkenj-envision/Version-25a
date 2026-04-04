@@ -57,17 +57,25 @@ export default function AdminOrdersPage() {
   }
 
   function getArtworkLink(order) {
-    const directUrl = order.artwork_url || order.artworkUrl;
+    const directUrl =
+      order.artwork_url ||
+      order.artworkUrl;
+
     if (directUrl && String(directUrl).trim() !== "") {
       return directUrl;
     }
 
-    const artworkPath = order.artwork_path || order.artworkPath;
-    if (artworkPath && String(artworkPath).trim() !== "") {
+    const pathValue =
+      order.artwork_path ||
+      order.artworkPath ||
+      order.file_path ||
+      order.filePath;
+
+    if (pathValue && String(pathValue).trim() !== "") {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       if (!supabaseUrl) return null;
 
-      return `${supabaseUrl}/storage/v1/object/public/order-artwork/${artworkPath}`;
+      return `${supabaseUrl}/storage/v1/object/public/order-artwork/${pathValue}`;
     }
 
     return null;

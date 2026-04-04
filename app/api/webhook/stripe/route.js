@@ -53,6 +53,10 @@ export async function POST(req) {
 
       const orderNumber = `ORD-${Date.now()}`;
 
+      const filePath = metadata.filePath || metadata.artworkPath || "";
+      const fileName = metadata.fileName || (filePath ? filePath.split("/").pop() : "");
+      const artworkUrl = metadata.artworkUrl || "";
+
       const payload = {
         order_number: orderNumber,
         stripe_session_id: session.id,
@@ -68,8 +72,15 @@ export async function POST(req) {
         finish: metadata.finish || "",
         sides: metadata.sides || "",
         quantity: Number(metadata.quantity || 0),
-        artwork_url: metadata.artworkUrl || "",
+
+        // keep legacy columns populated
+        file_name: fileName,
+        file_path: filePath,
+
+        // keep newer columns populated if they exist in your table
+        artwork_url: artworkUrl,
         artwork_path: metadata.artworkPath || "",
+
         notes: metadata.notes || "",
         print_price: Number(metadata.printPrice || 0),
         shipping_price: Number(metadata.shippingPrice || 0),
