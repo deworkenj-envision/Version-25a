@@ -153,7 +153,12 @@ export default function OrdersPage() {
         body: formData,
       });
 
-      const data = await response.json();
+      let data = {};
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
 
       if (!response.ok) {
         setUploadError(data.error || "Failed to upload artwork.");
@@ -164,7 +169,9 @@ export default function OrdersPage() {
 
       setStoredFilePath(data.publicUrl || data.filePath || "");
       setFileName(data.fileName || file.name);
-      setUploadMessage(`Artwork uploaded successfully: ${data.fileName || file.name}`);
+      setUploadMessage(
+        `Artwork uploaded successfully: ${data.fileName || file.name}`
+      );
     } catch (error) {
       console.error(error);
       setUploadError("Something went wrong while uploading the artwork.");
@@ -194,14 +201,12 @@ export default function OrdersPage() {
     try {
       setSubmitting(true);
 
-      const orderResponse = await fetch("/api/orders", {
+      const checkoutResponse = await fetch("/api/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          customerName: contactName,
-          customerEmail: email,
           productName: selectedProduct,
           size,
           paper,
@@ -211,35 +216,20 @@ export default function OrdersPage() {
           fileName,
           filePath: storedFilePath,
           notes,
-          printPrice: calculatedPrice,
-          shippingPrice,
-          total: grandTotal,
-        }),
-      });
-
-      const orderData = await orderResponse.json();
-
-      if (!orderResponse.ok) {
-        alert(orderData.error || "Failed to create order.");
-        return;
-      }
-
-      const checkoutResponse = await fetch("/api/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderId: orderData?.order?.order_number || orderData?.order?.id || "",
-          productName: selectedProduct,
-          quantity: Number(quantity),
-          total: grandTotal,
+          total: Number(grandTotal),
+          printPrice: Number(calculatedPrice),
+          shippingPrice: Number(shippingPrice),
           customerName: contactName,
           customerEmail: email,
         }),
       });
 
-      const checkoutData = await checkoutResponse.json();
+      let checkoutData = {};
+      try {
+        checkoutData = await checkoutResponse.json();
+      } catch {
+        checkoutData = {};
+      }
 
       if (!checkoutResponse.ok) {
         alert(checkoutData.error || "Failed to start Stripe checkout.");
@@ -253,7 +243,7 @@ export default function OrdersPage() {
 
       window.location.href = checkoutData.url;
     } catch (error) {
-      console.error(error);
+      console.error("Checkout flow error:", error);
       alert("Something went wrong while starting checkout.");
     } finally {
       setSubmitting(false);
