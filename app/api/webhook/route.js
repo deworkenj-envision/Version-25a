@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { supabaseAdmin } from "../../lib/supabaseAdmin";
+import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -58,16 +58,20 @@ export async function POST(req) {
         stripe_session_id: session.id,
         payment_status: session.payment_status || "paid",
         status: "paid",
-        customer_name: metadata.customerName || session.customer_details?.name || "",
-        customer_email: metadata.customerEmail || session.customer_details?.email || "",
+        customer_name:
+          metadata.customerName || session.customer_details?.name || "",
+        customer_email:
+          metadata.customerEmail || session.customer_details?.email || "",
         product_name: metadata.productName || "",
         size: metadata.size || "",
         paper: metadata.paper || "",
         finish: metadata.finish || "",
         sides: metadata.sides || "",
         quantity: Number(metadata.quantity || 0),
-        file_name: metadata.fileName || "",
-        file_path: metadata.filePath || "",
+
+        artwork_url: metadata.artworkUrl || "",
+        artwork_path: metadata.artworkPath || "",
+
         notes: metadata.notes || "",
         print_price: Number(metadata.printPrice || 0),
         shipping_price: Number(metadata.shippingPrice || 0),
@@ -81,7 +85,7 @@ export async function POST(req) {
         });
 
       if (error) {
-        console.error("Supabase order insert error:", error);
+        console.error("Supabase order upsert error:", error);
         return NextResponse.json(
           { error: "Failed to save order to database" },
           { status: 500 }

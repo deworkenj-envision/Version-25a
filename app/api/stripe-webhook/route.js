@@ -5,19 +5,18 @@ import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
-  const body = await req.text();
   const signature = req.headers.get("stripe-signature");
-
-  if (!process.env.STRIPE_WEBHOOK_SECRET) {
-    return NextResponse.json(
-      { error: "Missing STRIPE_WEBHOOK_SECRET" },
-      { status: 500 }
-    );
-  }
 
   if (!process.env.STRIPE_SECRET_KEY) {
     return NextResponse.json(
       { error: "Missing STRIPE_SECRET_KEY" },
+      { status: 500 }
+    );
+  }
+
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    return NextResponse.json(
+      { error: "Missing STRIPE_WEBHOOK_SECRET" },
       { status: 500 }
     );
   }
@@ -32,15 +31,17 @@ export async function POST(req) {
   let event;
 
   try {
+    const body = await req.text();
+
     event = stripe.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-  } catch (err) {
-    console.error("Webhook signature verification failed:", err.message);
+  } catch (error) {
+    console.error("Webhook signature verification failed:", error);
     return NextResponse.json(
-      { error: `Webhook Error: ${err.message}` },
+      { error: `Webhook Error: ${error.message}` },
       { status: 400 }
     );
   }
@@ -48,47 +49,55 @@ export async function POST(req) {
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
-
       const metadata = session.metadata || {};
 
-      const productName = metadata.productName || "";
-      const quantity = metadata.quantity ? Number(metadata.quantity) : 0;
-      const total = metadata.total ? Number(metadata.total) : 0;
-      const customerName = metadata.customerName || "";
-      const customerEmail =
-        metadata.customerEmail || session.customer_details?.email || "";
-      const artworkUrl = metadata.artworkUrl || "";
-      const notes = metadata.notes || "";
+      const orderNumber = `ORD-${Date.now()}`;
 
-      const insertPayload = {
-        customer_name: customerName,
-        customer_email: customerEmail,
-        product_name: productName,
-        quantity,
-        total,
+      const payload = {
+        order_number: orderNumber,
+        stripe_session_id: session.id,
+        payment_status: session.payment_status || "paid",
         status: "paid",
-        artwork_url: artworkUrl,
-        notes,
+        customer_name:
+          metadata.customerName || session.customer_details?.name || "",
+        customer_email:
+          metadata.customerEmail || session.customer_details?.email || "",
+        product_name: metadata.productName || "",
+        size: metadata.size || "",
+        paper: metadata.paper || "",
+        finish: metadata.finish || "",
+        sides: metadata.sides || "",
+        quantity: Number(metadata.quantity || 0),
+
+        artwork_url: metadata.artworkUrl || "",
+        artwork_path: metadata.artworkPath || "",
+
+        notes: metadata.notes || "",
+        print_price: Number(metadata.printPrice || 0),
+        shipping_price: Number(metadata.shippingPrice || 0),
+        total: Number(metadata.total || 0),
       };
 
       const { error } = await supabaseAdmin
         .from("orders")
-        .insert([insertPayload]);
+        .upsert([payload], {
+          onConflict: "stripe_session_id",
+        });
 
       if (error) {
-        console.error("Supabase insert error from webhook:", error);
+        console.error("Supabase order upsert error:", error);
         return NextResponse.json(
-          { error: "Failed to save paid order" },
+          { error: "Failed to save order to database" },
           { status: 500 }
         );
       }
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
-  } catch (err) {
-    console.error("Stripe webhook handler error:", err);
+  } catch (error) {
+    console.error("Webhook processing error:", error);
     return NextResponse.json(
-      { error: "Webhook handler failed" },
+      { error: error.message || "Webhook processing failed" },
       { status: 500 }
     );
   }
