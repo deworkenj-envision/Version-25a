@@ -1,18 +1,32 @@
+import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { supabaseAdmin } from "../../lib/supabaseAdmin";
+import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export async function POST(request) {
-  const body = await request.text();
-  const signature = request.headers.get("stripe-signature");
-
-  if (!signature) {
-    return new Response("Missing stripe-signature header", { status: 400 });
-  }
+export async function POST(req) {
+  const body = await req.text();
+  const signature = req.headers.get("stripe-signature");
 
   if (!process.env.STRIPE_WEBHOOK_SECRET) {
-    return new Response("Missing STRIPE_WEBHOOK_SECRET", { status: 500 });
+    return NextResponse.json(
+      { error: "Missing STRIPE_WEBHOOK_SECRET" },
+      { status: 500 }
+    );
+  }
+
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json(
+      { error: "Missing STRIPE_SECRET_KEY" },
+      { status: 500 }
+    );
+  }
+
+  if (!signature) {
+    return NextResponse.json(
+      { error: "Missing Stripe signature" },
+      { status: 400 }
+    );
   }
 
   let event;
@@ -23,62 +37,59 @@ export async function POST(request) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-  } catch (error) {
-    console.error("Webhook signature verification failed:", error.message);
-    return new Response(`Webhook Error: ${error.message}`, { status: 400 });
+  } catch (err) {
+    console.error("Webhook signature verification failed:", err.message);
+    return NextResponse.json(
+      { error: `Webhook Error: ${err.message}` },
+      { status: 400 }
+    );
   }
 
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
-      const orderNumber = session.metadata?.orderId;
 
-      if (!orderNumber) {
-        return new Response("Missing orderId in metadata", { status: 400 });
-      }
+      const metadata = session.metadata || {};
 
-      const { data: existingOrder, error: findError } = await supabaseAdmin
+      const productName = metadata.productName || "";
+      const quantity = metadata.quantity ? Number(metadata.quantity) : 0;
+      const total = metadata.total ? Number(metadata.total) : 0;
+      const customerName = metadata.customerName || "";
+      const customerEmail =
+        metadata.customerEmail || session.customer_details?.email || "";
+      const artworkUrl = metadata.artworkUrl || "";
+      const notes = metadata.notes || "";
+
+      const insertPayload = {
+        customer_name: customerName,
+        customer_email: customerEmail,
+        product_name: productName,
+        quantity,
+        total,
+        status: "paid",
+        artwork_url: artworkUrl,
+        notes,
+      };
+
+      const { error } = await supabaseAdmin
         .from("orders")
-        .select("id, order_number, status")
-        .eq("order_number", orderNumber)
-        .maybeSingle();
+        .insert([insertPayload]);
 
-      if (findError) {
-        console.error("Order lookup failed:", findError);
-        return new Response("Order lookup failed", { status: 500 });
+      if (error) {
+        console.error("Supabase insert error from webhook:", error);
+        return NextResponse.json(
+          { error: "Failed to save paid order" },
+          { status: 500 }
+        );
       }
-
-      if (!existingOrder) {
-        console.error("No order found for:", orderNumber);
-        return new Response("No matching order found", { status: 404 });
-      }
-
-      const { data: updatedOrder, error: updateError } = await supabaseAdmin
-        .from("orders")
-        .update({
-          status: "paid",
-          stripe_session_id: session.id,
-        })
-        .eq("order_number", orderNumber)
-        .select("id, order_number, status")
-        .maybeSingle();
-
-      if (updateError) {
-        console.error("Order update failed:", updateError);
-        return new Response("Database update failed", { status: 500 });
-      }
-
-      if (!updatedOrder) {
-        console.error("Update returned no row for:", orderNumber);
-        return new Response("Update returned no row", { status: 500 });
-      }
-
-      return new Response(`PAID:${updatedOrder.order_number}`, { status: 200 });
     }
 
-    return new Response(`IGNORED:${event.type}`, { status: 200 });
-  } catch (error) {
-    console.error("Stripe webhook handler error:", error);
-    return new Response("Webhook handler failed", { status: 500 });
+    return NextResponse.json({ received: true }, { status: 200 });
+  } catch (err) {
+    console.error("Stripe webhook handler error:", err);
+    return NextResponse.json(
+      { error: "Webhook handler failed" },
+      { status: 500 }
+    );
   }
 }
