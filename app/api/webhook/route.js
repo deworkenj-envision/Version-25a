@@ -5,53 +5,96 @@ import { supabaseAdmin } from "../../lib/supabaseAdmin";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
+  const signature = req.headers.get("stripe-signature");
+
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json(
+      { error: "Missing STRIPE_SECRET_KEY" },
+      { status: 500 }
+    );
+  }
+
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    return NextResponse.json(
+      { error: "Missing STRIPE_WEBHOOK_SECRET" },
+      { status: 500 }
+    );
+  }
+
+  if (!signature) {
+    return NextResponse.json(
+      { error: "Missing Stripe signature" },
+      { status: 400 }
+    );
+  }
+
+  let event;
+
   try {
     const body = await req.text();
-    const signature = req.headers.get("stripe-signature");
 
-    if (!signature) {
-      return NextResponse.json(
-        { error: "Missing Stripe signature" },
-        { status: 400 }
-      );
-    }
-
-    const event = stripe.webhooks.constructEvent(
+    event = stripe.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
+  } catch (error) {
+    console.error("Webhook signature verification failed:", error);
+    return NextResponse.json(
+      { error: `Webhook Error: ${error.message}` },
+      { status: 400 }
+    );
+  }
 
-    // ✅ PAYMENT SUCCESS
+  try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
+      const metadata = session.metadata || {};
 
-      const orderId = session.metadata?.orderId;
+      const orderNumber = `ORD-${Date.now()}`;
 
-      if (!orderId) {
-        console.error("Missing orderId in metadata");
-        return NextResponse.json({ received: true });
-      }
+      const payload = {
+        order_number: orderNumber,
+        stripe_session_id: session.id,
+        payment_status: session.payment_status || "paid",
+        status: "paid",
+        customer_name: metadata.customerName || session.customer_details?.name || "",
+        customer_email: metadata.customerEmail || session.customer_details?.email || "",
+        product_name: metadata.productName || "",
+        size: metadata.size || "",
+        paper: metadata.paper || "",
+        finish: metadata.finish || "",
+        sides: metadata.sides || "",
+        quantity: Number(metadata.quantity || 0),
+        file_name: metadata.fileName || "",
+        file_path: metadata.filePath || "",
+        notes: metadata.notes || "",
+        print_price: Number(metadata.printPrice || 0),
+        shipping_price: Number(metadata.shippingPrice || 0),
+        total: Number(metadata.total || 0),
+      };
 
-      // ✅ UPDATE ORDER STATUS
       const { error } = await supabaseAdmin
         .from("orders")
-        .update({ status: "paid" })
-        .eq("order_number", orderId);
+        .upsert([payload], {
+          onConflict: "stripe_session_id",
+        });
 
       if (error) {
-        console.error("Failed to update order:", error);
-      } else {
-        console.log("Order marked as PAID:", orderId);
+        console.error("Supabase order insert error:", error);
+        return NextResponse.json(
+          { error: "Failed to save order to database" },
+          { status: 500 }
+        );
       }
     }
 
-    return NextResponse.json({ received: true });
-  } catch (err) {
-    console.error("Webhook error:", err.message);
+    return NextResponse.json({ received: true }, { status: 200 });
+  } catch (error) {
+    console.error("Webhook processing error:", error);
     return NextResponse.json(
-      { error: "Webhook failed" },
-      { status: 400 }
+      { error: error.message || "Webhook processing failed" },
+      { status: 500 }
     );
   }
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "../../../lib/supabaseAdmin";
+import { supabaseAdmin } from "../../lib/supabaseAdmin";
 
 export async function GET() {
   try {
@@ -9,18 +9,18 @@ export async function GET() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("GET /api/orders error:", error);
+      console.error("Supabase fetch orders error:", error);
       return NextResponse.json(
-        { error: error.message || "Failed to load orders" },
+        { error: "Failed to fetch orders" },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ orders: data || [] });
-  } catch (err) {
-    console.error("GET /api/orders unexpected error:", err);
+    return NextResponse.json({ orders: data || [] }, { status: 200 });
+  } catch (error) {
+    console.error("Orders GET error:", error);
     return NextResponse.json(
-      { error: "Unexpected server error" },
+      { error: "Something went wrong while fetching orders" },
       { status: 500 }
     );
   }

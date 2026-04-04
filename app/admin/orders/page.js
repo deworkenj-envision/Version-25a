@@ -7,113 +7,95 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function loadOrders() {
-    try {
-      setLoading(true);
-      setError("");
-
-      const res = await fetch("/api/orders", {
-        cache: "no-store",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data?.error || "Failed to load orders");
-      }
-
-      setOrders(Array.isArray(data.orders) ? data.orders : []);
-    } catch (err) {
-      console.error("Admin orders fetch error:", err);
-      setError(err.message || "Could not load orders.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
+    async function loadOrders() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch("/api/orders", {
+          cache: "no-store",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || "Failed to load orders.");
+          return;
+        }
+
+        setOrders(data.orders || []);
+      } catch (err) {
+        console.error(err);
+        setError("Something went wrong while loading orders.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
     loadOrders();
   }, []);
 
   return (
-    <main className="min-h-screen bg-white px-6 py-10">
-      <div className="mx-auto max-w-6xl">
+    <main className="min-h-screen bg-slate-50 px-6 py-10">
+      <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            Admin Orders
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            View all submitted print orders.
+          <div className="inline-flex items-center rounded-full bg-blue-100 px-4 py-1.5 text-sm font-semibold text-blue-700">
+            Admin
+          </div>
+          <h1 className="mt-4 text-3xl font-bold text-slate-900">Orders</h1>
+          <p className="mt-2 text-slate-600">
+            View paid orders received from Stripe checkout.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-6 py-4">
-            <button
-              onClick={loadOrders}
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-            >
-              Refresh Orders
-            </button>
-          </div>
-
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           {loading ? (
-            <div className="px-6 py-10 text-sm text-slate-600">
-              Loading orders...
-            </div>
+            <div className="text-slate-600">Loading orders...</div>
           ) : error ? (
-            <div className="px-6 py-10 text-sm text-red-600">{error}</div>
+            <div className="font-medium text-red-600">{error}</div>
           ) : orders.length === 0 ? (
-            <div className="px-6 py-10 text-sm text-slate-600">
-              No orders found.
-            </div>
+            <div className="text-slate-600">No orders found.</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-slate-50">
-                  <tr className="border-b border-slate-200">
-                    <th className="px-6 py-4 font-semibold text-slate-700">Order ID</th>
-                    <th className="px-6 py-4 font-semibold text-slate-700">Customer</th>
-                    <th className="px-6 py-4 font-semibold text-slate-700">Email</th>
-                    <th className="px-6 py-4 font-semibold text-slate-700">Product</th>
-                    <th className="px-6 py-4 font-semibold text-slate-700">Quantity</th>
-                    <th className="px-6 py-4 font-semibold text-slate-700">Total</th>
-                    <th className="px-6 py-4 font-semibold text-slate-700">Status</th>
-                    <th className="px-6 py-4 font-semibold text-slate-700">Created</th>
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left">
+                    <th className="px-4 py-3 font-semibold text-slate-900">Order #</th>
+                    <th className="px-4 py-3 font-semibold text-slate-900">Customer</th>
+                    <th className="px-4 py-3 font-semibold text-slate-900">Email</th>
+                    <th className="px-4 py-3 font-semibold text-slate-900">Product</th>
+                    <th className="px-4 py-3 font-semibold text-slate-900">Qty</th>
+                    <th className="px-4 py-3 font-semibold text-slate-900">Total</th>
+                    <th className="px-4 py-3 font-semibold text-slate-900">Status</th>
+                    <th className="px-4 py-3 font-semibold text-slate-900">Artwork</th>
                   </tr>
                 </thead>
                 <tbody>
                   {orders.map((order) => (
-                    <tr key={order.id} className="border-b border-slate-100">
-                      <td className="px-6 py-4 text-slate-900">{order.id}</td>
-                      <td className="px-6 py-4 text-slate-900">
-                        {order.customer_name || "-"}
+                    <tr key={order.id || order.stripe_session_id} className="border-b border-slate-100">
+                      <td className="px-4 py-3">{order.order_number || "-"}</td>
+                      <td className="px-4 py-3">{order.customer_name || "-"}</td>
+                      <td className="px-4 py-3">{order.customer_email || "-"}</td>
+                      <td className="px-4 py-3">{order.product_name || "-"}</td>
+                      <td className="px-4 py-3">{order.quantity || "-"}</td>
+                      <td className="px-4 py-3">
+                        {typeof order.total === "number" ? `$${order.total.toFixed(2)}` : "-"}
                       </td>
-                      <td className="px-6 py-4 text-slate-700">
-                        {order.customer_email || "-"}
-                      </td>
-                      <td className="px-6 py-4 text-slate-700">
-                        {order.product_name || "-"}
-                      </td>
-                      <td className="px-6 py-4 text-slate-700">
-                        {order.quantity ?? "-"}
-                      </td>
-                      <td className="px-6 py-4 text-slate-700">
-                        {typeof order.total === "number"
-                          ? `$${order.total.toFixed(2)}`
-                          : order.total
-                          ? `$${Number(order.total).toFixed(2)}`
-                          : "-"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                          {order.status || "pending"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-slate-700">
-                        {order.created_at
-                          ? new Date(order.created_at).toLocaleString()
-                          : "-"}
+                      <td className="px-4 py-3">{order.status || "-"}</td>
+                      <td className="px-4 py-3">
+                        {order.file_path ? (
+                          <a
+                            href={order.file_path}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-medium text-blue-600 hover:underline"
+                          >
+                            View File
+                          </a>
+                        ) : (
+                          "-"
+                        )}
                       </td>
                     </tr>
                   ))}
