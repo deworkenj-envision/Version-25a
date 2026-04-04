@@ -1,108 +1,128 @@
-import { supabaseAdmin } from "../../lib/supabaseAdmin";
-import StatusSelect from "./status-select";
+"use client";
 
-async function getOrders() {
-  const { data, error } = await supabaseAdmin
-    .from("orders")
-    .select("*")
-    .order("created_at", { ascending: false });
+import { useEffect, useState } from "react";
 
-  if (error) {
-    throw new Error(error.message || "Failed to load orders");
+export default function AdminOrdersPage() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function loadOrders() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await fetch("/api/orders", {
+        cache: "no-store",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to load orders");
+      }
+
+      setOrders(Array.isArray(data.orders) ? data.orders : []);
+    } catch (err) {
+      console.error("Admin orders fetch error:", err);
+      setError(err.message || "Could not load orders.");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  return data || [];
-}
-
-export default async function AdminOrdersPage() {
-  const allOrders = await getOrders();
-  const orders = allOrders.filter((order) => order.order_number);
+  useEffect(() => {
+    loadOrders();
+  }, []);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-900 md:px-10 lg:px-16">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-white px-6 py-10">
+      <div className="mx-auto max-w-6xl">
         <div className="mb-8">
-          <div className="inline-flex rounded-full bg-blue-100 px-4 py-1.5 text-sm font-semibold text-blue-700">
-            Admin
-          </div>
-          <h1 className="mt-4 text-4xl font-bold tracking-tight">
-            Orders Dashboard
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            Admin Orders
           </h1>
-          <p className="mt-3 text-lg text-slate-600">
-            Review the most recent customer print orders.
+          <p className="mt-2 text-sm text-slate-600">
+            View all submitted print orders.
           </p>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-100 text-slate-700">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Order #</th>
-                  <th className="px-4 py-3 font-semibold">Customer</th>
-                  <th className="px-4 py-3 font-semibold">Email</th>
-                  <th className="px-4 py-3 font-semibold">Product</th>
-                  <th className="px-4 py-3 font-semibold">Size</th>
-                  <th className="px-4 py-3 font-semibold">Paper</th>
-                  <th className="px-4 py-3 font-semibold">Finish</th>
-                  <th className="px-4 py-3 font-semibold">Qty</th>
-                  <th className="px-4 py-3 font-semibold">Total</th>
-                  <th className="px-4 py-3 font-semibold">Artwork</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
-                  <th className="px-4 py-3 font-semibold">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.length === 0 ? (
-                  <tr>
-                    <td colSpan="12" className="px-4 py-6 text-center text-slate-500">
-                      No print orders found yet.
-                    </td>
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-6 py-4">
+            <button
+              onClick={loadOrders}
+              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              Refresh Orders
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="px-6 py-10 text-sm text-slate-600">
+              Loading orders...
+            </div>
+          ) : error ? (
+            <div className="px-6 py-10 text-sm text-red-600">
+              {error}
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="px-6 py-10 text-sm text-slate-600">
+              No orders found.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-slate-50">
+                  <tr className="border-b border-slate-200">
+                    <th className="px-6 py-4 font-semibold text-slate-700">Order ID</th>
+                    <th className="px-6 py-4 font-semibold text-slate-700">Customer</th>
+                    <th className="px-6 py-4 font-semibold text-slate-700">Email</th>
+                    <th className="px-6 py-4 font-semibold text-slate-700">Product</th>
+                    <th className="px-6 py-4 font-semibold text-slate-700">Quantity</th>
+                    <th className="px-6 py-4 font-semibold text-slate-700">Total</th>
+                    <th className="px-6 py-4 font-semibold text-slate-700">Status</th>
+                    <th className="px-6 py-4 font-semibold text-slate-700">Created</th>
                   </tr>
-                ) : (
-                  orders.map((order) => (
-                    <tr key={order.id} className="border-t border-slate-200">
-                      <td className="px-4 py-3 font-semibold text-slate-900">
-                        {order.order_number}
+                </thead>
+                <tbody>
+                  {orders.map((order) => (
+                    <tr key={order.id} className="border-b border-slate-100">
+                      <td className="px-6 py-4 text-slate-900">{order.id}</td>
+                      <td className="px-6 py-4 text-slate-900">
+                        {order.customer_name || "-"}
                       </td>
-                      <td className="px-4 py-3">{order.customer_name}</td>
-                      <td className="px-4 py-3">{order.customer_email}</td>
-                      <td className="px-4 py-3">{order.product_name}</td>
-                      <td className="px-4 py-3">{order.size}</td>
-                      <td className="px-4 py-3">{order.paper}</td>
-                      <td className="px-4 py-3">{order.finish}</td>
-                      <td className="px-4 py-3">{order.quantity}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-900">
-                        {order.total != null ? `$${Number(order.total).toFixed(2)}` : "—"}
+                      <td className="px-6 py-4 text-slate-700">
+                        {order.customer_email || "-"}
                       </td>
-                      <td className="px-4 py-3">
-                        {order.artwork_url ? (
-                          <a
-                            href={order.artwork_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
-                          >
-                            View File
-                          </a>
-                        ) : (
-                          <span className="text-slate-400">No file</span>
-                        )}
+                      <td className="px-6 py-4 text-slate-700">
+                        {order.product_name || "-"}
                       </td>
-                      <td className="px-4 py-3">
-                        <StatusSelect id={order.id} currentStatus={order.status} />
+                      <td className="px-6 py-4 text-slate-700">
+                        {order.quantity ?? "-"}
                       </td>
-                      <td className="px-4 py-3 text-slate-500">
+                      <td className="px-6 py-4 text-slate-700">
+                        {typeof order.total === "number"
+                          ? `$${order.total.toFixed(2)}`
+                          : order.total
+                          ? `$${Number(order.total).toFixed(2)}`
+                          : "-"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                          {order.status || "pending"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-slate-700">
                         {order.created_at
                           ? new Date(order.created_at).toLocaleString()
-                          : "—"}
+                          : "-"}
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </main>
