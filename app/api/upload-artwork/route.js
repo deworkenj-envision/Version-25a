@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
 
 export async function POST(request) {
@@ -6,7 +7,10 @@ export async function POST(request) {
     const file = formData.get("file");
 
     if (!file) {
-      return Response.json({ error: "No file uploaded." }, { status: 400 });
+      return NextResponse.json(
+        { error: "No file uploaded." },
+        { status: 400 }
+      );
     }
 
     const bytes = await file.arrayBuffer();
@@ -15,29 +19,39 @@ export async function POST(request) {
     const safeName = file.name.replace(/\s+/g, "-");
     const filePath = `${Date.now()}-${safeName}`;
 
-    const { error } = await supabaseAdmin.storage
-      .from("order-artwork")
+    const bucket = "order-artwork";
+
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from(bucket)
       .upload(filePath, buffer, {
         contentType: file.type || "application/octet-stream",
         upsert: false,
       });
 
-    if (error) {
-      console.error("Supabase storage upload error:", error);
-      return Response.json({ error: "Upload failed." }, { status: 500 });
+    if (uploadError) {
+      console.error("Supabase storage upload error:", uploadError);
+      return NextResponse.json(
+        { error: uploadError.message || "Upload failed." },
+        { status: 500 }
+      );
     }
 
-    return Response.json(
+    const {
+      data: { publicUrl },
+    } = supabaseAdmin.storage.from(bucket).getPublicUrl(filePath);
+
+    return NextResponse.json(
       {
         success: true,
         filePath,
         fileName: file.name,
+        publicUrl,
       },
       { status: 200 }
     );
   } catch (error) {
     console.error("Upload artwork route error:", error);
-    return Response.json(
+    return NextResponse.json(
       { error: "Unexpected server error." },
       { status: 500 }
     );
