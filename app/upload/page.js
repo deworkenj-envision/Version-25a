@@ -55,7 +55,7 @@ const productOptions = [
   },
 ];
 
-export default function order-artworkworkworkPage() {
+export default function UploadPage() {
   const [selectedProduct, setSelectedProduct] = useState("Business Cards");
   const [quantity, setQuantity] = useState("500");
   const [fileName, setFileName] = useState("");
