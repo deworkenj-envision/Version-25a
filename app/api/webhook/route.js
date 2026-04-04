@@ -68,10 +68,8 @@ export async function POST(req) {
         finish: metadata.finish || "",
         sides: metadata.sides || "",
         quantity: Number(metadata.quantity || 0),
-
         artwork_url: metadata.artworkUrl || "",
         artwork_path: metadata.artworkPath || "",
-
         notes: metadata.notes || "",
         print_price: Number(metadata.printPrice || 0),
         shipping_price: Number(metadata.shippingPrice || 0),
