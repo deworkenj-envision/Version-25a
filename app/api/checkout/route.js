@@ -53,19 +53,12 @@ export async function POST(req) {
       );
     }
 
-    const descriptionParts = [];
-
-    if (customerName) descriptionParts.push(`Customer: ${customerName}`);
-    if (customerEmail) descriptionParts.push(`Email: ${customerEmail}`);
-    if (artworkPath) descriptionParts.push(`Artwork: ${artworkPath}`);
-    if (notes) descriptionParts.push(`Notes: ${notes}`);
-
     const productData = {
       name: productName,
     };
 
-    if (descriptionParts.length > 0) {
-      productData.description = descriptionParts.join(" | ");
+    if (notes && notes.trim() !== "") {
+      productData.description = notes.trim();
     }
 
     const session = await stripe.checkout.sessions.create({
