@@ -15,7 +15,7 @@ export async function POST(request) {
     const safeName = file.name.replace(/\s+/g, "-");
     const filePath = `${Date.now()}-${safeName}`;
 
-    const bucketName = "order-artwork";
+    const bucketName = "order-artworkworkworkwork";
 
     const { error } = await supabaseAdmin.storage
       .from(bucketName)

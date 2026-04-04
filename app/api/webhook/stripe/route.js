@@ -61,7 +61,7 @@ export async function POST(req) {
     const artworkUrl =
       metadata.artworkUrl ||
       (filePath && process.env.NEXT_PUBLIC_SUPABASE_URL
-        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/order-artwork/${filePath}`
+        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/order-artworkworkworkwork/${filePath}`
         : "");
 
     const payload = {

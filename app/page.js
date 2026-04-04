@@ -176,7 +176,7 @@ export default function HomePage() {
           <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
             <h3 className="text-2xl font-bold text-slate-950">Easy Ordering</h3>
             <p className="mt-4 text-lg leading-7 text-slate-600">
-              Simple product selection, fast uploads, and a smooth checkout
+              Simple product selection, fast order-artworkworkwork, and a smooth checkout
               experience.
             </p>
           </div>
