@@ -53,9 +53,20 @@ export async function POST(req) {
 
       const orderNumber = `ORD-${Date.now()}`;
 
-      const filePath = metadata.filePath || metadata.artworkPath || "";
-      const fileName = metadata.fileName || (filePath ? filePath.split("/").pop() : "");
-      const artworkUrl = metadata.artworkUrl || "";
+      const filePath =
+        metadata.filePath ||
+        metadata.artworkPath ||
+        "";
+
+      const fileName =
+        metadata.fileName ||
+        (filePath ? filePath.split("/").pop() : "");
+
+      const artworkUrl =
+        metadata.artworkUrl ||
+        (filePath
+          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/order-artwork/${filePath}`
+          : "");
 
       const payload = {
         order_number: orderNumber,
@@ -73,11 +84,8 @@ export async function POST(req) {
         sides: metadata.sides || "",
         quantity: Number(metadata.quantity || 0),
 
-        // keep legacy columns populated
         file_name: fileName,
         file_path: filePath,
-
-        // keep newer columns populated if they exist in your table
         artwork_url: artworkUrl,
         artwork_path: metadata.artworkPath || "",
 
