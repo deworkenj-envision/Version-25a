@@ -15,41 +15,30 @@ export async function POST(request) {
     const safeName = file.name.replace(/\s+/g, "-");
     const filePath = `${Date.now()}-${safeName}`;
 
-    const bucketName = "order-artworkworkworkwork";
-
     const { error } = await supabaseAdmin.storage
-      .from(bucketName)
+      .from("order-artwork") // ✅ CORRECT BUCKET
       .upload(filePath, buffer, {
         contentType: file.type || "application/octet-stream",
         upsert: false,
       });
 
     if (error) {
-      console.error("Supabase storage upload error:", error);
-      return Response.json(
-        { error: `Upload failed: ${error.message}` },
-        { status: 500 }
-      );
+      console.error("Upload error:", error);
+      return Response.json({ error: error.message }, { status: 500 });
     }
 
-    const { data: publicUrlData } = supabaseAdmin.storage
-      .from(bucketName)
+    const { data } = supabaseAdmin.storage
+      .from("order-artwork")
       .getPublicUrl(filePath);
 
-    return Response.json(
-      {
-        success: true,
-        filePath,
-        fileName: file.name,
-        publicUrl: publicUrlData?.publicUrl || null,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Upload route error:", error);
-    return Response.json(
-      { error: "Server error during upload." },
-      { status: 500 }
-    );
+    return Response.json({
+      success: true,
+      filePath,
+      fileName: file.name,
+      publicUrl: data.publicUrl,
+    });
+  } catch (err) {
+    console.error(err);
+    return Response.json({ error: "Upload failed" }, { status: 500 });
   }
 }

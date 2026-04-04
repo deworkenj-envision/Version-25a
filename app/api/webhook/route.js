@@ -5,107 +5,57 @@ import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
+  const body = await req.text();
   const signature = req.headers.get("stripe-signature");
 
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return NextResponse.json(
-      { error: "Missing STRIPE_SECRET_KEY" },
-      { status: 500 }
-    );
-  }
-
-  if (!process.env.STRIPE_WEBHOOK_SECRET) {
-    return NextResponse.json(
-      { error: "Missing STRIPE_WEBHOOK_SECRET" },
-      { status: 500 }
-    );
-  }
-
   if (!signature) {
-    return NextResponse.json(
-      { error: "Missing Stripe signature" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing stripe signature" }, { status: 400 });
   }
 
   let event;
 
   try {
-    const rawBody = await req.text();
-
     event = stripe.webhooks.constructEvent(
-      rawBody,
+      body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-  } catch (error) {
-    console.error("Webhook signature verification failed:", error);
-    return NextResponse.json(
-      { error: `Webhook Error: ${error.message}` },
-      { status: 400 }
-    );
+  } catch (err) {
+    console.error("Stripe webhook signature error:", err.message);
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
   try {
-    if (event.type !== "checkout.session.completed") {
-      return NextResponse.json({ received: true }, { status: 200 });
-    }
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
 
-    const session = event.data.object;
-    const metadata = session.metadata || {};
+      const metadata = session.metadata || {};
 
-    const filePath = metadata.filePath || metadata.artworkPath || "";
-    const fileName =
-      metadata.fileName || (filePath ? filePath.split("/").pop() : "");
+      const orderPayload = {
+        stripe_session_id: session.id || null,
+        customer_name: metadata.customerName || session.customer_details?.name || "",
+        customer_email: metadata.customerEmail || session.customer_details?.email || "",
+        product_name: metadata.productName || "",
+        quantity: metadata.quantity ? Number(metadata.quantity) : 1,
+        total: session.amount_total ? session.amount_total / 100 : 0,
+        artwork_url: metadata.artworkUrl || "",
+        status: "paid",
+      };
 
-    const artworkUrl =
-      metadata.artworkUrl ||
-      (filePath && process.env.NEXT_PUBLIC_SUPABASE_URL
-        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/order-artworkworkworkwork/${filePath}`
-        : "");
+      const { error } = await supabaseAdmin.from("orders").insert([orderPayload]);
 
-    const payload = {
-      stripe_session_id: session.id,
-      status: "paid",
-      customer_name:
-        metadata.customerName || session.customer_details?.name || "",
-      customer_email:
-        metadata.customerEmail || session.customer_details?.email || "",
-      product_name: metadata.productName || "",
-      quantity: Number(metadata.quantity || 0),
-      file_name: fileName,
-      artwork_url: artworkUrl,
-      notes: metadata.notes || "",
-      total: Number(metadata.total || 0),
-    };
-
-    console.log("Webhook payload being inserted:", payload);
-
-    const { error } = await supabaseAdmin
-      .from("orders")
-      .insert([payload]);
-
-    if (error) {
-      console.error("Supabase insert error:", error);
-      return NextResponse.json(
-        {
-          error: "Supabase insert failed",
-          details: error.message,
-          payload,
-        },
-        { status: 500 }
-      );
+      if (error) {
+        console.error("Failed to save order to database:", error);
+        return NextResponse.json(
+          { error: "Failed to save order to database" },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
-  } catch (error) {
-    console.error("Webhook processing error:", error);
-    return NextResponse.json(
-      {
-        error: "Webhook processing failed",
-        details: error.message,
-      },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Webhook processing error:", err);
+    return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }
 }
