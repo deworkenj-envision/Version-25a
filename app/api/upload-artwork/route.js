@@ -1,4 +1,7 @@
-import { supabaseAdmin } from "../../../lib/supabaseAdmin";
+import { NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
+const BUCKET = "order-artwork";
 
 export async function POST(request) {
   try {
@@ -6,7 +9,10 @@ export async function POST(request) {
     const file = formData.get("file");
 
     if (!file) {
-      return Response.json({ error: "No file uploaded." }, { status: 400 });
+      return NextResponse.json(
+        { error: "No file uploaded." },
+        { status: 400 }
+      );
     }
 
     const bytes = await file.arrayBuffer();
@@ -15,30 +21,43 @@ export async function POST(request) {
     const safeName = file.name.replace(/\s+/g, "-");
     const filePath = `${Date.now()}-${safeName}`;
 
-    const { error } = await supabaseAdmin.storage
-      .from("order-artwork") // ✅ CORRECT BUCKET
+    const { data, error } = await supabaseAdmin.storage
+      .from(BUCKET)
       .upload(filePath, buffer, {
         contentType: file.type || "application/octet-stream",
         upsert: false,
       });
 
     if (error) {
-      console.error("Upload error:", error);
-      return Response.json({ error: error.message }, { status: 500 });
+      console.error("Supabase storage upload error:", error);
+      return NextResponse.json(
+        {
+          error: error.message || "Upload failed.",
+          details: error,
+        },
+        { status: 500 }
+      );
     }
 
-    const { data } = supabaseAdmin.storage
-      .from("order-artwork")
+    const { data: publicUrlData } = supabaseAdmin.storage
+      .from(BUCKET)
       .getPublicUrl(filePath);
 
-    return Response.json({
-      success: true,
-      filePath,
-      fileName: file.name,
-      publicUrl: data.publicUrl,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        filePath,
+        fileName: file.name,
+        publicUrl: publicUrlData?.publicUrl || null,
+        storageData: data || null,
+      },
+      { status: 200 }
+    );
   } catch (err) {
-    console.error(err);
-    return Response.json({ error: "Upload failed" }, { status: 500 });
+    console.error("Upload route crash:", err);
+    return NextResponse.json(
+      { error: err.message || "Server error." },
+      { status: 500 }
+    );
   }
 }
