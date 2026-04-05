@@ -1,59 +1,30 @@
-"use client";
+export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { supabaseAdmin } from "../../lib/supabaseAdmin";
 
-export default function OrderSuccessPage() {
-  const searchParams = useSearchParams();
-  const sessionId = searchParams.get("session_id");
+async function getOrderBySessionId(sessionId) {
+  if (!sessionId) return null;
 
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data, error } = await supabaseAdmin
+    .from("orders")
+    .select("*")
+    .eq("stripe_session_id", sessionId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  useEffect(() => {
-    let isCancelled = false;
+  if (error) {
+    console.error("Error loading order by session id:", error);
+    return null;
+  }
 
-    async function loadOrder() {
-      if (!sessionId) {
-        setLoading(false);
-        return;
-      }
+  return data;
+}
 
-      try {
-        const res = await fetch(
-          `/api/order-by-session?session_id=${encodeURIComponent(sessionId)}`,
-          {
-            method: "GET",
-            cache: "no-store",
-          }
-        );
-
-        const data = await res.json();
-
-        if (!isCancelled) {
-          if (data?.found && data?.order) {
-            setOrder(data.order);
-          } else {
-            setOrder(null);
-          }
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Failed to load order details:", error);
-        if (!isCancelled) {
-          setOrder(null);
-          setLoading(false);
-        }
-      }
-    }
-
-    loadOrder();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [sessionId]);
+export default async function OrderSuccessPage({ searchParams }) {
+  const sessionId = searchParams?.session_id || "";
+  const order = await getOrderBySessionId(sessionId);
 
   return (
     <main className="min-h-screen bg-[#f7f7f8] px-6 py-10">
@@ -67,9 +38,7 @@ export default function OrderSuccessPage() {
         </h1>
 
         <p className="mb-8 text-xl text-slate-600">
-          {loading
-            ? "Loading your order details..."
-            : order
+          {order
             ? "Thank you. Your payment was successful and your order details are below."
             : "We could not load the full order details, but your request was submitted."}
         </p>
@@ -78,44 +47,32 @@ export default function OrderSuccessPage() {
           <div className="grid grid-cols-2 gap-y-5 text-lg">
             <div className="text-slate-500">Order Number</div>
             <div className="text-right font-semibold text-slate-900">
-              {loading
-                ? "Loading..."
-                : order?.order_number || order?.id || "Unavailable"}
+              {order?.order_number || order?.id || "Unavailable"}
             </div>
 
             <div className="text-slate-500">Product</div>
             <div className="text-right font-semibold text-slate-900">
-              {loading
-                ? "Loading..."
-                : order?.product_name || "Unavailable"}
+              {order?.product_name || "Unavailable"}
             </div>
 
             <div className="text-slate-500">Quantity</div>
             <div className="text-right font-semibold text-slate-900">
-              {loading
-                ? "Loading..."
-                : order?.quantity ?? "Unavailable"}
+              {order?.quantity ?? "Unavailable"}
             </div>
 
             <div className="text-slate-500">Paper</div>
             <div className="text-right font-semibold text-slate-900">
-              {loading
-                ? "Loading..."
-                : order?.paper || "Unavailable"}
+              {order?.paper || "Unavailable"}
             </div>
 
             <div className="text-slate-500">Finish</div>
             <div className="text-right font-semibold text-slate-900">
-              {loading
-                ? "Loading..."
-                : order?.finish || "Unavailable"}
+              {order?.finish || "Unavailable"}
             </div>
 
             <div className="text-slate-500">Status</div>
             <div className="text-right font-semibold text-amber-600">
-              {loading
-                ? "Loading..."
-                : order?.status || "Paid"}
+              {order?.status || "Paid"}
             </div>
           </div>
         </div>
