@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 
 const ALLOWED_STATUSES = [
   "pending",
@@ -12,7 +12,7 @@ const ALLOWED_STATUSES = [
 
 export async function PATCH(request, { params }) {
   try {
-    const id = params.id; // ✅ FIXED (no await)
+    const id = params.id;
 
     const body = await request.json();
     const status = String(body?.status || "").toLowerCase().trim();
@@ -41,7 +41,7 @@ export async function PATCH(request, { params }) {
     if (error) {
       console.error("Supabase update error:", error);
       return NextResponse.json(
-        { error: error.message },
+        { error: error.message || "Failed to update order status" },
         { status: 500 }
       );
     }
