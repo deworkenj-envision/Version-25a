@@ -1,12 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-const STATUS_OPTIONS = ["paid", "printing", "shipped", "cancelled"];
+const STATUS_OPTIONS = [
+  "pending",
+  "paid",
+  "printing",
+  "shipped",
+  "completed",
+  "cancelled",
+];
+
+function formatMoney(value) {
+  const num = Number(value || 0);
+  return `$${num.toFixed(2)}`;
+}
 
 function formatDate(value) {
   if (!value) return "—";
-
   try {
     return new Date(value).toLocaleString();
   } catch {
@@ -14,124 +25,22 @@ function formatDate(value) {
   }
 }
 
-function formatMoney(value) {
-  const amount = Number(value || 0);
-  return `$${amount.toFixed(2)}`;
-}
-
-function getStatusBadgeClass(status) {
-  const value = String(status || "").toLowerCase();
-
-  if (value === "paid") {
-    return "bg-green-50 text-green-700 ring-1 ring-green-200";
-  }
-
-  if (value === "printing") {
-    return "bg-blue-50 text-blue-700 ring-1 ring-blue-200";
-  }
-
-  if (value === "shipped") {
-    return "bg-purple-50 text-purple-700 ring-1 ring-purple-200";
-  }
-
-  if (value === "cancelled") {
-    return "bg-red-50 text-red-700 ring-1 ring-red-200";
-  }
-
-  return "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
-}
-
-export default function AdminPage() {
+export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [statusValues, setStatusValues] = useState({});
-  const [updatingId, setUpdatingId] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [savingId, setSavingId] = useState(null);
 
   async function loadOrders() {
     try {
       setLoading(true);
-      setError("");
-      setSuccessMessage("");
-
-      const response = await fetch("/api/orders", {
-        method: "GET",
-        cache: "no-store",
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to load orders.");
-      }
-
-      const nextOrders = Array.isArray(data.orders) ? data.orders : [];
-      setOrders(nextOrders);
-
-      const nextStatusValues = {};
-      nextOrders.forEach((order) => {
-        const rowKey = order?.id || order?.order_number;
-        if (rowKey) {
-          nextStatusValues[rowKey] = String(
-            order.status || "paid"
-          ).toLowerCase();
-        }
-      });
-      setStatusValues(nextStatusValues);
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to load orders.");
+      const res = await fetch("/api/orders", { cache: "no-store" });
+      const data = await res.json();
+      setOrders(Array.isArray(data?.orders) ? data.orders : []);
+    } catch (error) {
+      console.error("Failed to load orders:", error);
+      setOrders([]);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function updateOrderStatus(rowKey) {
-    try {
-      const nextStatus = statusValues[rowKey];
-
-      if (!rowKey || !nextStatus) {
-        setError("Missing order id");
-        return;
-      }
-
-      setUpdatingId(rowKey);
-      setError("");
-      setSuccessMessage("");
-
-      const response = await fetch(
-        `/api/orders/${encodeURIComponent(rowKey)}/status`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status: nextStatus }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update order status.");
-      }
-
-      setOrders((current) =>
-        current.map((order) => {
-          const currentKey = order.id || order.order_number;
-          return currentKey === rowKey
-            ? { ...order, status: nextStatus }
-            : order;
-        })
-      );
-
-      setSuccessMessage("Order status updated.");
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to update order status.");
-    } finally {
-      setUpdatingId("");
     }
   }
 
@@ -139,266 +48,191 @@ export default function AdminPage() {
     loadOrders();
   }, []);
 
-  const metrics = useMemo(() => {
-    const awaitingPayment = orders.filter(
-      (order) => String(order.status || "").toLowerCase() === "pending_payment"
-    ).length;
+  async function updateStatus(orderId, status) {
+    try {
+      setSavingId(orderId);
 
-    const inProduction = orders.filter((order) =>
-      ["paid", "processing", "printing"].includes(
-        String(order.status || "").toLowerCase()
-      )
-    ).length;
+      const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
 
-    const needsFollowUp = orders.filter(
-      (order) =>
-        !order.customer_email ||
-        !order.artwork_url ||
-        String(order.status || "").toLowerCase().includes("issue")
-    ).length;
+      if (!res.ok) {
+        throw new Error("Failed to update status");
+      }
 
-    return {
-      total: orders.length,
-      awaitingPayment,
-      inProduction,
-      needsFollowUp,
-    };
-  }, [orders]);
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId ? { ...order, status } : order
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update order status.");
+    } finally {
+      setSavingId(null);
+    }
+  }
 
   return (
-    <main className="bg-slate-50 text-slate-900">
-      <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-[1900px] px-4 py-12 sm:px-6 lg:px-8 xl:px-10 lg:py-16">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center rounded-full bg-blue-100 px-4 py-1.5 text-sm font-semibold text-blue-700">
-              Admin Dashboard
-            </div>
-            <h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">
-              Order management
-            </h1>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
-              Review incoming print orders, monitor payment status, download
-              artwork, and manage production from one place.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-[1900px] px-4 py-10 sm:px-6 lg:px-8 xl:px-10 lg:py-14">
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-              Total
-            </div>
-            <div className="mt-3 text-4xl font-bold text-slate-900">
-              {metrics.total}
-            </div>
-            <div className="mt-2 text-sm text-slate-500">All orders</div>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-              Awaiting Payment
-            </div>
-            <div className="mt-3 text-4xl font-bold text-slate-900">
-              {metrics.awaitingPayment}
-            </div>
-            <div className="mt-2 text-sm text-slate-500">
-              Orders not yet paid
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-              In Production
-            </div>
-            <div className="mt-3 text-4xl font-bold text-slate-900">
-              {metrics.inProduction}
-            </div>
-            <div className="mt-2 text-sm text-slate-500">
-              Paid or being processed
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-              Needs Follow-Up
-            </div>
-            <div className="mt-3 text-4xl font-bold text-slate-900">
-              {metrics.needsFollowUp}
-            </div>
-            <div className="mt-2 text-sm text-slate-500">
-              Missing info or issue flagged
-            </div>
-          </div>
+    <main className="min-h-screen bg-slate-50 px-4 py-6 md:px-6">
+      <div className="mx-auto max-w-[1700px]">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900">Recent Orders</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            View artwork, track payments, and update order status.
+          </p>
         </div>
 
-        <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-                Live Orders
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <div className="min-w-[1450px]">
+              <div className="grid grid-cols-[170px_290px_220px_110px_110px_150px_210px_340px_180px] gap-4 border-b border-slate-200 bg-slate-100 px-6 py-4 text-sm font-semibold text-slate-700">
+                <div>Order</div>
+                <div>Customer</div>
+                <div>Product</div>
+                <div>Quantity</div>
+                <div>Total</div>
+                <div>Status</div>
+                <div>Placed</div>
+                <div>Artwork</div>
+                <div>Update</div>
               </div>
-              <h2 className="mt-2 text-2xl font-bold text-slate-900">
-                Recent order queue
-              </h2>
-            </div>
 
-            <button
-              type="button"
-              onClick={loadOrders}
-              className="shrink-0 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              Refresh
-            </button>
-          </div>
+              {loading ? (
+                <div className="px-6 py-10 text-sm text-slate-500">
+                  Loading orders...
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="px-6 py-10 text-sm text-slate-500">
+                  No orders found.
+                </div>
+              ) : (
+                <div>
+                  {orders.map((order) => {
+                    const artworkUrl =
+                      order.artwork_url ||
+                      order.artworkUrl ||
+                      order.file_url ||
+                      order.fileUrl ||
+                      "";
 
-          {successMessage ? (
-            <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-green-700">
-              {successMessage}
-            </div>
-          ) : null}
+                    const artworkName =
+                      order.artwork_name ||
+                      order.artworkName ||
+                      order.file_name ||
+                      order.fileName ||
+                      (artworkUrl ? artworkUrl.split("/").pop() : "No artwork");
 
-          {loading ? (
-            <div className="mt-6 rounded-2xl bg-slate-50 p-6 text-slate-600">
-              Loading orders...
-            </div>
-          ) : error ? (
-            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">
-              {error}
-            </div>
-          ) : orders.length === 0 ? (
-            <div className="mt-6 rounded-2xl bg-slate-50 p-6 text-slate-600">
-              No orders found yet.
-            </div>
-          ) : (
-            <div className="-mx-6 mt-6 overflow-x-auto sm:-mx-8 lg:-mx-10 xl:-mx-12">
-              <div className="inline-block min-w-full align-middle px-6 sm:px-8 lg:px-10 xl:px-12">
-                <table className="min-w-[1980px] border-separate border-spacing-y-3">
-                  <thead>
-                    <tr className="text-left text-sm text-slate-500">
-                      <th className="px-6 py-2 whitespace-nowrap">Order</th>
-                      <th className="px-6 py-2 whitespace-nowrap">Customer</th>
-                      <th className="px-6 py-2 whitespace-nowrap">Product</th>
-                      <th className="px-6 py-2 whitespace-nowrap">Quantity</th>
-                      <th className="px-6 py-2 whitespace-nowrap">Total</th>
-                      <th className="px-6 py-2 whitespace-nowrap">Status</th>
-                      <th className="px-6 py-2 whitespace-nowrap">Placed</th>
-                      <th className="px-6 py-2 whitespace-nowrap">Artwork</th>
-                      <th className="px-6 py-2 whitespace-nowrap">Update</th>
-                    </tr>
-                  </thead>
+                    const customerName =
+                      order.customer_name ||
+                      order.customerName ||
+                      "Customer";
 
-                  <tbody>
-                    {orders.map((order) => {
-                      const rowKey = order.id || order.order_number;
-                      const currentStatus =
-                        statusValues[rowKey] ||
-                        String(order.status || "paid").toLowerCase();
+                    const customerEmail =
+                      order.customer_email ||
+                      order.customerEmail ||
+                      "—";
 
-                      return (
-                        <tr
-                          key={rowKey}
-                          className="bg-slate-50 text-sm text-slate-700"
-                        >
-                          <td className="rounded-l-2xl px-6 py-5 font-semibold text-slate-900 whitespace-nowrap">
-                            {order.order_number || "—"}
-                          </td>
+                    const orderNumber =
+                      order.order_number ||
+                      order.orderNumber ||
+                      order.id ||
+                      "—";
 
-                          <td className="px-6 py-5 min-w-[300px]">
-                            <div className="font-medium text-slate-900 break-words">
-                              {order.customer_name || "—"}
-                            </div>
-                            <div className="text-slate-500 break-all">
-                              {order.customer_email || "—"}
-                            </div>
-                          </td>
+                    const status = (order.status || "pending").toLowerCase();
 
-                          <td className="px-6 py-5 min-w-[240px] break-words">
-                            {order.product_name || "—"}
-                          </td>
+                    return (
+                      <div
+                        key={order.id}
+                        className="grid grid-cols-[170px_290px_220px_110px_110px_150px_210px_340px_180px] gap-4 border-b border-slate-100 px-6 py-4 text-sm text-slate-700"
+                      >
+                        <div className="flex items-center font-semibold text-slate-900">
+                          {orderNumber}
+                        </div>
 
-                          <td className="px-6 py-5 whitespace-nowrap">
-                            {order.quantity || "—"}
-                          </td>
+                        <div className="flex min-w-0 flex-col justify-center">
+                          <span className="truncate font-semibold text-slate-900">
+                            {customerName}
+                          </span>
+                          <span className="truncate text-slate-500">
+                            {customerEmail}
+                          </span>
+                        </div>
 
-                          <td className="px-6 py-5 whitespace-nowrap">
-                            {formatMoney(order.total)}
-                          </td>
+                        <div className="flex items-center">
+                          {order.product_name ||
+                            order.productName ||
+                            order.product ||
+                            "—"}
+                        </div>
 
-                          <td className="px-6 py-5 whitespace-nowrap">
-                            <span
-                              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-tight ${getStatusBadgeClass(
-                                order.status
-                              )}`}
-                            >
-                              {order.status || "—"}
-                            </span>
-                          </td>
+                        <div className="flex items-center">
+                          {order.quantity ?? "—"}
+                        </div>
 
-                          <td className="px-6 py-5 min-w-[210px] whitespace-nowrap">
-                            {formatDate(order.created_at)}
-                          </td>
+                        <div className="flex items-center">
+                          {formatMoney(order.total)}
+                        </div>
 
-                          <td className="px-6 py-5 min-w-[260px]">
-                            {order.artwork_url ? (
+                        <div className="flex items-center">
+                          <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                            {status}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center">
+                          {formatDate(
+                            order.created_at || order.createdAt || order.placed_at
+                          )}
+                        </div>
+
+                        <div className="flex min-w-0 flex-col justify-center gap-2">
+                          {artworkUrl ? (
+                            <>
                               <a
-                                href={order.artwork_url}
+                                href={artworkUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                                className="inline-flex w-fit items-center justify-center rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
                               >
                                 Download Artwork
                               </a>
-                            ) : (
-                              <span className="text-slate-400">No artwork</span>
-                            )}
-                            {order.file_name ? (
-                              <div className="mt-2 text-xs text-slate-500 break-all">
-                                {order.file_name}
-                              </div>
-                            ) : null}
-                          </td>
+                              <span className="truncate text-xs text-slate-500">
+                                {artworkName}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-slate-400">No artwork</span>
+                          )}
+                        </div>
 
-                          <td className="rounded-r-2xl px-6 py-5 min-w-[360px]">
-                            <div className="flex items-center gap-2">
-                              <select
-                                value={currentStatus}
-                                onChange={(e) =>
-                                  setStatusValues((prev) => ({
-                                    ...prev,
-                                    [rowKey]: e.target.value,
-                                  }))
-                                }
-                                className="min-w-[150px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500"
-                              >
-                                {STATUS_OPTIONS.map((status) => (
-                                  <option key={status} value={status}>
-                                    {status}
-                                  </option>
-                                ))}
-                              </select>
-
-                              <button
-                                type="button"
-                                onClick={() => updateOrderStatus(rowKey)}
-                                disabled={!rowKey || updatingId === rowKey}
-                                className="shrink-0 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                              >
-                                {updatingId === rowKey ? "Saving..." : "Save"}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                        <div className="flex items-center">
+                          <select
+                            value={status}
+                            onChange={(e) =>
+                              updateStatus(order.id, e.target.value)
+                            }
+                            disabled={savingId === order.id}
+                            className="h-10 w-[140px] rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none focus:border-slate-400"
+                          >
+                            {STATUS_OPTIONS.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
-      </section>
+      </div>
     </main>
   );
 }
