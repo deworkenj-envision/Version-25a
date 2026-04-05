@@ -2,6 +2,128 @@
 
 import { useMemo, useState } from "react";
 
+const PRODUCT_OPTIONS = [
+  "Business Cards",
+  "Flyers",
+  "Postcards",
+  "Banners",
+  "Brochures",
+];
+
+const PAPER_OPTIONS = ["Standard", "Premium", "Gloss", "Recycled"];
+const FINISH_OPTIONS = ["Matte", "Glossy", "Soft Touch", "Uncoated"];
+const SIDES_OPTIONS = ["Front Only", "Front and Back"];
+
+const PRICING = {
+  "Business Cards": {
+    baseUnitPrice: 0.25,
+    paperUpcharges: {
+      Standard: 0,
+      Premium: 0.05,
+      Gloss: 0.04,
+      Recycled: 0.03,
+    },
+    finishUpcharges: {
+      Matte: 0,
+      Glossy: 0.03,
+      "Soft Touch": 0.08,
+      Uncoated: 0,
+    },
+    sidesMultiplier: {
+      "Front Only": 1,
+      "Front and Back": 1.15,
+    },
+  },
+
+  Flyers: {
+    baseUnitPrice: 0.35,
+    paperUpcharges: {
+      Standard: 0,
+      Premium: 0.07,
+      Gloss: 0.05,
+      Recycled: 0.04,
+    },
+    finishUpcharges: {
+      Matte: 0,
+      Glossy: 0.04,
+      "Soft Touch": 0.1,
+      Uncoated: 0,
+    },
+    sidesMultiplier: {
+      "Front Only": 1,
+      "Front and Back": 1.2,
+    },
+  },
+
+  Postcards: {
+    baseUnitPrice: 0.45,
+    paperUpcharges: {
+      Standard: 0,
+      Premium: 0.08,
+      Gloss: 0.06,
+      Recycled: 0.05,
+    },
+    finishUpcharges: {
+      Matte: 0,
+      Glossy: 0.05,
+      "Soft Touch": 0.12,
+      Uncoated: 0,
+    },
+    sidesMultiplier: {
+      "Front Only": 1,
+      "Front and Back": 1.15,
+    },
+  },
+
+  Banners: {
+    baseUnitPrice: 3.5,
+    paperUpcharges: {
+      Standard: 0,
+      Premium: 0.5,
+      Gloss: 0.35,
+      Recycled: 0.25,
+    },
+    finishUpcharges: {
+      Matte: 0,
+      Glossy: 0.25,
+      "Soft Touch": 0.4,
+      Uncoated: 0,
+    },
+    sidesMultiplier: {
+      "Front Only": 1,
+      "Front and Back": 1.25,
+    },
+  },
+
+  Brochures: {
+    baseUnitPrice: 0.65,
+    paperUpcharges: {
+      Standard: 0,
+      Premium: 0.1,
+      Gloss: 0.08,
+      Recycled: 0.06,
+    },
+    finishUpcharges: {
+      Matte: 0,
+      Glossy: 0.06,
+      "Soft Touch": 0.14,
+      Uncoated: 0,
+    },
+    sidesMultiplier: {
+      "Front Only": 1,
+      "Front and Back": 1.2,
+    },
+  },
+};
+
+function getPricingConfig(productName) {
+  return PRICING[productName] || PRICING["Business Cards"];
+}
+
+function formatMoney(value) {
+  return `$${Number(value || 0).toFixed(2)}`;
+}
+
 export default function OrderPage() {
   const [form, setForm] = useState({
     customerName: "",
@@ -11,7 +133,7 @@ export default function OrderPage() {
     paper: "Standard",
     finish: "Matte",
     size: "",
-    sides: "",
+    sides: "Front Only",
     notes: "",
   });
 
@@ -20,18 +142,49 @@ export default function OrderPage() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [message, setMessage] = useState("");
 
-  const subtotal = useMemo(() => {
-    return Number(form.quantity || 0) * 0.25;
-  }, [form.quantity]);
+  const pricing = useMemo(() => {
+    const config = getPricingConfig(form.productName);
+    const quantity = Number(form.quantity || 0);
 
-  const shipping = 0;
-  const total = subtotal + shipping;
+    const baseUnitPrice = Number(config.baseUnitPrice || 0);
+    const paperUpcharge = Number(config.paperUpcharges?.[form.paper] || 0);
+    const finishUpcharge = Number(config.finishUpcharges?.[form.finish] || 0);
+    const sidesMultiplier = Number(config.sidesMultiplier?.[form.sides] || 1);
+
+    const unitPriceBeforeMultiplier =
+      baseUnitPrice + paperUpcharge + finishUpcharge;
+
+    const finalUnitPrice = unitPriceBeforeMultiplier * sidesMultiplier;
+    const subtotal = quantity * finalUnitPrice;
+
+    const shipping =
+      form.productName === "Banners"
+        ? quantity > 1
+          ? 18
+          : 12
+        : subtotal >= 100
+        ? 0
+        : 9.95;
+
+    const total = subtotal + shipping;
+
+    return {
+      baseUnitPrice,
+      paperUpcharge,
+      finishUpcharge,
+      sidesMultiplier,
+      finalUnitPrice,
+      subtotal,
+      shipping,
+      total,
+    };
+  }, [form.productName, form.quantity, form.paper, form.finish, form.sides]);
 
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === "quantity" ? Number(value) : value,
     }));
   }
 
@@ -102,9 +255,9 @@ export default function OrderPage() {
         body: JSON.stringify({
           productName: form.productName,
           quantity: Number(form.quantity),
-          total,
-          subtotal,
-          shipping,
+          total: pricing.total,
+          subtotal: pricing.subtotal,
+          shipping: pricing.shipping,
 
           customerName: form.customerName,
           customerEmail: form.customerEmail,
@@ -143,7 +296,7 @@ export default function OrderPage() {
       <div className="mx-auto max-w-3xl rounded-2xl border border-gray-200 p-8 shadow-sm">
         <h1 className="mb-2 text-3xl font-bold">Place Your Order</h1>
         <p className="mb-8 text-gray-600">
-          Choose your product, paper, finish, upload artwork, and continue to payment.
+          Choose your product, customize options, upload artwork, and continue to payment.
         </p>
 
         <form onSubmit={handleCheckout} className="space-y-6">
@@ -188,11 +341,11 @@ export default function OrderPage() {
               onChange={handleChange}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
             >
-              <option value="Business Cards">Business Cards</option>
-              <option value="Flyers">Flyers</option>
-              <option value="Postcards">Postcards</option>
-              <option value="Banners">Banners</option>
-              <option value="Brochures">Brochures</option>
+              {PRODUCT_OPTIONS.map((product) => (
+                <option key={product} value={product}>
+                  {product}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -223,10 +376,11 @@ export default function OrderPage() {
               onChange={handleChange}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
             >
-              <option value="Standard">Standard</option>
-              <option value="Premium">Premium</option>
-              <option value="Gloss">Gloss</option>
-              <option value="Recycled">Recycled</option>
+              {PAPER_OPTIONS.map((paper) => (
+                <option key={paper} value={paper}>
+                  {paper}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -241,10 +395,11 @@ export default function OrderPage() {
               onChange={handleChange}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
             >
-              <option value="Matte">Matte</option>
-              <option value="Glossy">Glossy</option>
-              <option value="Soft Touch">Soft Touch</option>
-              <option value="Uncoated">Uncoated</option>
+              {FINISH_OPTIONS.map((finish) => (
+                <option key={finish} value={finish}>
+                  {finish}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -274,10 +429,53 @@ export default function OrderPage() {
               onChange={handleChange}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
             >
-              <option value="">Select sides</option>
-              <option value="Front Only">Front Only</option>
-              <option value="Front and Back">Front and Back</option>
+              {SIDES_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
             </select>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <h2 className="mb-3 text-lg font-semibold text-gray-900">
+              Live Pricing
+            </h2>
+
+            <div className="space-y-2 text-sm text-gray-700">
+              <div className="flex items-center justify-between">
+                <span>Base unit price</span>
+                <span>{formatMoney(pricing.baseUnitPrice)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Paper upcharge</span>
+                <span>{formatMoney(pricing.paperUpcharge)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Finish upcharge</span>
+                <span>{formatMoney(pricing.finishUpcharge)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Sides multiplier</span>
+                <span>{pricing.sidesMultiplier.toFixed(2)}x</span>
+              </div>
+              <div className="flex items-center justify-between border-t border-gray-200 pt-2">
+                <span>Final unit price</span>
+                <span>{formatMoney(pricing.finalUnitPrice)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Subtotal</span>
+                <span>{formatMoney(pricing.subtotal)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Shipping</span>
+                <span>{formatMoney(pricing.shipping)}</span>
+              </div>
+              <div className="flex items-center justify-between border-t border-gray-200 pt-2 font-semibold text-gray-900">
+                <span>Total</span>
+                <span>{formatMoney(pricing.total)}</span>
+              </div>
+            </div>
           </div>
 
           <div>
@@ -312,21 +510,6 @@ export default function OrderPage() {
               className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
               placeholder="Add any print instructions here..."
             />
-          </div>
-
-          <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-700">
-            <div className="flex items-center justify-between py-1">
-              <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex items-center justify-between py-1">
-              <span>Shipping</span>
-              <span>${shipping.toFixed(2)}</span>
-            </div>
-            <div className="flex items-center justify-between border-t border-gray-200 pt-3 font-semibold text-gray-900">
-              <span>Total</span>
-              <span>${total.toFixed(2)}</span>
-            </div>
           </div>
 
           <div className="flex flex-wrap gap-4">
