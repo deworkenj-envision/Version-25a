@@ -23,7 +23,8 @@ async function getOrderBySessionId(sessionId) {
 }
 
 export default async function OrderSuccessPage({ searchParams }) {
-  const sessionId = searchParams?.session_id || "";
+  const resolvedSearchParams = await searchParams;
+  const sessionId = resolvedSearchParams?.session_id || "";
   const order = await getOrderBySessionId(sessionId);
 
   return (
