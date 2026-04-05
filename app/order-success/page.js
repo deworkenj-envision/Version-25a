@@ -45,12 +45,12 @@ export default async function OrderSuccessPage({ searchParams }) {
           <div className="grid grid-cols-2 gap-y-5 text-lg">
             <div className="text-slate-500">Order Number</div>
             <div className="text-right font-semibold text-slate-900">
-              {order?.id || "Unavailable"}
+              {order?.order_number || order?.id || "Unavailable"}
             </div>
 
             <div className="text-slate-500">Product</div>
             <div className="text-right font-semibold text-slate-900">
-              {order?.product_name || order?.product || "Unavailable"}
+              {order?.product_name || "Unavailable"}
             </div>
 
             <div className="text-slate-500">Quantity</div>
@@ -70,7 +70,7 @@ export default async function OrderSuccessPage({ searchParams }) {
 
             <div className="text-slate-500">Status</div>
             <div className="text-right font-semibold text-amber-600">
-              {order?.payment_status || order?.status || "Paid"}
+              {order?.status || "Paid"}
             </div>
           </div>
         </div>
