@@ -68,7 +68,7 @@ export default function AdminOrdersPage() {
         )
       );
     } catch (error) {
-      console.error(error);
+      console.error("Failed to update order status:", error);
       alert("Failed to update order status.");
     } finally {
       setSavingId(null);
@@ -87,8 +87,8 @@ export default function AdminOrdersPage() {
 
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
-            <div className="min-w-[1450px]">
-              <div className="grid grid-cols-[170px_290px_220px_110px_110px_150px_210px_340px_180px] gap-4 border-b border-slate-200 bg-slate-100 px-6 py-4 text-sm font-semibold text-slate-700">
+            <div className="min-w-[1550px]">
+              <div className="grid grid-cols-[150px_260px_200px_90px_100px_130px_190px_300px_130px] gap-4 border-b border-slate-200 bg-slate-100 px-6 py-4 text-sm font-semibold text-slate-700">
                 <div>Order</div>
                 <div>Customer</div>
                 <div>Product</div>
@@ -146,7 +146,7 @@ export default function AdminOrdersPage() {
                     return (
                       <div
                         key={order.id}
-                        className="grid grid-cols-[170px_290px_220px_110px_110px_150px_210px_340px_180px] gap-4 border-b border-slate-100 px-6 py-4 text-sm text-slate-700"
+                        className="grid grid-cols-[150px_260px_200px_90px_100px_130px_190px_300px_130px] gap-4 border-b border-slate-100 px-6 py-4 text-sm text-slate-700"
                       >
                         <div className="flex items-center font-semibold text-slate-900">
                           {orderNumber}
@@ -211,11 +211,9 @@ export default function AdminOrdersPage() {
                         <div className="flex items-center">
                           <select
                             value={status}
-                            onChange={(e) =>
-                              updateStatus(order.id, e.target.value)
-                            }
+                            onChange={(e) => updateStatus(order.id, e.target.value)}
                             disabled={savingId === order.id}
-                            className="h-10 w-[140px] rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none focus:border-slate-400"
+                            className="h-9 w-[110px] rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-800 outline-none focus:border-slate-400"
                           >
                             {STATUS_OPTIONS.map((option) => (
                               <option key={option} value={option}>
