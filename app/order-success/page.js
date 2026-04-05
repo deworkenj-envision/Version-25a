@@ -22,10 +22,23 @@ async function getOrderBySessionId(sessionId) {
   return data;
 }
 
+function isImageFile(url = "") {
+  const lower = String(url).toLowerCase();
+  return (
+    lower.endsWith(".png") ||
+    lower.endsWith(".jpg") ||
+    lower.endsWith(".jpeg") ||
+    lower.endsWith(".webp") ||
+    lower.endsWith(".gif")
+  );
+}
+
 export default async function OrderSuccessPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const sessionId = resolvedSearchParams?.session_id || "";
   const order = await getOrderBySessionId(sessionId);
+  const artworkUrl = order?.artwork_url || "";
+  const canPreviewImage = isImageFile(artworkUrl);
 
   return (
     <main className="min-h-screen bg-[#f7f7f8] px-6 py-10">
@@ -77,6 +90,43 @@ export default async function OrderSuccessPage({ searchParams }) {
             </div>
           </div>
         </div>
+
+        {artworkUrl && (
+          <div className="mb-8 rounded-[24px] border border-slate-200 bg-white p-6">
+            <h2 className="mb-3 text-2xl font-semibold text-slate-900">
+              Uploaded Artwork
+            </h2>
+
+            {order?.file_name && (
+              <p className="mb-3 text-sm text-slate-500">
+                File: {order.file_name}
+              </p>
+            )}
+
+            {canPreviewImage ? (
+              <div className="mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <img
+                  src={artworkUrl}
+                  alt="Uploaded artwork preview"
+                  className="max-h-[420px] w-full rounded-xl object-contain"
+                />
+              </div>
+            ) : (
+              <p className="mb-4 text-slate-600">
+                Preview is not available for this file type, but your artwork was uploaded successfully.
+              </p>
+            )}
+
+            <a
+              href={artworkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+            >
+              View Uploaded File
+            </a>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-4">
           <Link
