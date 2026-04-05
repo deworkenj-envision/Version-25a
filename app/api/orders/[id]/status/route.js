@@ -1,83 +1,68 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 
-const ALLOWED_STATUSES = ["paid", "printing", "shipped", "cancelled"];
+const ALLOWED_STATUSES = [
+  "pending",
+  "paid",
+  "printing",
+  "shipped",
+  "completed",
+  "cancelled",
+];
 
-export async function PATCH(req, { params }) {
+export async function PATCH(request, { params }) {
   try {
-    const routeId = params?.id;
-    const body = await req.json();
+    const { id } = await params;
+    const body = await request.json();
     const status = String(body?.status || "").toLowerCase().trim();
 
-    if (!routeId) {
+    if (!id) {
       return NextResponse.json(
         { error: "Missing order id" },
         { status: 400 }
       );
     }
 
-    if (!ALLOWED_STATUSES.includes(status)) {
+    if (!status) {
       return NextResponse.json(
-        {
-          error: `Invalid status. Allowed: ${ALLOWED_STATUSES.join(", ")}`,
-        },
+        { error: "Missing status" },
         { status: 400 }
       );
     }
 
-    let updatedOrder = null;
-
-    const { data: byId, error: byIdError } = await supabaseAdmin
-      .from("orders")
-      .update({ status })
-      .eq("id", routeId)
-      .select()
-      .maybeSingle();
-
-    if (byIdError) {
-      console.error("Supabase update by id error:", byIdError);
-    }
-
-    if (byId) {
-      updatedOrder = byId;
-    } else {
-      const { data: byOrderNumber, error: byOrderNumberError } =
-        await supabaseAdmin
-          .from("orders")
-          .update({ status })
-          .eq("order_number", routeId)
-          .select()
-          .maybeSingle();
-
-      if (byOrderNumberError) {
-        console.error(
-          "Supabase update by order_number error:",
-          byOrderNumberError
-        );
-        return NextResponse.json(
-          { error: "Failed to update order status" },
-          { status: 500 }
-        );
-      }
-
-      updatedOrder = byOrderNumber;
-    }
-
-    if (!updatedOrder) {
+    if (!ALLOWED_STATUSES.includes(status)) {
       return NextResponse.json(
-        { error: "Order not found" },
-        { status: 404 }
+        { error: "Invalid status" },
+        { status: 400 }
       );
     }
 
-    return NextResponse.json(
-      { success: true, order: updatedOrder },
-      { status: 200 }
-    );
+    const { data, error } = await supabaseAdmin
+      .from("orders")
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Status update error:", error);
+      return NextResponse.json(
+        { error: error.message || "Failed to update order" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      order: data,
+    });
   } catch (error) {
-    console.error("Order status PATCH error:", error);
+    console.error("PATCH /api/admin/orders/[id]/status error:", error);
     return NextResponse.json(
-      { error: "Something went wrong while updating order status" },
+      { error: error.message || "Server error" },
       { status: 500 }
     );
   }
