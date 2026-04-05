@@ -33,7 +33,6 @@ export async function POST(req) {
       const metadata = session.metadata || {};
       const stripeSessionId = session.id;
 
-      // Prevent duplicate orders
       const { data: existing } = await supabaseAdmin
         .from("orders")
         .select("id")
@@ -41,19 +40,25 @@ export async function POST(req) {
         .maybeSingle();
 
       if (existing) {
-        return NextResponse.json({ received: true });
+        return NextResponse.json({ received: true }, { status: 200 });
       }
 
-      // 🔥 GET ORDER COUNT (for order number)
-      const { count } = await supabaseAdmin
+      const { count, error: countError } = await supabaseAdmin
         .from("orders")
         .select("*", { count: "exact", head: true });
+
+      if (countError) {
+        console.error("Supabase count error:", countError);
+        return NextResponse.json(
+          { error: "Failed to generate order number" },
+          { status: 500 }
+        );
+      }
 
       const orderNumber = generateOrderNumber(count || 0);
 
       const orderData = {
         order_number: orderNumber,
-
         stripe_session_id: stripeSessionId,
 
         product_name: metadata.productName || "",
@@ -79,28 +84,27 @@ export async function POST(req) {
         artwork_url: metadata.artworkUrl || "",
         file_name: metadata.fileName || "",
 
-        // 🔥 UPDATED STATUS SYSTEM
-        status: "pending",
+        status: "Paid",
       };
 
-      const { error } = await supabaseAdmin
+      const { error: insertError } = await supabaseAdmin
         .from("orders")
         .insert([orderData]);
 
-      if (error) {
-        console.error("Supabase insert error:", error);
+      if (insertError) {
+        console.error("Supabase insert error:", insertError);
         return NextResponse.json(
-          { error: error.message },
+          { error: insertError.message },
           { status: 500 }
         );
       }
     }
 
-    return NextResponse.json({ received: true });
+    return NextResponse.json({ received: true }, { status: 200 });
   } catch (err) {
     console.error("Webhook crash:", err);
     return NextResponse.json(
-      { error: err.message },
+      { error: err.message || "Webhook failed" },
       { status: 500 }
     );
   }
