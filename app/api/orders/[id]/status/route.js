@@ -5,11 +5,11 @@ const ALLOWED_STATUSES = ["paid", "printing", "shipped", "cancelled"];
 
 export async function PATCH(req, { params }) {
   try {
-    const { id } = params;
+    const routeId = params?.id;
     const body = await req.json();
     const status = String(body?.status || "").toLowerCase().trim();
 
-    if (!id) {
+    if (!routeId) {
       return NextResponse.json(
         { error: "Missing order id" },
         { status: 400 }
@@ -25,22 +25,55 @@ export async function PATCH(req, { params }) {
       );
     }
 
-    const { data, error } = await supabaseAdmin
+    let updatedOrder = null;
+
+    const { data: byId, error: byIdError } = await supabaseAdmin
       .from("orders")
       .update({ status })
-      .eq("id", id)
+      .eq("id", routeId)
       .select()
-      .single();
+      .maybeSingle();
 
-    if (error) {
-      console.error("Supabase update order status error:", error);
+    if (byIdError) {
+      console.error("Supabase update by id error:", byIdError);
+    }
+
+    if (byId) {
+      updatedOrder = byId;
+    } else {
+      const { data: byOrderNumber, error: byOrderNumberError } =
+        await supabaseAdmin
+          .from("orders")
+          .update({ status })
+          .eq("order_number", routeId)
+          .select()
+          .maybeSingle();
+
+      if (byOrderNumberError) {
+        console.error(
+          "Supabase update by order_number error:",
+          byOrderNumberError
+        );
+        return NextResponse.json(
+          { error: "Failed to update order status" },
+          { status: 500 }
+        );
+      }
+
+      updatedOrder = byOrderNumber;
+    }
+
+    if (!updatedOrder) {
       return NextResponse.json(
-        { error: "Failed to update order status" },
-        { status: 500 }
+        { error: "Order not found" },
+        { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true, order: data }, { status: 200 });
+    return NextResponse.json(
+      { success: true, order: updatedOrder },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Order status PATCH error:", error);
     return NextResponse.json(

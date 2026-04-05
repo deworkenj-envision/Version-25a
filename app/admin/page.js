@@ -49,8 +49,9 @@ export default function AdminPage() {
 
       const nextStatusValues = {};
       nextOrders.forEach((order) => {
-        if (order?.id) {
-          nextStatusValues[order.id] = String(
+        const rowKey = order?.id || order?.order_number;
+        if (rowKey) {
+          nextStatusValues[rowKey] = String(
             order.status || "paid"
           ).toLowerCase();
         }
@@ -64,25 +65,29 @@ export default function AdminPage() {
     }
   }
 
-  async function updateOrderStatus(orderId) {
+  async function updateOrderStatus(rowKey) {
     try {
-      const nextStatus = statusValues[orderId];
+      const nextStatus = statusValues[rowKey];
 
-      if (!orderId || !nextStatus) {
+      if (!rowKey || !nextStatus) {
+        setError("Missing order id");
         return;
       }
 
-      setUpdatingId(orderId);
+      setUpdatingId(rowKey);
       setError("");
       setSuccessMessage("");
 
-      const response = await fetch(`/api/orders/${orderId}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: nextStatus }),
-      });
+      const response = await fetch(
+        `/api/orders/${encodeURIComponent(rowKey)}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: nextStatus }),
+        }
+      );
 
       const data = await response.json();
 
@@ -91,9 +96,12 @@ export default function AdminPage() {
       }
 
       setOrders((current) =>
-        current.map((order) =>
-          order.id === orderId ? { ...order, status: nextStatus } : order
-        )
+        current.map((order) => {
+          const currentKey = order.id || order.order_number;
+          return currentKey === rowKey
+            ? { ...order, status: nextStatus }
+            : order;
+        })
       );
 
       setSuccessMessage("Order status updated.");
@@ -147,8 +155,8 @@ export default function AdminPage() {
               Order management
             </h1>
             <p className="mt-4 text-lg leading-8 text-slate-600">
-              Review incoming print orders, monitor payment status, and manage
-              production from one place.
+              Review incoming print orders, monitor payment status, download
+              artwork, and manage production from one place.
             </p>
           </div>
         </div>
@@ -244,7 +252,7 @@ export default function AdminPage() {
           ) : (
             <div className="-mx-4 mt-6 overflow-x-auto sm:-mx-6 lg:-mx-8">
               <div className="inline-block min-w-full align-middle px-4 sm:px-6 lg:px-8">
-                <table className="min-w-[1550px] border-separate border-spacing-y-3">
+                <table className="min-w-[1820px] border-separate border-spacing-y-3">
                   <thead>
                     <tr className="text-left text-sm text-slate-500">
                       <th className="px-5 py-2 whitespace-nowrap">Order</th>
@@ -254,20 +262,21 @@ export default function AdminPage() {
                       <th className="px-5 py-2 whitespace-nowrap">Total</th>
                       <th className="px-5 py-2 whitespace-nowrap">Status</th>
                       <th className="px-5 py-2 whitespace-nowrap">Placed</th>
+                      <th className="px-5 py-2 whitespace-nowrap">Artwork</th>
                       <th className="px-5 py-2 whitespace-nowrap">Update</th>
                     </tr>
                   </thead>
 
                   <tbody>
                     {orders.map((order) => {
-                      const orderId = order.id;
+                      const rowKey = order.id || order.order_number;
                       const currentStatus =
-                        statusValues[orderId] ||
+                        statusValues[rowKey] ||
                         String(order.status || "paid").toLowerCase();
 
                       return (
                         <tr
-                          key={order.id || order.order_number}
+                          key={rowKey}
                           className="bg-slate-50 text-sm text-slate-700"
                         >
                           <td className="rounded-l-2xl px-5 py-5 font-semibold text-slate-900 whitespace-nowrap">
@@ -305,6 +314,26 @@ export default function AdminPage() {
                             {formatDate(order.created_at)}
                           </td>
 
+                          <td className="px-5 py-5 min-w-[220px]">
+                            {order.artwork_url ? (
+                              <a
+                                href={order.artwork_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-slate-300 hover:bg-slate-100"
+                              >
+                                Download Artwork
+                              </a>
+                            ) : (
+                              <span className="text-slate-400">No artwork</span>
+                            )}
+                            {order.file_name ? (
+                              <div className="mt-2 text-xs text-slate-500 break-all">
+                                {order.file_name}
+                              </div>
+                            ) : null}
+                          </td>
+
                           <td className="rounded-r-2xl px-5 py-5 min-w-[360px]">
                             <div className="flex items-center gap-3">
                               <select
@@ -312,7 +341,7 @@ export default function AdminPage() {
                                 onChange={(e) =>
                                   setStatusValues((prev) => ({
                                     ...prev,
-                                    [orderId]: e.target.value,
+                                    [rowKey]: e.target.value,
                                   }))
                                 }
                                 className="min-w-[180px] rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500"
@@ -326,11 +355,11 @@ export default function AdminPage() {
 
                               <button
                                 type="button"
-                                onClick={() => updateOrderStatus(orderId)}
-                                disabled={!orderId || updatingId === orderId}
+                                onClick={() => updateOrderStatus(rowKey)}
+                                disabled={!rowKey || updatingId === rowKey}
                                 className="shrink-0 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                               >
-                                {updatingId === orderId ? "Saving..." : "Save"}
+                                {updatingId === rowKey ? "Saving..." : "Save"}
                               </button>
                             </div>
                           </td>
