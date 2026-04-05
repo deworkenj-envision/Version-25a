@@ -305,8 +305,8 @@ export default function AdminPage() {
                           </td>
 
                           <td className="px-6 py-5 whitespace-nowrap">
-                            <span className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700 ring-1 ring-slate-200">
-                              {order.status || "—"}
+                            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-tight text-slate-700">
+                            {order.status || "—"}
                             </span>
                           </td>
 
