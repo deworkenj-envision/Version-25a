@@ -52,7 +52,7 @@ export default function AdminOrdersPage() {
     try {
       setSavingId(orderId);
 
-      const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+      const res = await fetch(`/api/orders/${orderId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
