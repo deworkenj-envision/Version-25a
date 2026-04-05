@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const ALLOWED_STATUSES = [
   "pending",
@@ -12,7 +12,8 @@ const ALLOWED_STATUSES = [
 
 export async function PATCH(request, { params }) {
   try {
-    const { id } = await params;
+    const id = params.id; // ✅ FIXED (no await)
+
     const body = await request.json();
     const status = String(body?.status || "").toLowerCase().trim();
 
@@ -23,34 +24,24 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    if (!status) {
-      return NextResponse.json(
-        { error: "Missing status" },
-        { status: 400 }
-      );
-    }
-
     if (!ALLOWED_STATUSES.includes(status)) {
       return NextResponse.json(
-        { error: "Invalid status" },
+        { error: "Invalid status value" },
         { status: 400 }
       );
     }
 
     const { data, error } = await supabaseAdmin
       .from("orders")
-      .update({
-        status,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ status })
       .eq("id", id)
       .select()
       .single();
 
     if (error) {
-      console.error("Status update error:", error);
+      console.error("Supabase update error:", error);
       return NextResponse.json(
-        { error: error.message || "Failed to update order" },
+        { error: error.message },
         { status: 500 }
       );
     }
@@ -59,10 +50,11 @@ export async function PATCH(request, { params }) {
       success: true,
       order: data,
     });
-  } catch (error) {
-    console.error("PATCH /api/admin/orders/[id]/status error:", error);
+
+  } catch (err) {
+    console.error("STATUS UPDATE CRASH:", err);
     return NextResponse.json(
-      { error: error.message || "Server error" },
+      { error: "Server error updating order status" },
       { status: 500 }
     );
   }
