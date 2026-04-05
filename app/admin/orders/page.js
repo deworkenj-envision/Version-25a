@@ -146,7 +146,7 @@ export default function AdminPage() {
   return (
     <main className="bg-slate-50 text-slate-900">
       <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-[1600px] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+        <div className="mx-auto max-w-[1900px] px-4 py-12 sm:px-6 lg:px-8 xl:px-10 lg:py-16">
           <div className="max-w-3xl">
             <div className="inline-flex items-center rounded-full bg-blue-100 px-4 py-1.5 text-sm font-semibold text-blue-700">
               Admin Dashboard
@@ -162,7 +162,7 @@ export default function AdminPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1600px] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+      <section className="mx-auto max-w-[1900px] px-4 py-10 sm:px-6 lg:px-8 xl:px-10 lg:py-14">
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
@@ -250,20 +250,20 @@ export default function AdminPage() {
               No orders found yet.
             </div>
           ) : (
-            <div className="-mx-4 mt-6 overflow-x-auto sm:-mx-6 lg:-mx-8">
-              <div className="inline-block min-w-full align-middle px-4 sm:px-6 lg:px-8">
-                <table className="min-w-[1820px] border-separate border-spacing-y-3">
+            <div className="-mx-6 mt-6 overflow-x-auto sm:-mx-8 lg:-mx-10 xl:-mx-12">
+              <div className="inline-block min-w-full align-middle px-6 sm:px-8 lg:px-10 xl:px-12">
+                <table className="min-w-[2050px] border-separate border-spacing-y-3">
                   <thead>
                     <tr className="text-left text-sm text-slate-500">
-                      <th className="px-5 py-2 whitespace-nowrap">Order</th>
-                      <th className="px-5 py-2 whitespace-nowrap">Customer</th>
-                      <th className="px-5 py-2 whitespace-nowrap">Product</th>
-                      <th className="px-5 py-2 whitespace-nowrap">Quantity</th>
-                      <th className="px-5 py-2 whitespace-nowrap">Total</th>
-                      <th className="px-5 py-2 whitespace-nowrap">Status</th>
-                      <th className="px-5 py-2 whitespace-nowrap">Placed</th>
-                      <th className="px-5 py-2 whitespace-nowrap">Artwork</th>
-                      <th className="px-5 py-2 whitespace-nowrap">Update</th>
+                      <th className="px-6 py-2 whitespace-nowrap">Order</th>
+                      <th className="px-6 py-2 whitespace-nowrap">Customer</th>
+                      <th className="px-6 py-2 whitespace-nowrap">Product</th>
+                      <th className="px-6 py-2 whitespace-nowrap">Quantity</th>
+                      <th className="px-6 py-2 whitespace-nowrap">Total</th>
+                      <th className="px-6 py-2 whitespace-nowrap">Status</th>
+                      <th className="px-6 py-2 whitespace-nowrap">Placed</th>
+                      <th className="px-6 py-2 whitespace-nowrap">Artwork</th>
+                      <th className="px-6 py-2 whitespace-nowrap">Update</th>
                     </tr>
                   </thead>
 
@@ -279,11 +279,11 @@ export default function AdminPage() {
                           key={rowKey}
                           className="bg-slate-50 text-sm text-slate-700"
                         >
-                          <td className="rounded-l-2xl px-5 py-5 font-semibold text-slate-900 whitespace-nowrap">
+                          <td className="rounded-l-2xl px-6 py-5 font-semibold text-slate-900 whitespace-nowrap">
                             {order.order_number || "—"}
                           </td>
 
-                          <td className="px-5 py-5 min-w-[280px]">
+                          <td className="px-6 py-5 min-w-[300px]">
                             <div className="font-medium text-slate-900 break-words">
                               {order.customer_name || "—"}
                             </div>
@@ -292,35 +292,35 @@ export default function AdminPage() {
                             </div>
                           </td>
 
-                          <td className="px-5 py-5 min-w-[220px] break-words">
+                          <td className="px-6 py-5 min-w-[240px] break-words">
                             {order.product_name || "—"}
                           </td>
 
-                          <td className="px-5 py-5 whitespace-nowrap">
+                          <td className="px-6 py-5 whitespace-nowrap">
                             {order.quantity || "—"}
                           </td>
 
-                          <td className="px-5 py-5 whitespace-nowrap">
+                          <td className="px-6 py-5 whitespace-nowrap">
                             {formatMoney(order.total)}
                           </td>
 
-                          <td className="px-5 py-5 whitespace-nowrap">
+                          <td className="px-6 py-5 whitespace-nowrap">
                             <span className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700 ring-1 ring-slate-200">
                               {order.status || "—"}
                             </span>
                           </td>
 
-                          <td className="px-5 py-5 min-w-[190px]">
+                          <td className="px-6 py-5 min-w-[210px]">
                             {formatDate(order.created_at)}
                           </td>
 
-                          <td className="px-5 py-5 min-w-[220px]">
+                          <td className="px-6 py-5 min-w-[260px]">
                             {order.artwork_url ? (
                               <a
                                 href={order.artwork_url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-slate-300 hover:bg-slate-100"
+                                className="inline-flex items-center rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
                               >
                                 Download Artwork
                               </a>
@@ -334,7 +334,7 @@ export default function AdminPage() {
                             ) : null}
                           </td>
 
-                          <td className="rounded-r-2xl px-5 py-5 min-w-[360px]">
+                          <td className="rounded-r-2xl px-6 py-5 min-w-[420px]">
                             <div className="flex items-center gap-3">
                               <select
                                 value={currentStatus}
@@ -344,7 +344,7 @@ export default function AdminPage() {
                                     [rowKey]: e.target.value,
                                   }))
                                 }
-                                className="min-w-[180px] rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500"
+                                className="min-w-[220px] rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500"
                               >
                                 {STATUS_OPTIONS.map((status) => (
                                   <option key={status} value={status}>
