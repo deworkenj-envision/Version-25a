@@ -1,114 +1,94 @@
+import Link from "next/link";
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
 
-async function getOrder(orderNumber) {
-  if (!orderNumber) return null;
+async function getOrderBySessionId(sessionId) {
+  if (!sessionId) return null;
 
   const { data, error } = await supabaseAdmin
     .from("orders")
     .select("*")
-    .eq("order_number", orderNumber)
+    .eq("stripe_session_id", sessionId)
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (error) {
-    throw new Error(error.message || "Failed to load order");
+    console.error("Error loading order by session id:", error);
+    return null;
   }
 
-  return data || null;
+  return data;
 }
 
 export default async function OrderSuccessPage({ searchParams }) {
-  const params = await searchParams;
-  const orderNumber = params?.order || "";
-  const order = await getOrder(orderNumber);
+  const sessionId = searchParams?.session_id || null;
+  const order = await getOrderBySessionId(sessionId);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-16 text-slate-900">
-      <div className="mx-auto max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div
-          className={`inline-flex rounded-full px-4 py-1.5 text-sm font-semibold ${
-            order?.status === "paid"
-              ? "bg-green-100 text-green-700"
-              : "bg-amber-100 text-amber-700"
-          }`}
-        >
-          {order?.status === "paid" ? "Payment Received" : "Order Received"}
+    <main className="min-h-screen bg-[#f7f7f8] px-6 py-10">
+      <div className="mx-auto max-w-4xl rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="mb-6 inline-flex rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-700">
+          Order Received
         </div>
 
-        <h1 className="mt-5 text-4xl font-bold tracking-tight">
-          {order?.status === "paid"
-            ? "Your order is confirmed"
-            : "Your order has been received"}
+        <h1 className="mb-3 text-5xl font-bold tracking-tight text-slate-950">
+          Your order has been received
         </h1>
 
-        <p className="mt-4 text-lg text-slate-600">
+        <p className="mb-8 text-xl text-slate-600">
           {order
-            ? "Here are the live details from your saved order."
+            ? "Thank you. Your payment was successful and your order details are below."
             : "We could not load the full order details, but your request was submitted."}
         </p>
 
-        <div className="mt-8 space-y-3 rounded-2xl bg-slate-50 p-6 text-sm">
-          <div className="flex justify-between">
-            <span className="text-slate-500">Order Number</span>
-            <span className="font-semibold text-slate-900">
-              {order?.order_number || orderNumber || "Unavailable"}
-            </span>
-          </div>
+        <div className="mb-8 rounded-[24px] bg-slate-50 p-8">
+          <div className="grid grid-cols-2 gap-y-5 text-lg">
+            <div className="text-slate-500">Order Number</div>
+            <div className="text-right font-semibold text-slate-900">
+              {order?.id || "Unavailable"}
+            </div>
 
-          <div className="flex justify-between">
-            <span className="text-slate-500">Product</span>
-            <span className="font-semibold text-slate-900">
-              {order?.product_name || "Unavailable"}
-            </span>
-          </div>
+            <div className="text-slate-500">Product</div>
+            <div className="text-right font-semibold text-slate-900">
+              {order?.product_name || order?.product || "Unavailable"}
+            </div>
 
-          <div className="flex justify-between">
-            <span className="text-slate-500">Quantity</span>
-            <span className="font-semibold text-slate-900">
-              {order?.quantity || "Unavailable"}
-            </span>
-          </div>
+            <div className="text-slate-500">Quantity</div>
+            <div className="text-right font-semibold text-slate-900">
+              {order?.quantity ?? "Unavailable"}
+            </div>
 
-          <div className="flex justify-between">
-            <span className="text-slate-500">Paper</span>
-            <span className="font-semibold text-slate-900">
+            <div className="text-slate-500">Paper</div>
+            <div className="text-right font-semibold text-slate-900">
               {order?.paper || "Unavailable"}
-            </span>
-          </div>
+            </div>
 
-          <div className="flex justify-between">
-            <span className="text-slate-500">Finish</span>
-            <span className="font-semibold text-slate-900">
+            <div className="text-slate-500">Finish</div>
+            <div className="text-right font-semibold text-slate-900">
               {order?.finish || "Unavailable"}
-            </span>
-          </div>
+            </div>
 
-          <div className="flex justify-between">
-            <span className="text-slate-500">Status</span>
-            <span
-              className={`font-semibold ${
-                order?.status === "paid"
-                  ? "text-green-700"
-                  : "text-amber-700"
-              }`}
-            >
-              {order?.status || "Paid"}
-            </span>
+            <div className="text-slate-500">Status</div>
+            <div className="text-right font-semibold text-amber-600">
+              {order?.payment_status || order?.status || "Paid"}
+            </div>
           </div>
         </div>
 
-        <div className="mt-8 flex flex-wrap gap-3">
-          <a
+        <div className="flex flex-wrap gap-4">
+          <Link
             href="/order"
-            className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+            className="inline-flex items-center justify-center rounded-2xl bg-blue-600 px-6 py-4 text-lg font-semibold text-white hover:bg-blue-700"
           >
             Start Another Order
-          </a>
-          <a
+          </Link>
+
+          <Link
             href="/"
-            className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            className="inline-flex items-center justify-center rounded-2xl border border-slate-300 px-6 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
           >
             Back to Home
-          </a>
+          </Link>
         </div>
       </div>
     </main>
