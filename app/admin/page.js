@@ -240,8 +240,8 @@ export default function AdminPage() {
               No orders found yet.
             </div>
           ) : (
-            <div className="mt-6 overflow-x-auto">
-              <table className="min-w-full border-separate border-spacing-y-3">
+            <div className="mt-6 w-full overflow-x-auto">
+              <table className="min-w-[1200px] w-full border-separate border-spacing-y-3">
                 <thead>
                   <tr className="text-left text-sm text-slate-500">
                     <th className="px-4 py-2">Order</th>
@@ -293,8 +293,8 @@ export default function AdminPage() {
                           {formatDate(order.created_at)}
                         </td>
 
-                        <td className="rounded-r-2xl px-4 py-4">
-                          <div className="flex min-w-[220px] items-center gap-2">
+                        <td className="rounded-r-2xl px-4 py-4 pr-6">
+                          <div className="flex min-w-[260px] items-center gap-2">
                             <select
                               value={currentStatus}
                               onChange={(e) =>
@@ -303,7 +303,7 @@ export default function AdminPage() {
                                   [orderId]: e.target.value,
                                 }))
                               }
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500"
+                              className="min-w-[140px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500"
                             >
                               {STATUS_OPTIONS.map((status) => (
                                 <option key={status} value={status}>
@@ -316,7 +316,7 @@ export default function AdminPage() {
                               type="button"
                               onClick={() => updateOrderStatus(orderId)}
                               disabled={!orderId || updatingId === orderId}
-                              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="shrink-0 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {updatingId === orderId ? "Saving..." : "Save"}
                             </button>
