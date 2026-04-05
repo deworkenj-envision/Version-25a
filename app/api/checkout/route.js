@@ -87,10 +87,18 @@ export async function POST(req) {
       rawArtworkPath;
 
     const finalArtworkUrl = buildArtworkUrl(rawArtworkUrl);
+
     const fileName =
       toSafeString(body.fileName) ||
       getFileNameFromPath(rawArtworkPath) ||
       getFileNameFromPath(finalArtworkUrl);
+
+    if (!finalArtworkUrl) {
+      return NextResponse.json(
+        { error: "Artwork upload is required before checkout." },
+        { status: 400 }
+      );
+    }
 
     if (!productName) {
       return NextResponse.json(
