@@ -4,6 +4,11 @@ import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+function generateOrderNumber(count) {
+  const base = 10000 + count + 1;
+  return `EV-${base}`;
+}
+
 export async function POST(req) {
   const signature = req.headers.get("stripe-signature");
 
@@ -26,7 +31,6 @@ export async function POST(req) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
       const metadata = session.metadata || {};
-
       const stripeSessionId = session.id;
 
       // Prevent duplicate orders
@@ -40,7 +44,16 @@ export async function POST(req) {
         return NextResponse.json({ received: true });
       }
 
+      // 🔥 GET ORDER COUNT (for order number)
+      const { count } = await supabaseAdmin
+        .from("orders")
+        .select("*", { count: "exact", head: true });
+
+      const orderNumber = generateOrderNumber(count || 0);
+
       const orderData = {
+        order_number: orderNumber,
+
         stripe_session_id: stripeSessionId,
 
         product_name: metadata.productName || "",
@@ -66,7 +79,8 @@ export async function POST(req) {
         artwork_url: metadata.artworkUrl || "",
         file_name: metadata.fileName || "",
 
-        status: "paid",
+        // 🔥 UPDATED STATUS SYSTEM
+        status: "pending",
       };
 
       const { error } = await supabaseAdmin
