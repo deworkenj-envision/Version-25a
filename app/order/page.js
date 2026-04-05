@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 export default function OrderPage() {
   const [form, setForm] = useState({
@@ -8,6 +8,10 @@ export default function OrderPage() {
     customerEmail: "",
     productName: "Business Cards",
     quantity: 100,
+    paper: "Standard",
+    finish: "Matte",
+    size: "",
+    sides: "",
     notes: "",
   });
 
@@ -15,6 +19,13 @@ export default function OrderPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [message, setMessage] = useState("");
+
+  const subtotal = useMemo(() => {
+    return Number(form.quantity || 0) * 0.25;
+  }, [form.quantity]);
+
+  const shipping = 0;
+  const total = subtotal + shipping;
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -61,18 +72,27 @@ export default function OrderPage() {
 
   async function handleCheckout(e) {
     e.preventDefault();
+    setMessage("");
 
     let uploadData = uploadedFile;
+
+    if (!file && !uploadedFile) {
+      setMessage("Please upload your artwork before continuing to payment.");
+      return;
+    }
 
     if (file && !uploadedFile) {
       uploadData = await handleUpload();
       if (!uploadData) return;
     }
 
+    if (!uploadData?.publicUrl && !uploadData?.filePath) {
+      setMessage("Artwork upload is required before checkout.");
+      return;
+    }
+
     try {
       setMessage("Creating checkout session...");
-
-      const total = Number(form.quantity) * 0.25;
 
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -83,11 +103,21 @@ export default function OrderPage() {
           productName: form.productName,
           quantity: Number(form.quantity),
           total,
+          subtotal,
+          shipping,
+
           customerName: form.customerName,
           customerEmail: form.customerEmail,
-          artworkUrl: uploadData?.publicUrl || "",
-          artworkPath: uploadData?.filePath || "",
+
+          paper: form.paper,
+          finish: form.finish,
+          size: form.size,
+          sides: form.sides,
           notes: form.notes,
+
+          artworkUrl: uploadData?.publicUrl || "",
+          filePath: uploadData?.filePath || "",
+          fileName: uploadData?.fileName || "",
         }),
       });
 
@@ -113,7 +143,7 @@ export default function OrderPage() {
       <div className="mx-auto max-w-3xl rounded-2xl border border-gray-200 p-8 shadow-sm">
         <h1 className="mb-2 text-3xl font-bold">Place Your Order</h1>
         <p className="mb-8 text-gray-600">
-          Choose your product, upload artwork, and continue to payment.
+          Choose your product, paper, finish, upload artwork, and continue to payment.
         </p>
 
         <form onSubmit={handleCheckout} className="space-y-6">
@@ -183,6 +213,74 @@ export default function OrderPage() {
           </div>
 
           <div>
+            <label htmlFor="paper" className="mb-2 block font-medium">
+              Paper
+            </label>
+            <select
+              id="paper"
+              name="paper"
+              value={form.paper}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
+            >
+              <option value="Standard">Standard</option>
+              <option value="Premium">Premium</option>
+              <option value="Gloss">Gloss</option>
+              <option value="Recycled">Recycled</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="finish" className="mb-2 block font-medium">
+              Finish
+            </label>
+            <select
+              id="finish"
+              name="finish"
+              value={form.finish}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
+            >
+              <option value="Matte">Matte</option>
+              <option value="Glossy">Glossy</option>
+              <option value="Soft Touch">Soft Touch</option>
+              <option value="Uncoated">Uncoated</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="size" className="mb-2 block font-medium">
+              Size
+            </label>
+            <input
+              id="size"
+              name="size"
+              type="text"
+              value={form.size}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
+              placeholder='Example: 3.5" x 2"'
+            />
+          </div>
+
+          <div>
+            <label htmlFor="sides" className="mb-2 block font-medium">
+              Sides
+            </label>
+            <select
+              id="sides"
+              name="sides"
+              value={form.sides}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
+            >
+              <option value="">Select sides</option>
+              <option value="Front Only">Front Only</option>
+              <option value="Front and Back">Front and Back</option>
+            </select>
+          </div>
+
+          <div>
             <label htmlFor="artworkFile" className="mb-2 block font-medium">
               Upload Artwork
             </label>
@@ -193,9 +291,11 @@ export default function OrderPage() {
               onChange={(e) => {
                 setFile(e.target.files?.[0] || null);
                 setUploadedFile(null);
+                setMessage("");
               }}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
               accept=".pdf,.png,.jpg,.jpeg,.ai,.eps"
+              required
             />
           </div>
 
@@ -212,6 +312,21 @@ export default function OrderPage() {
               className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
               placeholder="Add any print instructions here..."
             />
+          </div>
+
+          <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-700">
+            <div className="flex items-center justify-between py-1">
+              <span>Subtotal</span>
+              <span>${subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between py-1">
+              <span>Shipping</span>
+              <span>${shipping.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between border-t border-gray-200 pt-3 font-semibold text-gray-900">
+              <span>Total</span>
+              <span>${total.toFixed(2)}</span>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-4">
