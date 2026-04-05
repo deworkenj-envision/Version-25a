@@ -19,6 +19,28 @@ function formatMoney(value) {
   return `$${amount.toFixed(2)}`;
 }
 
+function getStatusBadgeClass(status) {
+  const value = String(status || "").toLowerCase();
+
+  if (value === "paid") {
+    return "bg-green-50 text-green-700 ring-1 ring-green-200";
+  }
+
+  if (value === "printing") {
+    return "bg-blue-50 text-blue-700 ring-1 ring-blue-200";
+  }
+
+  if (value === "shipped") {
+    return "bg-purple-50 text-purple-700 ring-1 ring-purple-200";
+  }
+
+  if (value === "cancelled") {
+    return "bg-red-50 text-red-700 ring-1 ring-red-200";
+  }
+
+  return "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
+}
+
 export default function AdminPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -252,7 +274,7 @@ export default function AdminPage() {
           ) : (
             <div className="-mx-6 mt-6 overflow-x-auto sm:-mx-8 lg:-mx-10 xl:-mx-12">
               <div className="inline-block min-w-full align-middle px-6 sm:px-8 lg:px-10 xl:px-12">
-                <table className="min-w-[2050px] border-separate border-spacing-y-3">
+                <table className="min-w-[1980px] border-separate border-spacing-y-3">
                   <thead>
                     <tr className="text-left text-sm text-slate-500">
                       <th className="px-6 py-2 whitespace-nowrap">Order</th>
@@ -305,12 +327,16 @@ export default function AdminPage() {
                           </td>
 
                           <td className="px-6 py-5 whitespace-nowrap">
-                            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-tight text-slate-700">
-                            {order.status || "—"}
+                            <span
+                              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-tight ${getStatusBadgeClass(
+                                order.status
+                              )}`}
+                            >
+                              {order.status || "—"}
                             </span>
                           </td>
 
-                          <td className="px-6 py-5 min-w-[210px]">
+                          <td className="px-6 py-5 min-w-[210px] whitespace-nowrap">
                             {formatDate(order.created_at)}
                           </td>
 
@@ -334,8 +360,8 @@ export default function AdminPage() {
                             ) : null}
                           </td>
 
-                          <td className="rounded-r-2xl px-6 py-5 min-w-[420px]">
-                            <div className="flex items-center gap-3">
+                          <td className="rounded-r-2xl px-6 py-5 min-w-[360px]">
+                            <div className="flex items-center gap-2">
                               <select
                                 value={currentStatus}
                                 onChange={(e) =>
@@ -344,7 +370,7 @@ export default function AdminPage() {
                                     [rowKey]: e.target.value,
                                   }))
                                 }
-                                className="min-w-[220px] rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500"
+                                className="min-w-[150px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500"
                               >
                                 {STATUS_OPTIONS.map((status) => (
                                   <option key={status} value={status}>
@@ -357,7 +383,7 @@ export default function AdminPage() {
                                 type="button"
                                 onClick={() => updateOrderStatus(rowKey)}
                                 disabled={!rowKey || updatingId === rowKey}
-                                className="shrink-0 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="shrink-0 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                               >
                                 {updatingId === rowKey ? "Saving..." : "Save"}
                               </button>
