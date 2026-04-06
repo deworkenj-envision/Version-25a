@@ -37,7 +37,7 @@ async function findOrderByParam(param) {
   return { data, error, useId };
 }
 
-export async function GET(_req, context) {
+export async function GET(req, context) {
   try {
     const param = await getParam(context);
 
@@ -45,6 +45,61 @@ export async function GET(_req, context) {
       return NextResponse.json(
         { error: "Missing order identifier" },
         { status: 400 }
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const statusParam = searchParams.get("status");
+
+    if (statusParam) {
+      const status = normalizeStatus(statusParam);
+
+      if (!ALLOWED_STATUSES.includes(status)) {
+        return NextResponse.json(
+          {
+            error: `Invalid status. Allowed: ${ALLOWED_STATUSES.join(", ")}`,
+          },
+          { status: 400 }
+        );
+      }
+
+      const { data: existingOrder, error: findError, useId } =
+        await findOrderByParam(param);
+
+      if (findError) {
+        console.error("Order lookup error:", findError);
+        return NextResponse.json(
+          { error: findError.message || "Failed to find order" },
+          { status: 500 }
+        );
+      }
+
+      if (!existingOrder) {
+        return NextResponse.json({ error: "Order not found" }, { status: 404 });
+      }
+
+      const { data: updatedOrder, error: updateError } = await supabaseAdmin
+        .from("orders")
+        .update({ status })
+        .eq(useId ? "id" : "order_number", param)
+        .select("*")
+        .single();
+
+      if (updateError) {
+        console.error("Order update error:", updateError);
+        return NextResponse.json(
+          { error: updateError.message || "Failed to update status" },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Order status updated successfully",
+          order: updatedOrder,
+        },
+        { status: 200 }
       );
     }
 
@@ -95,7 +150,9 @@ export async function POST(req, context) {
 
     if (!ALLOWED_STATUSES.includes(status)) {
       return NextResponse.json(
-        { error: `Invalid status. Allowed: ${ALLOWED_STATUSES.join(", ")}` },
+        {
+          error: `Invalid status. Allowed: ${ALLOWED_STATUSES.join(", ")}`,
+        },
         { status: 400 }
       );
     }
