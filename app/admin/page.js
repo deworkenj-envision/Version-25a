@@ -44,6 +44,14 @@ export default function AdminDashboard() {
     );
   }, [orders]);
 
+  const newestPaidOrders = useMemo(() => {
+    return [...paidOrders].sort((a, b) => {
+      const aTime = a?.created_at ? new Date(a.created_at).getTime() : 0;
+      const bTime = b?.created_at ? new Date(b.created_at).getTime() : 0;
+      return bTime - aTime;
+    });
+  }, [paidOrders]);
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="mx-auto max-w-[1600px]">
@@ -95,30 +103,30 @@ export default function AdminDashboard() {
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <PipelineColumn
-            title="Paid Queue"
-            subtitle="New paid orders waiting for production"
+            title="New Orders"
+            subtitle="Awaiting production start"
             badgeClass="bg-emerald-100 text-emerald-700"
-            count={paidOrders.length}
-            orders={paidOrders}
-            emptyText="No paid orders waiting."
+            count={newestPaidOrders.length}
+            orders={newestPaidOrders}
+            emptyText="No new orders"
           />
 
           <PipelineColumn
-            title="Printing"
-            subtitle="Orders currently in production"
+            title="In Production"
+            subtitle="Currently printing"
             badgeClass="bg-amber-100 text-amber-700"
             count={printingOrders.length}
             orders={printingOrders}
-            emptyText="No orders in printing."
+            emptyText="No active jobs"
           />
 
           <PipelineColumn
-            title="Shipped"
-            subtitle="Completed orders sent to customers"
+            title="Completed"
+            subtitle="Shipped orders"
             badgeClass="bg-blue-100 text-blue-700"
             count={shippedOrders.length}
             orders={shippedOrders}
-            emptyText="No shipped orders yet."
+            emptyText="No completed orders"
           />
         </div>
       </div>
@@ -168,15 +176,15 @@ function PipelineColumn({
             {emptyText}
           </div>
         ) : (
-          orders.slice(0, 8).map((order) => (
+          orders.slice(0, 6).map((order) => (
             <PipelineCard key={order.id} order={order} />
           ))
         )}
       </div>
 
-      {orders.length > 8 && (
+      {orders.length > 6 && (
         <div className="mt-4 text-xs text-gray-400">
-          Showing 8 of {orders.length} orders in this stage.
+          Showing 6 of {orders.length} orders in this stage.
         </div>
       )}
     </div>
