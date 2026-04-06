@@ -59,17 +59,22 @@ export default function AdminOrdersPage() {
       });
 
       if (!res.ok) {
-        throw new Error("Failed to update status");
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.error || "Failed to update status");
       }
+
+      const result = await res.json().catch(() => null);
 
       setOrders((prev) =>
         prev.map((order) =>
-          order.id === orderId ? { ...order, status } : order
+          order.id === orderId
+            ? { ...order, status: result?.order?.status || status }
+            : order
         )
       );
     } catch (error) {
       console.error("Failed to update order status:", error);
-      alert("Failed to update order status.");
+      alert(error.message || "Failed to update order status.");
     } finally {
       setSavingId(null);
     }

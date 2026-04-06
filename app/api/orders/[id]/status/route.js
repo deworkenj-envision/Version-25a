@@ -12,7 +12,8 @@ const ALLOWED_STATUSES = [
 
 export async function PATCH(request, { params }) {
   try {
-    const id = params?.id;
+    const { id } = await params;
+
     const body = await request.json();
     const status = String(body?.status || "").toLowerCase().trim();
 
@@ -52,7 +53,7 @@ export async function PATCH(request, { params }) {
   } catch (err) {
     console.error("STATUS UPDATE CRASH:", err);
     return NextResponse.json(
-      { error: "Server error updating order status" },
+      { error: err?.message || "Server error updating order status" },
       { status: 500 }
     );
   }
