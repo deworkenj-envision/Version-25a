@@ -16,8 +16,7 @@ export async function POST(req) {
 
     const { data, error } = await supabaseAdmin
       .from("orders")
-      .select(
-        `
+      .select(`
         id,
         order_number,
         customer_name,
@@ -30,8 +29,7 @@ export async function POST(req) {
         artwork_url,
         file_name,
         created_at
-      `
-      )
+      `)
       .eq("order_number", orderNumber)
       .ilike("customer_email", email)
       .maybeSingle();

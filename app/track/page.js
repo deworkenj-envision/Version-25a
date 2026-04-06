@@ -67,7 +67,6 @@ export default function TrackPage() {
 
       if (!res.ok) {
         setError(data.error || "Unable to find order.");
-        setLoading(false);
         return;
       }
 
