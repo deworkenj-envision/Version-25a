@@ -19,6 +19,7 @@ export default function AdminDashboard() {
       });
 
       const data = await res.json();
+      console.log("Loaded orders:", data);
       setOrders(data.orders || []);
     } catch (error) {
       console.error("Failed to load orders:", error);
@@ -26,14 +27,18 @@ export default function AdminDashboard() {
   }
 
   async function updateOrderStatus(orderId, newStatus) {
-if (!orderId) {
-  alert("Missing order ID on this order record.");
-  return;
-}
+    if (!orderId) {
+      alert("Missing order ID on this order record.");
+      console.error("updateOrderStatus called without orderId");
+      return;
+    }
+
     try {
       setUpdatingId(orderId);
 
       const currentOrder = orders.find((order) => order.id === orderId);
+      console.log("Updating order:", currentOrder);
+      console.log("Updating orderId:", orderId, "newStatus:", newStatus);
 
       const statusRes = await fetch(`/api/orders/${orderId}/status`, {
         method: "PUT",
@@ -42,6 +47,7 @@ if (!orderId) {
       });
 
       const statusData = await statusRes.json();
+      console.log("Status API response:", statusData);
 
       if (!statusRes.ok) {
         console.error("Status API error:", statusData);
@@ -61,7 +67,7 @@ if (!orderId) {
         });
 
         const emailData = await emailRes.json();
-        console.log("Email result:", emailData);
+        console.log("Email API response:", emailData);
 
         if (!emailRes.ok) {
           console.error("Email API error:", emailData);
@@ -312,7 +318,7 @@ function PipelineColumn({
         ) : (
           orders.slice(0, 6).map((order) => (
             <PipelineCard
-              key={order.id}
+              key={order.id || order.order_number || Math.random()}
               order={order}
               isUpdating={updatingId === order.id}
               onUpdateStatus={onUpdateStatus}
@@ -365,7 +371,16 @@ function PipelineCard({ order, isUpdating, onUpdateStatus, onOpenDetails }) {
           {status === "paid" && (
             <button
               type="button"
-              onClick={() => onUpdateStatus(order.id, "printing")}
+              onClick={() => {
+                console.log("ORDER OBJECT:", order);
+
+                if (!order?.id) {
+                  alert("Order ID missing — check console");
+                  return;
+                }
+
+                onUpdateStatus(order.id, "printing");
+              }}
               disabled={isUpdating}
               className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -376,7 +391,16 @@ function PipelineCard({ order, isUpdating, onUpdateStatus, onOpenDetails }) {
           {status === "printing" && (
             <button
               type="button"
-              onClick={() => onUpdateStatus(order.id, "shipped")}
+              onClick={() => {
+                console.log("ORDER OBJECT:", order);
+
+                if (!order?.id) {
+                  alert("Order ID missing — check console");
+                  return;
+                }
+
+                onUpdateStatus(order.id, "shipped");
+              }}
               disabled={isUpdating}
               className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -492,7 +516,16 @@ function OrderDetailsModal({ order, onClose, onUpdateStatus, isUpdating }) {
             {status === "paid" && (
               <button
                 type="button"
-                onClick={() => onUpdateStatus(order.id, "printing")}
+                onClick={() => {
+                  console.log("MODAL ORDER OBJECT:", order);
+
+                  if (!order?.id) {
+                    alert("Order ID missing — check console");
+                    return;
+                  }
+
+                  onUpdateStatus(order.id, "printing");
+                }}
                 disabled={isUpdating}
                 className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -503,7 +536,16 @@ function OrderDetailsModal({ order, onClose, onUpdateStatus, isUpdating }) {
             {status === "printing" && (
               <button
                 type="button"
-                onClick={() => onUpdateStatus(order.id, "shipped")}
+                onClick={() => {
+                  console.log("MODAL ORDER OBJECT:", order);
+
+                  if (!order?.id) {
+                    alert("Order ID missing — check console");
+                    return;
+                  }
+
+                  onUpdateStatus(order.id, "shipped");
+                }}
                 disabled={isUpdating}
                 className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
