@@ -1,15 +1,20 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 
-export async function PUT(req, { params }) {
+export async function PUT(req, context) {
   try {
-    const { id } = params;
+    // ✅ FIX: pull params safely
+    const id = context?.params?.id;
+
     const body = await req.json();
     const { status } = body;
 
+    console.log("PARAM ID:", id);
+    console.log("STATUS:", status);
+
     if (!id) {
       return NextResponse.json(
-        { error: "Missing order ID" },
+        { error: "Missing order ID (params not passed)" },
         { status: 400 }
       );
     }
@@ -30,11 +35,14 @@ export async function PUT(req, { params }) {
 
     if (error) {
       console.error("Supabase update error:", error);
+
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
       );
     }
+
+    console.log("UPDATED ORDER:", data);
 
     return NextResponse.json({
       success: true,
@@ -42,6 +50,7 @@ export async function PUT(req, { params }) {
     });
   } catch (error) {
     console.error("Status route error:", error);
+
     return NextResponse.json(
       { error: "Server error" },
       { status: 500 }
