@@ -30,7 +30,7 @@ export async function POST(req) {
         file_name,
         created_at
       `)
-      .eq("order_number", orderNumber)
+      .ilike("order_number", orderNumber)
       .ilike("customer_email", email)
       .maybeSingle();
 
