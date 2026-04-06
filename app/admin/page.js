@@ -26,6 +26,10 @@ export default function AdminDashboard() {
   }
 
   async function updateOrderStatus(orderId, newStatus) {
+if (!orderId) {
+  alert("Missing order ID on this order record.");
+  return;
+}
     try {
       setUpdatingId(orderId);
 
