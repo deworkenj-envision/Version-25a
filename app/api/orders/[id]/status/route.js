@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 
-const ALLOWED_STATUSES = ["pending", "paid", "printing", "shipped", "completed", "cancelled"];
+const ALLOWED_STATUSES = [
+  "pending",
+  "paid",
+  "printing",
+  "shipped",
+  "completed",
+  "cancelled",
+];
 
 function isUuid(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -16,9 +23,9 @@ function normalizeStatus(status) {
 async function findOrderByParam(param) {
   const useId = isUuid(param);
 
-  const query = supabaseAdmin.from("orders").select("*");
-
-  const { data, error } = await query
+  const { data, error } = await supabaseAdmin
+    .from("orders")
+    .select("*")
     .eq(useId ? "id" : "order_number", param)
     .maybeSingle();
 
@@ -83,14 +90,13 @@ export async function POST(req, { params }) {
 
     if (!ALLOWED_STATUSES.includes(status)) {
       return NextResponse.json(
-        {
-          error: `Invalid status. Allowed: ${ALLOWED_STATUSES.join(", ")}`,
-        },
+        { error: `Invalid status. Allowed: ${ALLOWED_STATUSES.join(", ")}` },
         { status: 400 }
       );
     }
 
-    const { data: existingOrder, error: findError, useId } = await findOrderByParam(param);
+    const { data: existingOrder, error: findError, useId } =
+      await findOrderByParam(param);
 
     if (findError) {
       console.error("Order lookup error:", findError);
