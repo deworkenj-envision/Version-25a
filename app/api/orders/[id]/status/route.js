@@ -20,6 +20,11 @@ function normalizeStatus(status) {
   return String(status || "").trim().toLowerCase();
 }
 
+async function getParam(context) {
+  const resolvedParams = await context.params;
+  return resolvedParams?.id || "";
+}
+
 async function findOrderByParam(param) {
   const useId = isUuid(param);
 
@@ -32,9 +37,9 @@ async function findOrderByParam(param) {
   return { data, error, useId };
 }
 
-export async function GET(_req, { params }) {
+export async function GET(_req, context) {
   try {
-    const param = params?.id;
+    const param = await getParam(context);
 
     if (!param) {
       return NextResponse.json(
@@ -67,9 +72,9 @@ export async function GET(_req, { params }) {
   }
 }
 
-export async function POST(req, { params }) {
+export async function POST(req, context) {
   try {
-    const param = params?.id;
+    const param = await getParam(context);
 
     if (!param) {
       return NextResponse.json(
