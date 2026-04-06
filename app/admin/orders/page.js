@@ -2,154 +2,465 @@
 
 import { useEffect, useState } from "react";
 
+function formatMoney(value) {
+  return `$${Number(value || 0).toFixed(2)}`;
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+  try {
+    return new Date(value).toLocaleString();
+  } catch {
+    return value;
+  }
+}
+
+function normalizeOrder(order) {
+  return {
+    ...order,
+    status: order.status || "pending",
+    tracking_carrier: order.tracking_carrier || "",
+    tracking_number: order.tracking_number || "",
+  };
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
+  const [drafts, setDrafts] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [savingId, setSavingId] = useState("");
+
+  async function loadOrders(showRefreshState = false) {
+    try {
+      if (showRefreshState) setRefreshing(true);
+      else setLoading(true);
+
+      setError("");
+
+      const res = await fetch("/api/orders", {
+        cache: "no-store",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to load orders.");
+      }
+
+      const rawOrders = Array.isArray(data?.orders) ? data.orders : [];
+      const normalized = rawOrders.map(normalizeOrder);
+
+      setOrders(normalized);
+
+      const nextDrafts = {};
+      normalized.forEach((order) => {
+        nextDrafts[order.id] = {
+          status: order.status || "pending",
+          trackingCarrier: order.tracking_carrier || "",
+          trackingNumber: order.tracking_number || "",
+        };
+      });
+      setDrafts(nextDrafts);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to load orders.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }
 
   useEffect(() => {
     loadOrders();
   }, []);
 
-  async function loadOrders() {
-    try {
-      const res = await fetch("/api/orders", { cache: "no-store" });
-      const data = await res.json();
-      setOrders(data.orders || []);
-    } catch (error) {
-      console.error("Failed to load orders:", error);
-    }
+  function updateDraft(orderId, updates) {
+    setDrafts((prev) => ({
+      ...prev,
+      [orderId]: {
+        ...(prev[orderId] || {}),
+        ...updates,
+      },
+    }));
   }
 
-  async function updateStatus(id, status) {
+  async function saveOrder(orderId) {
     try {
-      const res = await fetch(`/api/orders/${id}/status`, {
+      setSavingId(orderId);
+      setError("");
+      setSuccessMessage("");
+
+      const draft = drafts[orderId] || {};
+      const order = orders.find((item) => item.id === orderId);
+
+      if (!order) {
+        throw new Error("Order not found.");
+      }
+
+      const res = await fetch(`/api/orders/${orderId}/status`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: draft.status ?? order.status ?? "pending",
+          trackingCarrier:
+            draft.trackingCarrier ?? order.tracking_carrier ?? "",
+          trackingNumber:
+            draft.trackingNumber ?? order.tracking_number ?? "",
+        }),
       });
 
       const data = await res.json();
-      console.log(data);
 
-      await loadOrders();
-    } catch (error) {
-      console.error("Failed to update status:", error);
-    }
-  }
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to update order.");
+      }
 
-  function getStatusClasses(status) {
-    switch ((status || "").toLowerCase()) {
-      case "paid":
-        return "bg-emerald-100 text-emerald-700";
-      case "printing":
-        return "bg-amber-100 text-amber-700";
-      case "shipped":
-        return "bg-blue-100 text-blue-700";
-      default:
-        return "bg-gray-100 text-gray-700";
+      const updatedOrder = normalizeOrder(data?.order || order);
+
+      setOrders((prev) =>
+        prev.map((item) => (item.id === orderId ? updatedOrder : item))
+      );
+
+      setDrafts((prev) => ({
+        ...prev,
+        [orderId]: {
+          status: updatedOrder.status || "pending",
+          trackingCarrier: updatedOrder.tracking_carrier || "",
+          trackingNumber: updatedOrder.tracking_number || "",
+        },
+      }));
+
+      setSuccessMessage(
+        `Order ${updatedOrder.order_number || ""} updated successfully.`
+      );
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to update order.");
+    } finally {
+      setSavingId("");
     }
   }
 
   return (
-    <div className="w-full px-6 py-6">
-      <div className="mx-auto max-w-[1700px]">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-            Orders
-          </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Manage customer orders and production status.
-          </p>
+    <main className="min-h-screen bg-slate-50">
+      <section className="max-w-[1500px] mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">
+              Admin Orders
+            </h1>
+            <p className="mt-2 text-slate-600">
+              View orders, update statuses, and add shipment tracking.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => loadOrders(true)}
+            disabled={refreshing || loading}
+            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+          >
+            {refreshing ? "Refreshing..." : "Refresh Orders"}
+          </button>
         </div>
 
-        <div className="space-y-3">
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className="grid grid-cols-[160px_1.5fr_1.1fr_90px_110px_120px_150px_140px] items-center gap-4 rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
-            >
-              {/* Order Number */}
-              <div className="min-w-0">
-                <div className="text-[28px] font-semibold leading-none tracking-tight text-gray-900">
-                  {order.order_number || "—"}
-                </div>
-              </div>
+        {error ? (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+            {error}
+          </div>
+        ) : null}
 
-              {/* Customer */}
-              <div className="min-w-0">
-                <div className="truncate text-base font-semibold leading-tight text-gray-900">
-                  {order.customer_name || "No customer name"}
-                </div>
-                <div className="mt-1 truncate text-sm text-gray-500">
-                  {order.customer_email || "No email"}
-                </div>
-              </div>
+        {successMessage ? (
+          <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-green-700">
+            {successMessage}
+          </div>
+        ) : null}
 
-              {/* Product */}
-              <div className="min-w-0">
-                <div className="truncate text-base text-gray-800">
-                  {order.product_name || "—"}
-                </div>
-              </div>
+        {loading ? (
+          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
+            Loading orders...
+          </div>
+        ) : null}
 
-              {/* Quantity */}
-              <div className="text-base font-medium text-gray-800">
-                {order.quantity || 0}
-              </div>
+        {!loading && orders.length === 0 ? (
+          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
+            No orders found.
+          </div>
+        ) : null}
 
-              {/* Total */}
-              <div className="text-base font-semibold text-gray-900">
-                ${Number(order.total || 0).toFixed(2)}
-              </div>
+        {!loading && orders.length > 0 ? (
+          <div className="space-y-6">
+            {orders.map((order) => {
+              const draft = drafts[order.id] || {};
+              const isSaving = savingId === order.id;
 
-              {/* Status */}
-              <div>
-                <span
-                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold capitalize ${getStatusClasses(
-                    order.status
-                  )}`}
+              return (
+                <div
+                  key={order.id}
+                  className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
                 >
-                  {order.status || "unknown"}
-                </span>
-              </div>
+                  <div className="border-b border-slate-200 bg-slate-900 px-6 py-5 text-white">
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-300">
+                          Order Number
+                        </p>
+                        <p className="mt-1 text-base font-semibold break-all">
+                          {order.order_number || "-"}
+                        </p>
+                      </div>
 
-              {/* Artwork */}
-              <div>
-                {order.artwork_url ? (
-                  <a
-                    href={order.artwork_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center justify-center rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700"
-                  >
-                    Download
-                  </a>
-                ) : (
-                  <span className="text-sm text-gray-400">No artwork</span>
-                )}
-              </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-300">
+                          Customer
+                        </p>
+                        <p className="mt-1 text-base font-semibold break-all">
+                          {order.customer_name || "-"}
+                        </p>
+                      </div>
 
-              {/* Status Dropdown */}
-              <div>
-                <select
-                  value={order.status || "paid"}
-                  onChange={(e) => updateStatus(order.id, e.target.value)}
-                  className="h-11 w-full rounded-xl border border-gray-300 bg-white px-3 text-sm font-medium text-gray-800 outline-none transition focus:border-gray-400"
-                >
-                  <option value="paid">paid</option>
-                  <option value="printing">printing</option>
-                  <option value="shipped">shipped</option>
-                </select>
-              </div>
-            </div>
-          ))}
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-300">
+                          Email
+                        </p>
+                        <p className="mt-1 text-base font-semibold break-all">
+                          {order.customer_email || "-"}
+                        </p>
+                      </div>
 
-          {orders.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-10 text-center text-gray-500">
-              No orders found.
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-300">
+                          Product
+                        </p>
+                        <p className="mt-1 text-base font-semibold break-all">
+                          {order.product_name || "-"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-300">
+                          Total
+                        </p>
+                        <p className="mt-1 text-base font-semibold">
+                          {formatMoney(order.total)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-300">
+                          Created
+                        </p>
+                        <p className="mt-1 text-base font-semibold break-all">
+                          {formatDate(order.created_at)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Quantity
+                        </p>
+                        <p className="mt-1 font-semibold text-slate-900">
+                          {order.quantity ?? "-"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Shipping
+                        </p>
+                        <p className="mt-1 font-semibold text-slate-900">
+                          {formatMoney(order.shipping)}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          File Name
+                        </p>
+                        <p className="mt-1 font-semibold text-slate-900 break-all">
+                          {order.file_name || "-"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Current Status
+                        </p>
+                        <p className="mt-1 font-semibold text-blue-700 break-all">
+                          {order.status || "pending"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {order.notes ? (
+                      <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Notes
+                        </p>
+                        <p className="mt-1 text-slate-900 whitespace-pre-wrap">
+                          {order.notes}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-slate-700">
+                          Status
+                        </label>
+                        <select
+                          value={draft.status ?? order.status ?? "pending"}
+                          onChange={(e) =>
+                            updateDraft(order.id, { status: e.target.value })
+                          }
+                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-500"
+                        >
+                          <option value="pending">pending</option>
+                          <option value="paid">paid</option>
+                          <option value="printing">printing</option>
+                          <option value="shipped">shipped</option>
+                          <option value="delivered">delivered</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-slate-700">
+                          Carrier
+                        </label>
+                        <select
+                          value={
+                            draft.trackingCarrier ??
+                            order.tracking_carrier ??
+                            ""
+                          }
+                          onChange={(e) =>
+                            updateDraft(order.id, {
+                              trackingCarrier: e.target.value,
+                            })
+                          }
+                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-500"
+                        >
+                          <option value="">Select carrier</option>
+                          <option value="UPS">UPS</option>
+                          <option value="USPS">USPS</option>
+                          <option value="FEDEX">FedEx</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-slate-700">
+                          Tracking Number
+                        </label>
+                        <input
+                          type="text"
+                          value={
+                            draft.trackingNumber ??
+                            order.tracking_number ??
+                            ""
+                          }
+                          onChange={(e) =>
+                            updateDraft(order.id, {
+                              trackingNumber: e.target.value,
+                            })
+                          }
+                          placeholder="Enter tracking number"
+                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Saved Carrier
+                        </p>
+                        <p className="mt-1 font-semibold text-slate-900 break-all">
+                          {order.tracking_carrier || "-"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Saved Tracking Number
+                        </p>
+                        <p className="mt-1 font-semibold text-slate-900 break-all">
+                          {order.tracking_number || "-"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Order ID
+                        </p>
+                        <p className="mt-1 font-semibold text-slate-900 break-all text-sm">
+                          {order.id || "-"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Artwork
+                        </p>
+                        {order.artwork_url ? (
+                          <a
+                            href={order.artwork_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-2 inline-flex items-center justify-center rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                          >
+                            Download Artwork
+                          </a>
+                        ) : (
+                          <p className="mt-1 font-semibold text-slate-900">
+                            No artwork
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => saveOrder(order.id)}
+                        disabled={isSaving}
+                        className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                      >
+                        {isSaving ? "Saving..." : "Save Update"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDrafts((prev) => ({
+                            ...prev,
+                            [order.id]: {
+                              status: order.status || "pending",
+                              trackingCarrier: order.tracking_carrier || "",
+                              trackingNumber: order.tracking_number || "",
+                            },
+                          }))
+                        }
+                        className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-900 hover:bg-slate-100"
+                      >
+                        Reset Changes
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
+      </section>
+    </main>
   );
 }

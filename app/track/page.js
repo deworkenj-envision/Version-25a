@@ -38,6 +38,27 @@ function Step({ label, active }) {
   );
 }
 
+function getTrackingLink(carrier, trackingNumber) {
+  const c = (carrier || "").toUpperCase();
+  const n = encodeURIComponent(trackingNumber || "");
+
+  if (!n) return "";
+
+  if (c === "UPS") {
+    return `https://www.ups.com/track?loc=en_US&tracknum=${n}`;
+  }
+
+  if (c === "USPS") {
+    return `https://tools.usps.com/go/TrackAction?tLabels=${n}`;
+  }
+
+  if (c === "FEDEX") {
+    return `https://www.fedex.com/fedextrack/?trknbr=${n}`;
+  }
+
+  return "";
+}
+
 export default function TrackPage() {
   const [orderNumber, setOrderNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -80,6 +101,10 @@ export default function TrackPage() {
   }
 
   const currentStep = statusStep(order?.status);
+  const trackingLink = getTrackingLink(
+    order?.tracking_carrier,
+    order?.tracking_number
+  );
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -91,7 +116,7 @@ export default function TrackPage() {
             </h1>
             <p className="mt-3 text-sm sm:text-base text-blue-100 max-w-2xl">
               Enter your order number and email address to view the latest
-              production status for your print order.
+              production and shipment status for your print order.
             </p>
           </div>
 
@@ -203,6 +228,47 @@ export default function TrackPage() {
                     <Step label="Delivered" active={currentStep >= 5} />
                   </div>
                 </div>
+
+                {(order.tracking_carrier || order.tracking_number) && (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6">
+                    <h2 className="text-lg font-bold text-slate-900 mb-4">
+                      Shipment Tracking
+                    </h2>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Carrier
+                        </p>
+                        <p className="mt-1 font-medium text-slate-900">
+                          {order.tracking_carrier || "-"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Tracking Number
+                        </p>
+                        <p className="mt-1 font-medium text-slate-900 break-all">
+                          {order.tracking_number || "-"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {trackingLink ? (
+                      <div className="mt-6">
+                        <a
+                          href={trackingLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center rounded-xl bg-blue-600 text-white px-5 py-3 font-semibold hover:bg-blue-700"
+                        >
+                          Track Shipment
+                        </a>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-6">
                   <h2 className="text-lg font-bold text-slate-900 mb-4">

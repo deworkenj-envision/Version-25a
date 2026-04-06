@@ -4,7 +4,7 @@ import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 export async function POST(req) {
   try {
     const body = await req.json();
-    const orderNumber = (body.orderNumber || "").trim();
+    const orderNumber = (body.orderNumber || "").trim().toUpperCase();
     const email = (body.email || "").trim().toLowerCase();
 
     if (!orderNumber || !email) {
@@ -28,7 +28,9 @@ export async function POST(req) {
         status,
         artwork_url,
         file_name,
-        created_at
+        created_at,
+        tracking_carrier,
+        tracking_number
       `)
       .ilike("order_number", orderNumber)
       .ilike("customer_email", email)

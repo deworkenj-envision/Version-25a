@@ -1,61 +1,75 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 
-export async function PUT(req) {
+export async function PUT(req, { params }) {
   try {
-    const url = new URL(req.url);
-    const pathnameParts = url.pathname.split("/").filter(Boolean);
-
-    // /api/orders/:id/status  -> ["api", "orders", ":id", "status"]
-    const id = pathnameParts[2];
-
+    const { id } = await params;
     const body = await req.json();
-    const { status } = body;
 
-    console.log("STATUS ROUTE URL:", req.url);
-    console.log("PATH PARTS:", pathnameParts);
-    console.log("ORDER ID FROM URL:", id);
-    console.log("NEW STATUS:", status);
+    const status = (body.status || "").trim().toLowerCase();
+    const trackingCarrier = (body.trackingCarrier || "").trim().toUpperCase();
+    const trackingNumber = (body.trackingNumber || "").trim();
 
     if (!id) {
       return NextResponse.json(
-        { error: "Missing order ID (could not read from URL)" },
+        { error: "Missing order id." },
         { status: 400 }
       );
     }
 
-    if (!status) {
+    const allowedStatuses = [
+      "pending",
+      "paid",
+      "printing",
+      "shipped",
+      "delivered",
+    ];
+
+    if (status && !allowedStatuses.includes(status)) {
       return NextResponse.json(
-        { error: "Missing status" },
+        { error: "Invalid status." },
         { status: 400 }
       );
     }
+
+    const allowedCarriers = ["", "UPS", "USPS", "FEDEX"];
+
+    if (!allowedCarriers.includes(trackingCarrier)) {
+      return NextResponse.json(
+        { error: "Invalid tracking carrier." },
+        { status: 400 }
+      );
+    }
+
+    const updateData = {};
+
+    if (status) updateData.status = status;
+    updateData.tracking_carrier = trackingCarrier || null;
+    updateData.tracking_number = trackingNumber || null;
 
     const { data, error } = await supabaseAdmin
       .from("orders")
-      .update({ status })
+      .update(updateData)
       .eq("id", id)
       .select()
       .single();
 
     if (error) {
-      console.error("Supabase update error:", error);
+      console.error("Order status update error:", error);
       return NextResponse.json(
-        { error: error.message },
+        { error: "Failed to update order." },
         { status: 500 }
       );
     }
 
-    console.log("UPDATED ORDER:", data);
-
-    return NextResponse.json({
-      success: true,
-      order: data,
-    });
-  } catch (error) {
-    console.error("Status route error:", error);
     return NextResponse.json(
-      { error: "Server error" },
+      { success: true, order: data },
+      { status: 200 }
+    );
+  } catch (err) {
+    console.error("Order status route error:", err);
+    return NextResponse.json(
+      { error: "Something went wrong." },
       { status: 500 }
     );
   }
