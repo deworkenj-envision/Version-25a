@@ -1,20 +1,25 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 
-export async function PUT(req, context) {
+export async function PUT(req) {
   try {
-    // ✅ FIX: pull params safely
-    const id = context?.params?.id;
+    const url = new URL(req.url);
+    const pathnameParts = url.pathname.split("/").filter(Boolean);
+
+    // /api/orders/:id/status  -> ["api", "orders", ":id", "status"]
+    const id = pathnameParts[2];
 
     const body = await req.json();
     const { status } = body;
 
-    console.log("PARAM ID:", id);
-    console.log("STATUS:", status);
+    console.log("STATUS ROUTE URL:", req.url);
+    console.log("PATH PARTS:", pathnameParts);
+    console.log("ORDER ID FROM URL:", id);
+    console.log("NEW STATUS:", status);
 
     if (!id) {
       return NextResponse.json(
-        { error: "Missing order ID (params not passed)" },
+        { error: "Missing order ID (could not read from URL)" },
         { status: 400 }
       );
     }
@@ -35,7 +40,6 @@ export async function PUT(req, context) {
 
     if (error) {
       console.error("Supabase update error:", error);
-
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
@@ -50,7 +54,6 @@ export async function PUT(req, context) {
     });
   } catch (error) {
     console.error("Status route error:", error);
-
     return NextResponse.json(
       { error: "Server error" },
       { status: 500 }
