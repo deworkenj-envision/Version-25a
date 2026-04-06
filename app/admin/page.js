@@ -14,7 +14,10 @@ export default function AdminDashboard() {
 
   async function loadOrders() {
     try {
-      const res = await fetch("/api/orders", { cache: "no-store" });
+      const res = await fetch("/api/orders", {
+        cache: "no-store",
+      });
+
       const data = await res.json();
       setOrders(data.orders || []);
     } catch (error) {
@@ -28,45 +31,56 @@ export default function AdminDashboard() {
 
       const currentOrder = orders.find((order) => order.id === orderId);
 
-      const res = await fetch(`/api/orders/${orderId}/status`, {
+      const statusRes = await fetch(`/api/orders/${orderId}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to update order status");
+      const statusData = await statusRes.json();
+
+      if (!statusRes.ok) {
+        console.error("Status API error:", statusData);
+        throw new Error(statusData?.error || "Failed to update order status");
       }
 
-      const data = await res.json();
-      const updatedOrder = data?.order;
+      try {
+        const emailRes = await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: currentOrder?.customer_email,
+            name: currentOrder?.customer_name,
+            orderNumber: currentOrder?.order_number,
+            status: newStatus,
+          }),
+        });
 
-      await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: currentOrder?.customer_email,
-          name: currentOrder?.customer_name,
-          orderNumber: currentOrder?.order_number,
-          status: newStatus,
-        }),
-      });
+        const emailData = await emailRes.json();
+        console.log("Email result:", emailData);
 
-      if (updatedOrder?.id) {
-        setOrders((prev) =>
-          prev.map((order) =>
-            order.id === updatedOrder.id ? { ...order, ...updatedOrder } : order
-          )
-        );
-
-        if (selectedOrder?.id === updatedOrder.id) {
-          setSelectedOrder((prev) => ({ ...prev, ...updatedOrder }));
+        if (!emailRes.ok) {
+          console.error("Email API error:", emailData);
         }
-      } else {
-        await loadOrders();
+      } catch (emailError) {
+        console.error("Email request failed:", emailError);
+      }
+
+      await loadOrders();
+
+      if (selectedOrder?.id === orderId) {
+        const refreshedRes = await fetch("/api/orders", {
+          cache: "no-store",
+        });
+        const refreshedData = await refreshedRes.json();
+        const refreshedOrder = (refreshedData.orders || []).find(
+          (order) => order.id === orderId
+        );
+        setSelectedOrder(refreshedOrder || null);
       }
     } catch (error) {
       console.error("Status update failed:", error);
+      alert("Status update failed. Check browser console and Vercel logs.");
     } finally {
       setUpdatingId(null);
     }
@@ -512,7 +526,9 @@ function OrderDetailsModal({ order, onClose, onUpdateStatus, isUpdating }) {
 
 function DetailBlock({ title, children, className = "" }) {
   return (
-    <div className={`rounded-2xl border border-gray-100 bg-gray-50 p-5 ${className}`}>
+    <div
+      className={`rounded-2xl border border-gray-100 bg-gray-50 p-5 ${className}`}
+    >
       <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
         {title}
       </h3>
