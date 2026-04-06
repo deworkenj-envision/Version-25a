@@ -7,44 +7,39 @@ export async function GET() {
       .from("orders")
       .select(`
         id,
-        user_id,
-        status,
-        total,
-        stripe_session_id,
-        created_at,
         order_number,
         customer_name,
         customer_email,
         product_name,
-        size,
-        paper,
-        finish,
-        sides,
         quantity,
+        total,
+        shipping,
+        status,
+        artwork_url,
         file_name,
         notes,
-        shipping,
-        artwork_url,
-        subtotal
+        tracking_carrier,
+        tracking_number,
+        created_at
       `)
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Supabase fetch orders error:", error);
+      console.error("Orders fetch error:", error);
       return NextResponse.json(
-        { error: error.message },
+        { error: "Failed to load orders." },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      orders: data || [],
-    });
-  } catch (error) {
-    console.error("Orders route error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch orders" },
+      { orders: data || [] },
+      { status: 200 }
+    );
+  } catch (err) {
+    console.error("Orders route error:", err);
+    return NextResponse.json(
+      { error: "Something went wrong." },
       { status: 500 }
     );
   }

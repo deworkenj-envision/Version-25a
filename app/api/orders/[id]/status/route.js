@@ -41,17 +41,33 @@ export async function PUT(req, { params }) {
       );
     }
 
-    const updateData = {};
-
-    if (status) updateData.status = status;
-    updateData.tracking_carrier = trackingCarrier || null;
-    updateData.tracking_number = trackingNumber || null;
+    const updateData = {
+      status: status || "pending",
+      tracking_carrier: trackingCarrier || null,
+      tracking_number: trackingNumber || null,
+    };
 
     const { data, error } = await supabaseAdmin
       .from("orders")
       .update(updateData)
       .eq("id", id)
-      .select()
+      .select(`
+        id,
+        order_number,
+        customer_name,
+        customer_email,
+        product_name,
+        quantity,
+        total,
+        shipping,
+        status,
+        artwork_url,
+        file_name,
+        notes,
+        tracking_carrier,
+        tracking_number,
+        created_at
+      `)
       .single();
 
     if (error) {
