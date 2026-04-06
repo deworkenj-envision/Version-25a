@@ -63,7 +63,9 @@ async function sendEmail({ to, subject, html, text }) {
 
   if (!response.ok) {
     console.error("Resend email error:", data || response.statusText);
-    throw new Error("Failed to send email.");
+    throw new Error(
+      data?.message || data?.error || "Failed to send email."
+    );
   }
 
   console.log("Email sent:", data);
@@ -176,12 +178,12 @@ async function sendDeliveredEmail(order) {
   const text = [
     `Hi ${customerName},`,
     ``,
-    `Your order ${orderNumber} has been marked as delivered.`,
+    `Your order ${orderNumber} has been delivered.`,
     `Carrier: ${carrier || "-"}`,
     `Tracking Number: ${trackingNumber || "-"}`,
     trackingLink ? `View Tracking: ${trackingLink}` : "",
     ``,
-    `Thank you for your order.`,
+    `Thank you for your order. We appreciate your business.`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -315,7 +317,7 @@ export async function PUT(req, { params }) {
               : "Shipment email sent.";
         } catch (emailError) {
           console.error("Shipment email failed:", emailError);
-          emailNotice = "Order updated, but shipment email failed.";
+          emailNotice = `Order updated, but shipment email failed: ${emailError.message}`;
         }
       } else {
         emailNotice =
@@ -332,7 +334,7 @@ export async function PUT(req, { params }) {
             : "Delivered email sent.";
       } catch (emailError) {
         console.error("Delivered email failed:", emailError);
-        emailNotice = "Order updated, but delivered email failed.";
+        emailNotice = `Order updated, but delivered email failed: ${emailError.message}`;
       }
     }
 
