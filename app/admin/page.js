@@ -26,6 +26,8 @@ export default function AdminDashboard() {
     try {
       setUpdatingId(orderId);
 
+      const currentOrder = orders.find((order) => order.id === orderId);
+
       const res = await fetch(`/api/orders/${orderId}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -38,6 +40,17 @@ export default function AdminDashboard() {
 
       const data = await res.json();
       const updatedOrder = data?.order;
+
+      await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: currentOrder?.customer_email,
+          name: currentOrder?.customer_name,
+          orderNumber: currentOrder?.order_number,
+          status: newStatus,
+        }),
+      });
 
       if (updatedOrder?.id) {
         setOrders((prev) =>
@@ -91,8 +104,7 @@ export default function AdminDashboard() {
     });
   }, [paidOrders]);
 
-  const averageOrderValue =
-    totalOrders > 0 ? revenue / totalOrders : 0;
+  const averageOrderValue = totalOrders > 0 ? revenue / totalOrders : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -243,9 +255,7 @@ function MiniStat({ label, value }) {
       <div className="text-xs uppercase tracking-wide text-gray-400">
         {label}
       </div>
-      <div className="mt-2 text-lg font-semibold text-gray-900">
-        {value}
-      </div>
+      <div className="mt-2 text-lg font-semibold text-gray-900">{value}</div>
     </div>
   );
 }
@@ -452,7 +462,9 @@ function OrderDetailsModal({ order, onClose, onUpdateStatus, isUpdating }) {
                 </a>
               </div>
             ) : (
-              <div className="mt-4 text-sm text-gray-400">No artwork uploaded.</div>
+              <div className="mt-4 text-sm text-gray-400">
+                No artwork uploaded.
+              </div>
             )}
           </DetailBlock>
         </div>
