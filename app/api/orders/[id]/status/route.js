@@ -1,60 +1,10 @@
-import { NextResponse } from "next/server";
-import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
+const param = params.id;
 
-const ALLOWED_STATUSES = [
-  "pending",
-  "paid",
-  "printing",
-  "shipped",
-  "completed",
-  "cancelled",
-];
+// detect if it's UUID or order number
+const isUUID = /^[0-9a-fA-F-]{36}$/.test(param);
 
-export async function PATCH(request, { params }) {
-  try {
-    const { id } = await params;
+const query = supabaseAdmin.from("orders").select("*");
 
-    const body = await request.json();
-    const status = String(body?.status || "").toLowerCase().trim();
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "Missing order id" },
-        { status: 400 }
-      );
-    }
-
-    if (!ALLOWED_STATUSES.includes(status)) {
-      return NextResponse.json(
-        { error: "Invalid status value" },
-        { status: 400 }
-      );
-    }
-
-    const { data, error } = await supabaseAdmin
-      .from("orders")
-      .update({ status })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Supabase update error:", error);
-      return NextResponse.json(
-        { error: error.message || "Failed to update order status" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      order: data,
-    });
-  } catch (err) {
-    console.error("STATUS UPDATE CRASH:", err);
-    return NextResponse.json(
-      { error: err?.message || "Server error updating order status" },
-      { status: 500 }
-    );
-  }
-}
+const { data: order, error } = await query
+  .eq(isUUID ? "id" : "order_number", param)
+  .single();
