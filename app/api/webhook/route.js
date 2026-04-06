@@ -33,29 +33,37 @@ export async function POST(req) {
       const metadata = session.metadata || {};
       const stripeSessionId = session.id;
 
-      const { data: existing } = await supabaseAdmin
+      const { data: existing, error: existingError } = await supabaseAdmin
         .from("orders")
-        .select("id")
+        .select("id, order_number, status")
         .eq("stripe_session_id", stripeSessionId)
         .maybeSingle();
 
-      if (existing) {
-        return NextResponse.json({ received: true }, { status: 200 });
-      }
-
-      const { count, error: countError } = await supabaseAdmin
-        .from("orders")
-        .select("*", { count: "exact", head: true });
-
-      if (countError) {
-        console.error("Supabase count error:", countError);
+      if (existingError) {
+        console.error("Supabase existing lookup error:", existingError);
         return NextResponse.json(
-          { error: "Failed to generate order number" },
+          { error: "Failed to look up existing order" },
           { status: 500 }
         );
       }
 
-      const orderNumber = generateOrderNumber(count || 0);
+      let orderNumber = existing?.order_number || null;
+
+      if (!orderNumber) {
+        const { count, error: countError } = await supabaseAdmin
+          .from("orders")
+          .select("*", { count: "exact", head: true });
+
+        if (countError) {
+          console.error("Supabase count error:", countError);
+          return NextResponse.json(
+            { error: "Failed to generate order number" },
+            { status: 500 }
+          );
+        }
+
+        orderNumber = generateOrderNumber(count || 0);
+      }
 
       const orderData = {
         order_number: orderNumber,
@@ -84,19 +92,34 @@ export async function POST(req) {
         artwork_url: metadata.artworkUrl || "",
         file_name: metadata.fileName || "",
 
-        status: "Paid",
+        status: "paid",
       };
 
-      const { error: insertError } = await supabaseAdmin
-        .from("orders")
-        .insert([orderData]);
+      if (existing) {
+        const { error: updateError } = await supabaseAdmin
+          .from("orders")
+          .update(orderData)
+          .eq("id", existing.id);
 
-      if (insertError) {
-        console.error("Supabase insert error:", insertError);
-        return NextResponse.json(
-          { error: insertError.message },
-          { status: 500 }
-        );
+        if (updateError) {
+          console.error("Supabase update error:", updateError);
+          return NextResponse.json(
+            { error: updateError.message },
+            { status: 500 }
+          );
+        }
+      } else {
+        const { error: insertError } = await supabaseAdmin
+          .from("orders")
+          .insert([orderData]);
+
+        if (insertError) {
+          console.error("Supabase insert error:", insertError);
+          return NextResponse.json(
+            { error: insertError.message },
+            { status: 500 }
+          );
+        }
       }
     }
 
