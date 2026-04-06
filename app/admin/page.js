@@ -7,43 +7,72 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    fetch("/api/orders")
-      .then((res) => res.json())
-      .then((data) => setOrders(data.orders || []));
+    loadOrders();
   }, []);
 
-  const totalOrders = orders.length;
-  const revenue = orders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+  async function loadOrders() {
+    try {
+      const res = await fetch("/api/orders", { cache: "no-store" });
+      const data = await res.json();
+      setOrders(data.orders || []);
+    } catch (error) {
+      console.error("Failed to load orders:", error);
+    }
+  }
 
-  const paid = orders.filter((o) => o.status === "paid").length;
-  const printing = orders.filter((o) => o.status === "printing").length;
-  const shipped = orders.filter((o) => o.status === "shipped").length;
+  const totalOrders = orders.length;
+  const revenue = orders.reduce((sum, order) => {
+    return sum + Number(order.total || 0);
+  }, 0);
+
+  const paid = orders.filter(
+    (order) => (order.status || "").toLowerCase() === "paid"
+  ).length;
+
+  const printing = orders.filter(
+    (order) => (order.status || "").toLowerCase() === "printing"
+  ).length;
+
+  const shipped = orders.filter(
+    (order) => (order.status || "").toLowerCase() === "shipped"
+  ).length;
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
-      <h1 className="text-2xl font-semibold mb-6">Admin Dashboard</h1>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="mx-auto max-w-[1500px]">
+        <div className="mb-8">
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+            Admin Dashboard
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            Overview of orders, revenue, and production status.
+          </p>
+        </div>
 
-      {/* STATS */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <Stat title="Total Orders" value={totalOrders} />
-        <Stat title="Revenue" value={`$${revenue.toFixed(2)}`} />
-        <Stat title="Printing" value={printing} />
-        <Stat title="Shipped" value={shipped} />
-      </div>
+        <div className="mb-10 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-5">
+          <Stat title="Total Orders" value={totalOrders} />
+          <Stat title="Revenue" value={`$${revenue.toFixed(2)}`} />
+          <Stat title="Paid" value={paid} />
+          <Stat title="Printing" value={printing} />
+          <Stat title="Shipped" value={shipped} />
+        </div>
 
-      {/* QUICK ACTION */}
-      <div className="bg-white border rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-2">Orders</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Manage and update all customer orders
-        </p>
+        <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
+          <h2 className="mb-2 text-xl font-semibold text-gray-900">
+            Order Management
+          </h2>
 
-        <Link
-          href="/admin/orders"
-          className="inline-block bg-black text-white px-5 py-3 rounded-lg"
-        >
-          Go to Orders →
-        </Link>
+          <p className="mb-6 text-sm text-gray-500">
+            View, update, and manage all customer orders.
+          </p>
+
+          <Link
+            href="/admin/orders"
+            className="inline-flex items-center gap-2 rounded-xl bg-black px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
+          >
+            Go to Orders →
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -51,9 +80,13 @@ export default function AdminDashboard() {
 
 function Stat({ title, value }) {
   return (
-    <div className="bg-white border rounded-xl p-4 shadow-sm">
-      <div className="text-sm text-gray-500">{title}</div>
-      <div className="text-xl font-semibold mt-1">{value}</div>
+    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:shadow-md">
+      <div className="text-xs uppercase tracking-wide text-gray-400">
+        {title}
+      </div>
+      <div className="mt-2 text-2xl font-semibold text-gray-900">
+        {value}
+      </div>
     </div>
   );
 }
