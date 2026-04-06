@@ -5,6 +5,7 @@ import Link from "next/link";
 
 export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     loadOrders();
@@ -17,6 +18,28 @@ export default function AdminDashboard() {
       setOrders(data.orders || []);
     } catch (error) {
       console.error("Failed to load orders:", error);
+    }
+  }
+
+  async function updateOrderStatus(orderId, newStatus) {
+    try {
+      setUpdatingId(orderId);
+
+      const res = await fetch(`/api/orders/${orderId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update order status");
+      }
+
+      await loadOrders();
+    } catch (error) {
+      console.error("Status update failed:", error);
+    } finally {
+      setUpdatingId(null);
     }
   }
 
@@ -109,6 +132,8 @@ export default function AdminDashboard() {
             count={newestPaidOrders.length}
             orders={newestPaidOrders}
             emptyText="No new orders"
+            updatingId={updatingId}
+            onUpdateStatus={updateOrderStatus}
           />
 
           <PipelineColumn
@@ -118,6 +143,8 @@ export default function AdminDashboard() {
             count={printingOrders.length}
             orders={printingOrders}
             emptyText="No active jobs"
+            updatingId={updatingId}
+            onUpdateStatus={updateOrderStatus}
           />
 
           <PipelineColumn
@@ -127,6 +154,8 @@ export default function AdminDashboard() {
             count={shippedOrders.length}
             orders={shippedOrders}
             emptyText="No completed orders"
+            updatingId={updatingId}
+            onUpdateStatus={updateOrderStatus}
           />
         </div>
       </div>
@@ -154,6 +183,8 @@ function PipelineColumn({
   count,
   orders,
   emptyText,
+  updatingId,
+  onUpdateStatus,
 }) {
   return (
     <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
@@ -177,7 +208,12 @@ function PipelineColumn({
           </div>
         ) : (
           orders.slice(0, 6).map((order) => (
-            <PipelineCard key={order.id} order={order} />
+            <PipelineCard
+              key={order.id}
+              order={order}
+              isUpdating={updatingId === order.id}
+              onUpdateStatus={onUpdateStatus}
+            />
           ))
         )}
       </div>
@@ -191,7 +227,9 @@ function PipelineColumn({
   );
 }
 
-function PipelineCard({ order }) {
+function PipelineCard({ order, isUpdating, onUpdateStatus }) {
+  const status = (order.status || "").toLowerCase();
+
   return (
     <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 transition hover:bg-white hover:shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -219,12 +257,36 @@ function PipelineCard({ order }) {
           Qty: {order.quantity || 0}
         </div>
 
-        <Link
-          href="/admin/orders"
-          className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-100"
-        >
-          Open →
-        </Link>
+        <div className="flex items-center gap-2">
+          {status === "paid" && (
+            <button
+              type="button"
+              onClick={() => onUpdateStatus(order.id, "printing")}
+              disabled={isUpdating}
+              className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isUpdating ? "Updating..." : "Start"}
+            </button>
+          )}
+
+          {status === "printing" && (
+            <button
+              type="button"
+              onClick={() => onUpdateStatus(order.id, "shipped")}
+              disabled={isUpdating}
+              className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isUpdating ? "Updating..." : "Ship"}
+            </button>
+          )}
+
+          <Link
+            href="/admin/orders"
+            className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-100"
+          >
+            Open →
+          </Link>
+        </div>
       </div>
     </div>
   );
