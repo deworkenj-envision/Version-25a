@@ -49,7 +49,7 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="mb-10 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-5">
+        <div className="mb-10 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <Stat title="Total Orders" value={totalOrders} />
           <Stat title="Revenue" value={`$${revenue.toFixed(2)}`} />
           <Stat title="Paid" value={paid} />
