@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 export async function POST(req) {
   try {
     const body = await req.json();
-
     const { email, name, orderNumber, status } = body;
 
     if (!email) {
@@ -13,7 +12,7 @@ export async function POST(req) {
       );
     }
 
-    console.log("📧 EMAIL SENT:");
+    console.log("EMAIL STATUS UPDATE");
     console.log({
       to: email,
       name,
@@ -23,11 +22,13 @@ export async function POST(req) {
 
     return NextResponse.json({
       success: true,
-      message: "Email simulated (check console)",
+      message: "Email simulated successfully",
     });
-  } catch (err) {
+  } catch (error) {
+    console.error("Send email error:", error);
+
     return NextResponse.json(
-      { error: "Email failed" },
+      { error: "Failed to send email" },
       { status: 500 }
     );
   }
