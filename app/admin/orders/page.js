@@ -135,9 +135,12 @@ export default function AdminOrdersPage() {
         },
       }));
 
-      setSuccessMessage(
-        `Order ${updatedOrder.order_number || ""} updated successfully.`
-      );
+      const message =
+  data?.emailNotice
+    ? `Order ${updatedOrder.order_number || ""} updated. ${data.emailNotice}`
+    : `Order ${updatedOrder.order_number || ""} updated successfully.`;
+
+setSuccessMessage(message);
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to update order.");
