@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 
 export async function PUT(req, { params }) {
   try {
@@ -21,7 +21,6 @@ export async function PUT(req, { params }) {
       );
     }
 
-    // ✅ IMPORTANT: id is already a UUID string — do NOT modify it
     const { data, error } = await supabaseAdmin
       .from("orders")
       .update({ status })
@@ -31,7 +30,6 @@ export async function PUT(req, { params }) {
 
     if (error) {
       console.error("Supabase update error:", error);
-
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
@@ -42,9 +40,8 @@ export async function PUT(req, { params }) {
       success: true,
       order: data,
     });
-  } catch (err) {
-    console.error("Route error:", err);
-
+  } catch (error) {
+    console.error("Status route error:", error);
     return NextResponse.json(
       { error: "Server error" },
       { status: 500 }
