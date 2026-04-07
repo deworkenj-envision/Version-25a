@@ -1,205 +1,57 @@
 "use client";
 
-import { useMemo, useState } from "react";
-
-const PRODUCT_OPTIONS = [
-  "Business Cards",
-  "Flyers",
-  "Postcards",
-  "Banners",
-  "Brochures",
-];
-
-const PAPER_OPTIONS = ["Standard", "Premium", "Gloss", "Recycled"];
-const FINISH_OPTIONS = ["Matte", "Glossy", "Soft Touch", "Uncoated"];
-const SIDES_OPTIONS = ["Front Only", "Front and Back"];
-
-const PRICING = {
-  "Business Cards": {
-    baseUnitPrice: 0.25,
-    paperUpcharges: {
-      Standard: 0,
-      Premium: 0.05,
-      Gloss: 0.04,
-      Recycled: 0.03,
-    },
-    finishUpcharges: {
-      Matte: 0,
-      Glossy: 0.03,
-      "Soft Touch": 0.08,
-      Uncoated: 0,
-    },
-    sidesMultiplier: {
-      "Front Only": 1,
-      "Front and Back": 1.15,
-    },
-  },
-
-  Flyers: {
-    baseUnitPrice: 0.35,
-    paperUpcharges: {
-      Standard: 0,
-      Premium: 0.07,
-      Gloss: 0.05,
-      Recycled: 0.04,
-    },
-    finishUpcharges: {
-      Matte: 0,
-      Glossy: 0.04,
-      "Soft Touch": 0.1,
-      Uncoated: 0,
-    },
-    sidesMultiplier: {
-      "Front Only": 1,
-      "Front and Back": 1.2,
-    },
-  },
-
-  Postcards: {
-    baseUnitPrice: 0.45,
-    paperUpcharges: {
-      Standard: 0,
-      Premium: 0.08,
-      Gloss: 0.06,
-      Recycled: 0.05,
-    },
-    finishUpcharges: {
-      Matte: 0,
-      Glossy: 0.05,
-      "Soft Touch": 0.12,
-      Uncoated: 0,
-    },
-    sidesMultiplier: {
-      "Front Only": 1,
-      "Front and Back": 1.15,
-    },
-  },
-
-  Banners: {
-    baseUnitPrice: 3.5,
-    paperUpcharges: {
-      Standard: 0,
-      Premium: 0.5,
-      Gloss: 0.35,
-      Recycled: 0.25,
-    },
-    finishUpcharges: {
-      Matte: 0,
-      Glossy: 0.25,
-      "Soft Touch": 0.4,
-      Uncoated: 0,
-    },
-    sidesMultiplier: {
-      "Front Only": 1,
-      "Front and Back": 1.25,
-    },
-  },
-
-  Brochures: {
-    baseUnitPrice: 0.65,
-    paperUpcharges: {
-      Standard: 0,
-      Premium: 0.1,
-      Gloss: 0.08,
-      Recycled: 0.06,
-    },
-    finishUpcharges: {
-      Matte: 0,
-      Glossy: 0.06,
-      "Soft Touch": 0.14,
-      Uncoated: 0,
-    },
-    sidesMultiplier: {
-      "Front Only": 1,
-      "Front and Back": 1.2,
-    },
-  },
-};
-
-function getPricingConfig(productName) {
-  return PRICING[productName] || PRICING["Business Cards"];
-}
-
-function formatMoney(value) {
-  return `$${Number(value || 0).toFixed(2)}`;
-}
+import { useEffect, useMemo, useState } from "react";
+import {
+  PRODUCT_OPTIONS,
+  calculatePrice,
+  formatPrice,
+} from "../../lib/pricing";
 
 export default function OrderPage() {
-  const [form, setForm] = useState({
-    customerName: "",
-    customerEmail: "",
-    productName: "Business Cards",
-    quantity: 100,
-    paper: "Standard",
-    finish: "Matte",
-    size: "",
-    sides: "Front Only",
-    notes: "",
-  });
+  const [productName, setProductName] = useState("Business Cards");
+  const [quantity, setQuantity] = useState(100);
+  const [paper, setPaper] = useState("Standard");
+  const [finish, setFinish] = useState("Matte");
+  const [sides, setSides] = useState("Front Only");
 
-  const [file, setFile] = useState(null);
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [notes, setNotes] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const options = PRODUCT_OPTIONS[productName];
+
+  useEffect(() => {
+    if (!options) return;
+    setQuantity(options.quantities[0]);
+    setPaper(options.papers[0]);
+    setFinish(options.finishes[0]);
+    setSides(options.sides[0]);
+  }, [productName]);
 
   const pricing = useMemo(() => {
-    const config = getPricingConfig(form.productName);
-    const quantity = Number(form.quantity || 0);
-
-    const baseUnitPrice = Number(config.baseUnitPrice || 0);
-    const paperUpcharge = Number(config.paperUpcharges?.[form.paper] || 0);
-    const finishUpcharge = Number(config.finishUpcharges?.[form.finish] || 0);
-    const sidesMultiplier = Number(config.sidesMultiplier?.[form.sides] || 1);
-
-    const unitPriceBeforeMultiplier =
-      baseUnitPrice + paperUpcharge + finishUpcharge;
-
-    const finalUnitPrice = unitPriceBeforeMultiplier * sidesMultiplier;
-    const subtotal = quantity * finalUnitPrice;
-
-    const shipping =
-      form.productName === "Banners"
-        ? quantity > 1
-          ? 18
-          : 12
-        : subtotal >= 100
-        ? 0
-        : 9.95;
-
-    const total = subtotal + shipping;
-
-    return {
-      baseUnitPrice,
-      paperUpcharge,
-      finishUpcharge,
-      sidesMultiplier,
-      finalUnitPrice,
-      subtotal,
-      shipping,
-      total,
-    };
-  }, [form.productName, form.quantity, form.paper, form.finish, form.sides]);
-
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: name === "quantity" ? Number(value) : value,
-    }));
-  }
+    return calculatePrice({
+      productName,
+      quantity,
+      paper,
+      finish,
+      sides,
+    });
+  }, [productName, quantity, paper, finish, sides]);
 
   async function handleUpload() {
-    if (!file) {
-      setMessage("Please choose a file first.");
-      return null;
-    }
+    if (!selectedFile) return null;
+
+    setUploading(true);
+    setError("");
 
     try {
-      setUploading(true);
-      setMessage("");
-
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", selectedFile);
 
       const res = await fetch("/api/upload-artwork", {
         method: "POST",
@@ -209,14 +61,13 @@ export default function OrderPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Upload failed.");
+        throw new Error(data?.error || "Upload failed.");
       }
 
       setUploadedFile(data);
-      setMessage("Artwork uploaded successfully.");
       return data;
     } catch (err) {
-      setMessage(err.message || "Upload failed.");
+      setError(err.message || "Upload failed.");
       return null;
     } finally {
       setUploading(false);
@@ -225,27 +76,19 @@ export default function OrderPage() {
 
   async function handleCheckout(e) {
     e.preventDefault();
-    setMessage("");
-
-    let uploadData = uploadedFile;
-
-    if (!file && !uploadedFile) {
-      setMessage("Please upload your artwork before continuing to payment.");
-      return;
-    }
-
-    if (file && !uploadedFile) {
-      uploadData = await handleUpload();
-      if (!uploadData) return;
-    }
-
-    if (!uploadData?.publicUrl && !uploadData?.filePath) {
-      setMessage("Artwork upload is required before checkout.");
-      return;
-    }
+    setSubmitting(true);
+    setError("");
 
     try {
-      setMessage("Creating checkout session...");
+      let artwork = uploadedFile;
+
+      if (selectedFile && !uploadedFile) {
+        artwork = await handleUpload();
+        if (!artwork) {
+          setSubmitting(false);
+          return;
+        }
+      }
 
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -253,290 +96,308 @@ export default function OrderPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          productName: form.productName,
-          quantity: Number(form.quantity),
-          total: pricing.total,
+          productName,
+          quantity,
+          paper,
+          finish,
+          sides,
+          customerName,
+          customerEmail,
+          notes,
           subtotal: pricing.subtotal,
           shipping: pricing.shipping,
-
-          customerName: form.customerName,
-          customerEmail: form.customerEmail,
-
-          paper: form.paper,
-          finish: form.finish,
-          size: form.size,
-          sides: form.sides,
-          notes: form.notes,
-
-          artworkUrl: uploadData?.publicUrl || "",
-          filePath: uploadData?.filePath || "",
-          fileName: uploadData?.fileName || "",
+          total: pricing.total,
+          fileName: artwork?.fileName || "",
+          artworkUrl: artwork?.publicUrl || "",
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Checkout failed.");
+        throw new Error(data?.error || "Checkout failed.");
       }
 
-      if (data.url) {
+      if (data?.url) {
         window.location.href = data.url;
         return;
       }
 
-      setMessage("Checkout session created, but no redirect URL was returned.");
+      throw new Error("Missing checkout URL.");
     } catch (err) {
-      setMessage(err.message || "Checkout failed.");
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-white px-6 py-10">
-      <div className="mx-auto max-w-3xl rounded-2xl border border-gray-200 p-8 shadow-sm">
-        <h1 className="mb-2 text-3xl font-bold">Place Your Order</h1>
-        <p className="mb-8 text-gray-600">
-          Choose your product, customize options, upload artwork, and continue to payment.
-        </p>
+    <main className="min-h-screen bg-slate-50 px-6 py-12">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold text-slate-900">Start Your Order</h1>
+          <p className="mt-3 max-w-2xl text-slate-600">
+            Choose your product, paper, quantity, and finish. Upload your
+            print-ready artwork and continue to checkout.
+          </p>
+        </div>
 
-        <form onSubmit={handleCheckout} className="space-y-6">
-          <div>
-            <label htmlFor="customerName" className="mb-2 block font-medium">
-              Full Name
-            </label>
-            <input
-              id="customerName"
-              name="customerName"
-              type="text"
-              value={form.customerName}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
-              required
-            />
-          </div>
+        <form onSubmit={handleCheckout} className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-2xl font-semibold text-slate-900">
+                Product options
+              </h2>
 
-          <div>
-            <label htmlFor="customerEmail" className="mb-2 block font-medium">
-              Email Address
-            </label>
-            <input
-              id="customerEmail"
-              name="customerEmail"
-              type="email"
-              value={form.customerEmail}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
-              required
-            />
-          </div>
+              <div className="mt-6 grid gap-5 md:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="productName"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Product
+                  </label>
+                  <select
+                    id="productName"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  >
+                    {Object.keys(PRODUCT_OPTIONS).map((product) => (
+                      <option key={product} value={product}>
+                        {product}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          <div>
-            <label htmlFor="productName" className="mb-2 block font-medium">
-              Product
-            </label>
-            <select
-              id="productName"
-              name="productName"
-              value={form.productName}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
-            >
-              {PRODUCT_OPTIONS.map((product) => (
-                <option key={product} value={product}>
-                  {product}
-                </option>
-              ))}
-            </select>
-          </div>
+                <div>
+                  <label
+                    htmlFor="quantity"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Quantity
+                  </label>
+                  <select
+                    id="quantity"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  >
+                    {options.quantities.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          <div>
-            <label htmlFor="quantity" className="mb-2 block font-medium">
-              Quantity
-            </label>
-            <input
-              id="quantity"
-              name="quantity"
-              type="number"
-              min="1"
-              value={form.quantity}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
-              required
-            />
-          </div>
+                <div>
+                  <label
+                    htmlFor="paper"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Paper
+                  </label>
+                  <select
+                    id="paper"
+                    value={paper}
+                    onChange={(e) => setPaper(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  >
+                    {options.papers.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          <div>
-            <label htmlFor="paper" className="mb-2 block font-medium">
-              Paper
-            </label>
-            <select
-              id="paper"
-              name="paper"
-              value={form.paper}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
-            >
-              {PAPER_OPTIONS.map((paper) => (
-                <option key={paper} value={paper}>
-                  {paper}
-                </option>
-              ))}
-            </select>
-          </div>
+                <div>
+                  <label
+                    htmlFor="finish"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Finish
+                  </label>
+                  <select
+                    id="finish"
+                    value={finish}
+                    onChange={(e) => setFinish(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  >
+                    {options.finishes.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          <div>
-            <label htmlFor="finish" className="mb-2 block font-medium">
-              Finish
-            </label>
-            <select
-              id="finish"
-              name="finish"
-              value={form.finish}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
-            >
-              {FINISH_OPTIONS.map((finish) => (
-                <option key={finish} value={finish}>
-                  {finish}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="size" className="mb-2 block font-medium">
-              Size
-            </label>
-            <input
-              id="size"
-              name="size"
-              type="text"
-              value={form.size}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
-              placeholder='Example: 3.5" x 2"'
-            />
-          </div>
-
-          <div>
-            <label htmlFor="sides" className="mb-2 block font-medium">
-              Sides
-            </label>
-            <select
-              id="sides"
-              name="sides"
-              value={form.sides}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
-            >
-              {SIDES_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <h2 className="mb-3 text-lg font-semibold text-gray-900">
-              Live Pricing
-            </h2>
-
-            <div className="space-y-2 text-sm text-gray-700">
-              <div className="flex items-center justify-between">
-                <span>Base unit price</span>
-                <span>{formatMoney(pricing.baseUnitPrice)}</span>
+                <div className="md:col-span-2">
+                  <label
+                    htmlFor="sides"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Printing sides
+                  </label>
+                  <select
+                    id="sides"
+                    value={sides}
+                    onChange={(e) => setSides(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  >
+                    {options.sides.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span>Paper upcharge</span>
-                <span>{formatMoney(pricing.paperUpcharge)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Finish upcharge</span>
-                <span>{formatMoney(pricing.finishUpcharge)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Sides multiplier</span>
-                <span>{pricing.sidesMultiplier.toFixed(2)}x</span>
-              </div>
-              <div className="flex items-center justify-between border-t border-gray-200 pt-2">
-                <span>Final unit price</span>
-                <span>{formatMoney(pricing.finalUnitPrice)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Subtotal</span>
-                <span>{formatMoney(pricing.subtotal)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Shipping</span>
-                <span>{formatMoney(pricing.shipping)}</span>
-              </div>
-              <div className="flex items-center justify-between border-t border-gray-200 pt-2 font-semibold text-gray-900">
-                <span>Total</span>
-                <span>{formatMoney(pricing.total)}</span>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-2xl font-semibold text-slate-900">
+                Customer information
+              </h2>
+
+              <div className="mt-6 grid gap-5 md:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="customerName"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Full name
+                  </label>
+                  <input
+                    id="customerName"
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                    placeholder="John Smith"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="customerEmail"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Email address
+                  </label>
+                  <input
+                    id="customerEmail"
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label
+                    htmlFor="artwork"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Upload artwork
+                  </label>
+                  <input
+                    id="artwork"
+                    type="file"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:font-medium"
+                  />
+                  {uploadedFile?.fileName ? (
+                    <p className="mt-2 text-sm text-green-700">
+                      Uploaded: {uploadedFile.fileName}
+                    </p>
+                  ) : null}
+                  {uploading ? (
+                    <p className="mt-2 text-sm text-slate-600">Uploading artwork...</p>
+                  ) : null}
+                </div>
+
+                <div className="md:col-span-2">
+                  <label
+                    htmlFor="notes"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Notes
+                  </label>
+                  <textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={4}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                    placeholder="Anything you want us to know about your order..."
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          <div>
-            <label htmlFor="artworkFile" className="mb-2 block font-medium">
-              Upload Artwork
-            </label>
-            <input
-              id="artworkFile"
-              name="artworkFile"
-              type="file"
-              onChange={(e) => {
-                setFile(e.target.files?.[0] || null);
-                setUploadedFile(null);
-                setMessage("");
-              }}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
-              accept=".pdf,.png,.jpg,.jpeg,.ai,.eps"
-              required
-            />
-          </div>
+          <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-6">
+            <h2 className="text-2xl font-semibold text-slate-900">Order summary</h2>
 
-          <div>
-            <label htmlFor="notes" className="mb-2 block font-medium">
-              Order Notes
-            </label>
-            <textarea
-              id="notes"
-              name="notes"
-              value={form.notes}
-              onChange={handleChange}
-              rows={4}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none"
-              placeholder="Add any print instructions here..."
-            />
-          </div>
+            <div className="mt-6 space-y-4">
+              <div className="rounded-xl bg-slate-50 p-4">
+                <p className="text-sm text-slate-500">Product</p>
+                <p className="mt-1 font-semibold text-slate-900">{productName}</p>
+              </div>
 
-          <div className="flex flex-wrap gap-4">
-            <button
-              type="button"
-              onClick={handleUpload}
-              disabled={uploading || !file}
-              className="rounded-lg bg-gray-900 px-5 py-3 text-white disabled:opacity-50"
-            >
-              {uploading ? "Uploading..." : "Upload Artwork"}
-            </button>
+              <div className="rounded-xl bg-slate-50 p-4">
+                <p className="text-sm text-slate-500">Specs</p>
+                <p className="mt-1 text-sm font-medium text-slate-900">
+                  {quantity} • {paper} • {finish} • {sides}
+                </p>
+              </div>
 
-            <button
-              type="submit"
-              className="rounded-lg bg-blue-600 px-5 py-3 text-white"
-            >
-              Continue to Payment
-            </button>
-          </div>
+              <div className="rounded-xl border border-slate-200 p-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Subtotal</span>
+                  <span className="font-medium text-slate-900">
+                    {formatPrice(pricing.subtotal)}
+                  </span>
+                </div>
 
-          {uploadedFile?.fileName && (
-            <p className="text-sm text-green-600">
-              Uploaded: {uploadedFile.fileName}
-            </p>
-          )}
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Shipping</span>
+                  <span className="font-medium text-slate-900">
+                    {formatPrice(pricing.shipping)}
+                  </span>
+                </div>
 
-          {message && <p className="text-sm text-gray-700">{message}</p>}
+                <div className="mt-4 border-t border-slate-200 pt-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-base font-semibold text-slate-900">Total</span>
+                    <span className="text-2xl font-bold text-slate-900">
+                      {formatPrice(pricing.total)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {error ? (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {error}
+                </div>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={submitting || uploading}
+                className="w-full rounded-xl bg-blue-600 px-4 py-4 text-base font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting ? "Processing..." : "Continue to Payment"}
+              </button>
+            </div>
+          </aside>
         </form>
       </div>
     </main>
