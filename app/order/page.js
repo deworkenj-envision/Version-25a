@@ -6,6 +6,7 @@ import {
   calculatePrice,
   formatPrice,
 } from "../../lib/pricing";
+import { calculateShipping } from "../../lib/shipping";
 
 function SectionTitle({ title, subtitle }) {
   return (
@@ -58,13 +59,21 @@ export default function OrderPage() {
   }, [productName]);
 
   const pricing = useMemo(() => {
-    return calculatePrice({
+    const priceData = calculatePrice({
       productName,
       quantity,
       paper,
       finish,
       sides,
     });
+
+    const shipping = calculateShipping(productName, quantity);
+
+    return {
+      ...priceData,
+      shipping,
+      total: Number((priceData.subtotal + shipping).toFixed(2)),
+    };
   }, [productName, quantity, paper, finish, sides]);
 
   async function handleUpload() {
