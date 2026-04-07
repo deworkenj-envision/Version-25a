@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
+import { supabaseAdmin } from "../../../../../../lib/supabaseAdmin";
+import { Resend } from "resend";
+
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 function getTrackingLink(carrier, trackingNumber) {
   const c = (carrier || "").toUpperCase();
@@ -8,7 +13,7 @@ function getTrackingLink(carrier, trackingNumber) {
   if (!n) return "";
 
   if (c === "UPS") {
-    return `https://www.ups.com/track?loc=en_US&tracknum=${n}`;
+    return `https://www.ups.com/track?tracknum=${n}`;
   }
 
   if (c === "USPS") {
@@ -22,335 +27,104 @@ function getTrackingLink(carrier, trackingNumber) {
   return "";
 }
 
-async function sendEmail({ to, subject, html, text }) {
-  if (!to) {
-    console.log("Email skipped: missing recipient.");
-    return "Email skipped: missing recipient.";
-  }
-
-  const resendApiKey = process.env.RESEND_API_KEY;
-  const fromEmail =
-    process.env.EMAIL_FROM ||
-    process.env.RESEND_FROM ||
-    "Envision Direct <onboarding@resend.dev>";
-
-  if (!resendApiKey) {
-    console.log("=== SIMULATED EMAIL ===");
-    console.log("To:", to);
-    console.log("From:", fromEmail);
-    console.log("Subject:", subject);
-    console.log(text);
-    console.log("=== END SIMULATED EMAIL ===");
-    return "Simulated email logged.";
-  }
-
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: fromEmail,
-      to: [to],
-      subject,
-      html,
-      text,
-    }),
-  });
-
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    console.error("Resend email error:", data || response.statusText);
-    throw new Error(
-      data?.message || data?.error || "Failed to send email."
-    );
-  }
-
-  console.log("Email sent:", data);
-  return "Email sent.";
-}
-
-async function sendShipmentEmail(order) {
-  const customerName = order.customer_name || "Customer";
-  const orderNumber = order.order_number || "Your Order";
-  const customerEmail = order.customer_email;
-  const carrier = order.tracking_carrier || "";
-  const trackingNumber = order.tracking_number || "";
-  const trackingLink = getTrackingLink(carrier, trackingNumber);
-
-  const subject = `Your order ${orderNumber} has shipped`;
-
-  const html = `
-    <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.6;">
-      <h2 style="margin-bottom: 8px;">Your order has shipped</h2>
-      <p>Hi ${customerName},</p>
-      <p>Your order <strong>${orderNumber}</strong> is now on the way.</p>
-
-      <div style="margin: 20px 0; padding: 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc;">
-        <p style="margin: 0 0 8px;"><strong>Carrier:</strong> ${carrier || "-"}</p>
-        <p style="margin: 0 0 8px;"><strong>Tracking Number:</strong> ${trackingNumber || "-"}</p>
-        <p style="margin: 0;"><strong>Order Number:</strong> ${orderNumber}</p>
-      </div>
-
-      ${
-        trackingLink
-          ? `
-            <p style="margin-top: 20px;">
-              <a
-                href="${trackingLink}"
-                style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 700;"
-              >
-                Track Shipment
-              </a>
-            </p>
-          `
-          : ""
-      }
-
-      <p style="margin-top: 24px;">Thank you for your order.</p>
-    </div>
-  `;
-
-  const text = [
-    `Hi ${customerName},`,
-    ``,
-    `Your order ${orderNumber} has shipped.`,
-    `Carrier: ${carrier || "-"}`,
-    `Tracking Number: ${trackingNumber || "-"}`,
-    trackingLink ? `Track Shipment: ${trackingLink}` : "",
-    ``,
-    `Thank you for your order.`,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  return sendEmail({
-    to: customerEmail,
-    subject,
-    html,
-    text,
-  });
-}
-
-async function sendDeliveredEmail(order) {
-  const customerName = order.customer_name || "Customer";
-  const orderNumber = order.order_number || "Your Order";
-  const customerEmail = order.customer_email;
-  const carrier = order.tracking_carrier || "";
-  const trackingNumber = order.tracking_number || "";
-  const trackingLink = getTrackingLink(carrier, trackingNumber);
-
-  const subject = `Your order ${orderNumber} was delivered`;
-
-  const html = `
-    <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.6;">
-      <h2 style="margin-bottom: 8px;">Your order was delivered</h2>
-      <p>Hi ${customerName},</p>
-      <p>Your order <strong>${orderNumber}</strong> has been marked as delivered.</p>
-
-      <div style="margin: 20px 0; padding: 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc;">
-        <p style="margin: 0 0 8px;"><strong>Order Number:</strong> ${orderNumber}</p>
-        <p style="margin: 0 0 8px;"><strong>Carrier:</strong> ${carrier || "-"}</p>
-        <p style="margin: 0;"><strong>Tracking Number:</strong> ${trackingNumber || "-"}</p>
-      </div>
-
-      ${
-        trackingLink
-          ? `
-            <p style="margin-top: 20px;">
-              <a
-                href="${trackingLink}"
-                style="display: inline-block; background: #16a34a; color: #ffffff; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 700;"
-              >
-                View Tracking
-              </a>
-            </p>
-          `
-          : ""
-      }
-
-      <p style="margin-top: 24px;">Thank you for your order. We appreciate your business.</p>
-    </div>
-  `;
-
-  const text = [
-    `Hi ${customerName},`,
-    ``,
-    `Your order ${orderNumber} has been delivered.`,
-    `Carrier: ${carrier || "-"}`,
-    `Tracking Number: ${trackingNumber || "-"}`,
-    trackingLink ? `View Tracking: ${trackingLink}` : "",
-    ``,
-    `Thank you for your order. We appreciate your business.`,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  return sendEmail({
-    to: customerEmail,
-    subject,
-    html,
-    text,
-  });
-}
-
 export async function PUT(req, { params }) {
   try {
-    const { id } = await params;
+    const { id } = params;
     const body = await req.json();
 
-    const status = (body.status || "").trim().toLowerCase();
-    const trackingCarrier = (body.trackingCarrier || "").trim().toUpperCase();
-    const trackingNumber = (body.trackingNumber || "").trim();
+    const status = body?.status || "";
+    const tracking_number = body?.tracking_number || "";
+    const tracking_carrier = body?.tracking_carrier || "";
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "Missing order id." },
-        { status: 400 }
-      );
-    }
-
-    const allowedStatuses = [
-      "pending",
-      "paid",
-      "printing",
-      "shipped",
-      "delivered",
-    ];
-
-    if (status && !allowedStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: "Invalid status." },
-        { status: 400 }
-      );
-    }
-
-    const allowedCarriers = ["", "UPS", "USPS", "FEDEX"];
-
-    if (!allowedCarriers.includes(trackingCarrier)) {
-      return NextResponse.json(
-        { error: "Invalid tracking carrier." },
-        { status: 400 }
-      );
-    }
-
-    const { data: existingOrder, error: existingError } = await supabaseAdmin
+    const { data: order, error: fetchError } = await supabaseAdmin
       .from("orders")
-      .select(`
-        id,
-        order_number,
-        customer_name,
-        customer_email,
-        status,
-        tracking_carrier,
-        tracking_number
-      `)
+      .select("*")
       .eq("id", id)
       .single();
 
-    if (existingError || !existingOrder) {
-      console.error("Fetch existing order error:", existingError);
-      return NextResponse.json(
-        { error: "Order not found." },
-        { status: 404 }
-      );
+    if (fetchError || !order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    const updateData = {
-      status: status || existingOrder.status || "pending",
-      tracking_carrier: trackingCarrier || null,
-      tracking_number: trackingNumber || null,
+    const updatePayload = {
+      status,
+      tracking_number,
+      tracking_carrier,
     };
 
-    const { data: updatedOrder, error: updateError } = await supabaseAdmin
+    const { error: updateError } = await supabaseAdmin
       .from("orders")
-      .update(updateData)
-      .eq("id", id)
-      .select(`
-        id,
-        order_number,
-        customer_name,
-        customer_email,
-        product_name,
-        quantity,
-        total,
-        shipping,
-        status,
-        artwork_url,
-        file_name,
-        notes,
-        tracking_carrier,
-        tracking_number,
-        created_at
-      `)
-      .single();
+      .update(updatePayload)
+      .eq("id", id);
 
     if (updateError) {
-      console.error("Order status update error:", updateError);
+      console.error("Order update failed:", updateError);
       return NextResponse.json(
-        { error: "Failed to update order." },
+        { error: "Failed to update order" },
         { status: 500 }
       );
     }
 
-    const justChangedToShipped =
-      existingOrder.status !== "shipped" && updatedOrder.status === "shipped";
+    let message = "Order updated";
 
-    const justChangedToDelivered =
-      existingOrder.status !== "delivered" &&
-      updatedOrder.status === "delivered";
+    if (status === "shipped" && order.customer_email) {
+      const trackingLink = getTrackingLink(tracking_carrier, tracking_number);
 
-    const hasTrackingInfo =
-      !!updatedOrder.tracking_carrier && !!updatedOrder.tracking_number;
-
-    let emailNotice = null;
-
-    if (justChangedToShipped) {
-      if (hasTrackingInfo) {
+      if (!resend) {
+        message = "Order updated, but shipment email failed: missing RESEND_API_KEY";
+      } else {
         try {
-          const result = await sendShipmentEmail(updatedOrder);
-          emailNotice =
-            result === "Simulated email logged."
-              ? "Shipment email simulated."
-              : "Shipment email sent.";
+          await resend.emails.send({
+            from: "Envision Direct <orders@envisiondirect.net>",
+            to: order.customer_email,
+            subject: `Your order ${order.order_number} has shipped`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #0f172a;">
+                <h2 style="margin-bottom: 16px;">Your order has shipped</h2>
+                <p style="margin: 0 0 12px;">Hi ${order.customer_name || "there"},</p>
+                <p style="margin: 0 0 16px;">
+                  Good news — your order is on the way.
+                </p>
+
+                <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 16px 0;">
+                  <p style="margin: 0 0 8px;"><strong>Order Number:</strong> ${order.order_number || "-"}</p>
+                  <p style="margin: 0 0 8px;"><strong>Product:</strong> ${order.product_name || "-"}</p>
+                  <p style="margin: 0 0 8px;"><strong>Carrier:</strong> ${tracking_carrier || "-"}</p>
+                  <p style="margin: 0;"><strong>Tracking Number:</strong> ${tracking_number || "-"}</p>
+                </div>
+
+                ${
+                  trackingLink
+                    ? `
+                  <p style="margin: 20px 0;">
+                    <a href="${trackingLink}" style="display:inline-block; background:#2563eb; color:#ffffff; text-decoration:none; padding:12px 18px; border-radius:10px; font-weight:600;">
+                      Track Your Shipment
+                    </a>
+                  </p>
+                `
+                    : ""
+                }
+
+                <p style="margin-top: 24px;">Thank you for your order.</p>
+                <p style="margin-top: 8px;">Envision Direct</p>
+              </div>
+            `,
+          });
         } catch (emailError) {
           console.error("Shipment email failed:", emailError);
-          emailNotice = `Order updated, but shipment email failed: ${emailError.message}`;
+          message = `Order updated, but shipment email failed: ${
+            emailError?.message || "unknown email error"
+          }`;
         }
-      } else {
-        emailNotice =
-          "Order updated to shipped, but no shipment email was sent because carrier or tracking number is missing.";
       }
     }
 
-    if (justChangedToDelivered) {
-      try {
-        const result = await sendDeliveredEmail(updatedOrder);
-        emailNotice =
-          result === "Simulated email logged."
-            ? "Delivered email simulated."
-            : "Delivered email sent.";
-      } catch (emailError) {
-        console.error("Delivered email failed:", emailError);
-        emailNotice = `Order updated, but delivered email failed: ${emailError.message}`;
-      }
-    }
-
-    return NextResponse.json(
-      {
-        success: true,
-        order: updatedOrder,
-        emailNotice,
-      },
-      { status: 200 }
-    );
-  } catch (err) {
-    console.error("Order status route error:", err);
-    return NextResponse.json(
-      { error: "Something went wrong." },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: true,
+      message,
+    });
+  } catch (error) {
+    console.error("PUT order status error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
