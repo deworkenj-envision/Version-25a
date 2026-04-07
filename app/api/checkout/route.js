@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { calculatePrice } from "../../../lib/pricing";
+import { calculateShipping } from "../../../lib/shipping";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -61,7 +63,6 @@ export async function POST(req) {
 
     const productName = toSafeString(body.productName);
     const quantity = toSafeNumber(body.quantity, 0);
-    const total = toSafeNumber(body.total, 0);
 
     const customerName = toSafeString(body.customerName);
     const customerEmail = toSafeString(body.customerEmail);
@@ -71,9 +72,6 @@ export async function POST(req) {
     const size = toSafeString(body.size);
     const sides = toSafeString(body.sides);
     const notes = toSafeString(body.notes);
-
-    const subtotal = toSafeNumber(body.subtotal, total);
-    const shipping = toSafeNumber(body.shipping, 0);
 
     const rawArtworkPath =
       toSafeString(body.filePath) ||
@@ -114,6 +112,18 @@ export async function POST(req) {
       );
     }
 
+    const priceData = calculatePrice({
+      productName,
+      quantity,
+      paper,
+      finish,
+      sides,
+    });
+
+    const subtotal = Number(priceData.subtotal || 0);
+    const shipping = Number(calculateShipping(productName, quantity) || 0);
+    const total = Number((subtotal + shipping).toFixed(2));
+
     if (!total || total <= 0) {
       return NextResponse.json(
         { error: "Invalid total" },
@@ -121,21 +131,28 @@ export async function POST(req) {
       );
     }
 
-    const unitAmount = Math.round((total * 100) / quantity);
-
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       customer_email: customerEmail || undefined,
       line_items: [
         {
-          quantity,
+          quantity: 1,
           price_data: {
             currency: "usd",
             product_data: {
-              name: productName,
+              name: `${productName} Order`,
+              description: [
+                `Quantity: ${quantity}`,
+                paper ? `Paper: ${paper}` : null,
+                finish ? `Finish: ${finish}` : null,
+                size ? `Size: ${size}` : null,
+                sides ? `Sides: ${sides}` : null,
+              ]
+                .filter(Boolean)
+                .join(" • "),
             },
-            unit_amount: unitAmount,
+            unit_amount: Math.round(total * 100),
           },
         },
       ],
