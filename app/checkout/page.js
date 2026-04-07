@@ -1,8 +1,3 @@
-"use client";
-
-import { useMemo } from "react";
-import { useSearchParams } from "next/navigation";
-
 function toNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -12,31 +7,23 @@ function formatMoney(value) {
   return toNumber(value).toFixed(2);
 }
 
-export default function CheckoutPage() {
-  const searchParams = useSearchParams();
+export default async function CheckoutPage({ searchParams }) {
+  const params = await searchParams;
 
-  const productName = searchParams.get("productName") || "Business Cards";
-  const quantity = searchParams.get("quantity") || "100";
-  const paper = searchParams.get("paper") || "Standard";
-  const finish = searchParams.get("finish") || "Matte";
-  const sides = searchParams.get("sides") || "Front Only";
-  const customerName = searchParams.get("customerName") || "";
-  const customerEmail = searchParams.get("customerEmail") || "";
-  const notes = searchParams.get("notes") || "";
-  const artworkUrl = searchParams.get("artworkUrl") || "";
-  const fileName = searchParams.get("fileName") || "";
+  const productName = params?.productName || "Business Cards";
+  const quantity = params?.quantity || "100";
+  const paper = params?.paper || "Standard";
+  const finish = params?.finish || "Matte";
+  const sides = params?.sides || "Front Only";
+  const customerName = params?.customerName || "";
+  const customerEmail = params?.customerEmail || "";
+  const notes = params?.notes || "";
+  const artworkUrl = params?.artworkUrl || "";
+  const fileName = params?.fileName || "";
 
-  const subtotal = toNumber(searchParams.get("subtotal"));
-  const shipping = toNumber(searchParams.get("shipping"));
-  const total = toNumber(searchParams.get("total"));
-
-  const summary = useMemo(() => {
-    return {
-      subtotal: formatMoney(subtotal),
-      shipping: formatMoney(shipping),
-      total: formatMoney(total),
-    };
-  }, [subtotal, shipping, total]);
+  const subtotal = toNumber(params?.subtotal);
+  const shipping = toNumber(params?.shipping);
+  const total = toNumber(params?.total);
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-12">
@@ -119,7 +106,9 @@ export default function CheckoutPage() {
                     {fileName || "View uploaded artwork"}
                   </a>
                 ) : (
-                  <p className="mt-1 font-semibold text-slate-900">No file uploaded</p>
+                  <p className="mt-1 font-semibold text-slate-900">
+                    No file uploaded
+                  </p>
                 )}
               </div>
             </div>
@@ -134,14 +123,14 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-500">Subtotal</span>
                 <span className="font-medium text-slate-900">
-                  ${summary.subtotal}
+                  ${formatMoney(subtotal)}
                 </span>
               </div>
 
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-500">Shipping</span>
                 <span className="font-medium text-slate-900">
-                  ${summary.shipping}
+                  ${formatMoney(shipping)}
                 </span>
               </div>
 
@@ -151,19 +140,18 @@ export default function CheckoutPage() {
                     Total
                   </span>
                   <span className="text-2xl font-bold text-slate-900">
-                    ${summary.total}
+                    ${formatMoney(total)}
                   </span>
                 </div>
               </div>
             </div>
 
-            <button
-              type="button"
-              className="mt-6 w-full rounded-xl bg-blue-600 px-4 py-4 text-base font-semibold text-white transition hover:bg-blue-700"
-              onClick={() => window.history.back()}
+            <a
+              href="/order"
+              className="mt-6 block w-full rounded-xl bg-blue-600 px-4 py-4 text-center text-base font-semibold text-white transition hover:bg-blue-700"
             >
               Back to Order
-            </button>
+            </a>
           </aside>
         </div>
       </div>
