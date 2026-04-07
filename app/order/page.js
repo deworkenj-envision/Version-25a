@@ -294,21 +294,27 @@ export default function OrderPage() {
               </div>
 
               <div className="mt-6 grid gap-4 md:grid-cols-3">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">Selected product</p>
-                  <p className="mt-1 font-semibold text-slate-900">{productName}</p>
+                <div className="rounded-2xl bg-gradient-to-br from-blue-600 to-blue-500 p-4 text-white shadow">
+                  <p className="text-xs uppercase tracking-wide text-blue-100">
+                    Selected product
+                  </p>
+                  <p className="mt-1 text-lg font-semibold">{productName}</p>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">Configuration</p>
-                  <p className="mt-1 font-semibold text-slate-900">
+                <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-500 p-4 text-white shadow">
+                  <p className="text-xs uppercase tracking-wide text-indigo-100">
+                    Configuration
+                  </p>
+                  <p className="mt-1 text-lg font-semibold">
                     {paper} / {finish}
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">Print style</p>
-                  <p className="mt-1 font-semibold text-slate-900">
+                <div className="rounded-2xl bg-gradient-to-br from-slate-800 to-slate-700 p-4 text-white shadow">
+                  <p className="text-xs uppercase tracking-wide text-slate-300">
+                    Print style
+                  </p>
+                  <p className="mt-1 text-lg font-semibold">
                     {quantity} / {sides}
                   </p>
                 </div>
@@ -350,22 +356,39 @@ export default function OrderPage() {
 
                 <div className="md:col-span-2">
                   <FieldLabel htmlFor="artwork">Upload artwork</FieldLabel>
-                  <input
-                    id="artwork"
-                    type="file"
-                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 outline-none file:mr-4 file:rounded-xl file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:font-medium"
-                  />
+
+                  <div className="rounded-2xl border border-slate-300 bg-slate-50 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                      <label
+                        htmlFor="artwork"
+                        className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
+                      >
+                        Upload Artwork
+                      </label>
+
+                      <span className="text-sm text-slate-600">
+                        {selectedFile ? selectedFile.name : "No file selected"}
+                      </span>
+                    </div>
+
+                    <input
+                      id="artwork"
+                      type="file"
+                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+
+                    <p className="mt-3 text-xs text-slate-500">
+                      Accepted formats: PDF, PNG, JPG • High resolution recommended
+                    </p>
+                  </div>
+
                   {uploadedFile?.fileName ? (
                     <p className="mt-2 text-sm text-green-700">
                       Uploaded: {uploadedFile.fileName}
                     </p>
                   ) : null}
-                  {selectedFile && !uploadedFile?.fileName ? (
-                    <p className="mt-2 text-sm text-slate-500">
-                      Selected file: {selectedFile.name}
-                    </p>
-                  ) : null}
+
                   {uploading ? (
                     <p className="mt-2 text-sm text-slate-600">
                       Uploading artwork...
