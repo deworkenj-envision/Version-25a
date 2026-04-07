@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "../../../../../../lib/supabaseAdmin";
+import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY
@@ -46,15 +46,13 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    const updatePayload = {
-      status,
-      tracking_number,
-      tracking_carrier,
-    };
-
     const { error: updateError } = await supabaseAdmin
       .from("orders")
-      .update(updatePayload)
+      .update({
+        status,
+        tracking_number,
+        tracking_carrier,
+      })
       .eq("id", id);
 
     if (updateError) {
