@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 
 export async function POST(req) {
   try {
     const body = await req.json();
+
     const rawOrderNumber = body?.orderNumber || "";
     const rawEmail = body?.email || "";
 
@@ -20,14 +21,13 @@ export async function POST(req) {
     let query = supabaseAdmin
       .from("orders")
       .select("*")
-      .ilike("order_number", orderNumber)
-      .limit(1);
+      .ilike("order_number", orderNumber);
 
     if (email) {
       query = query.ilike("customer_email", email);
     }
 
-    const { data, error } = await query.maybeSingle();
+    const { data, error } = await query.limit(1).maybeSingle();
 
     if (error) {
       console.error("Track order lookup error:", error);
@@ -47,22 +47,22 @@ export async function POST(req) {
     return NextResponse.json({
       success: true,
       order: {
-        id: data.id,
-        order_number: data.order_number,
-        customer_name: data.customer_name,
-        customer_email: data.customer_email,
-        product_name: data.product_name,
-        size: data.size,
-        paper: data.paper,
-        finish: data.finish,
-        sides: data.sides,
-        quantity: data.quantity,
-        total: data.total,
-        shipping: data.shipping,
-        status: data.status,
-        created_at: data.created_at,
-        artwork_url: data.artwork_url,
-        file_name: data.file_name,
+        id: data.id || "",
+        order_number: data.order_number || "",
+        customer_name: data.customer_name || "",
+        customer_email: data.customer_email || "",
+        product_name: data.product_name || "",
+        size: data.size || "",
+        paper: data.paper || "",
+        finish: data.finish || "",
+        sides: data.sides || "",
+        quantity: data.quantity || 0,
+        total: data.total || 0,
+        shipping: data.shipping || 0,
+        status: data.status || "pending",
+        created_at: data.created_at || "",
+        artwork_url: data.artwork_url || "",
+        file_name: data.file_name || "",
         tracking_number: data.tracking_number || "",
         carrier: data.carrier || "",
       },
