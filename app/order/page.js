@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  PRODUCT_OPTIONS,
-  calculatePrice,
-  formatPrice,
-} from "../../lib/pricing";
+import { PRODUCT_OPTIONS, calculatePrice, formatPrice } from "@/lib/pricing";
 
 export default function OrderPage() {
   const [productName, setProductName] = useState("Business Cards");
@@ -23,10 +19,14 @@ export default function OrderPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const options = PRODUCT_OPTIONS[productName];
+  const options = PRODUCT_OPTIONS[productName] || {
+    quantities: [100],
+    papers: ["Standard"],
+    finishes: ["Matte"],
+    sides: ["Front Only"],
+  };
 
   useEffect(() => {
-    if (!options) return;
     setQuantity(options.quantities[0]);
     setPaper(options.papers[0]);
     setFinish(options.finishes[0]);
@@ -151,10 +151,7 @@ export default function OrderPage() {
 
               <div className="mt-6 grid gap-5 md:grid-cols-2">
                 <div>
-                  <label
-                    htmlFor="productName"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="productName" className="mb-2 block text-sm font-medium text-slate-700">
                     Product
                   </label>
                   <select
@@ -172,10 +169,7 @@ export default function OrderPage() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="quantity"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="quantity" className="mb-2 block text-sm font-medium text-slate-700">
                     Quantity
                   </label>
                   <select
@@ -193,10 +187,7 @@ export default function OrderPage() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="paper"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="paper" className="mb-2 block text-sm font-medium text-slate-700">
                     Paper
                   </label>
                   <select
@@ -214,10 +205,7 @@ export default function OrderPage() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="finish"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="finish" className="mb-2 block text-sm font-medium text-slate-700">
                     Finish
                   </label>
                   <select
@@ -235,10 +223,7 @@ export default function OrderPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label
-                    htmlFor="sides"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="sides" className="mb-2 block text-sm font-medium text-slate-700">
                     Printing sides
                   </label>
                   <select
@@ -264,10 +249,7 @@ export default function OrderPage() {
 
               <div className="mt-6 grid gap-5 md:grid-cols-2">
                 <div>
-                  <label
-                    htmlFor="customerName"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="customerName" className="mb-2 block text-sm font-medium text-slate-700">
                     Full name
                   </label>
                   <input
@@ -282,10 +264,7 @@ export default function OrderPage() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="customerEmail"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="customerEmail" className="mb-2 block text-sm font-medium text-slate-700">
                     Email address
                   </label>
                   <input
@@ -300,10 +279,7 @@ export default function OrderPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label
-                    htmlFor="artwork"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="artwork" className="mb-2 block text-sm font-medium text-slate-700">
                     Upload artwork
                   </label>
                   <input
@@ -323,10 +299,7 @@ export default function OrderPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label
-                    htmlFor="notes"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="notes" className="mb-2 block text-sm font-medium text-slate-700">
                     Notes
                   </label>
                   <textarea
