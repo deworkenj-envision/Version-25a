@@ -64,7 +64,7 @@ export async function POST(req) {
         artwork_url: data.artwork_url || "",
         file_name: data.file_name || "",
         tracking_number: data.tracking_number || "",
-        carrier: data.carrier || "",
+        carrier: data.tracking_carrier || "",
       },
     });
   } catch (error) {
