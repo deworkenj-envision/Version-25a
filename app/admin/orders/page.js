@@ -61,8 +61,8 @@ export default function AdminOrdersPage() {
         nextDrafts[order.id] = {
           status: order.status || "pending",
           carrier: order.carrier || "",
-          trackingNumber: order.tracking_number || "",
-          trackingUrl: order.tracking_url || "",
+          tracking_number: order.tracking_number || "",
+          tracking_url: order.tracking_url || "",
         };
       });
       setDrafts(nextDrafts);
@@ -102,7 +102,7 @@ export default function AdminOrdersPage() {
         throw new Error("Order not found.");
       }
 
-      const res = await fetch(`/api/orders/${orderId}/status`, {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -110,8 +110,9 @@ export default function AdminOrdersPage() {
         body: JSON.stringify({
           status: draft.status ?? order.status ?? "pending",
           carrier: draft.carrier ?? order.carrier ?? "",
-          trackingNumber: draft.trackingNumber ?? order.tracking_number ?? "",
-          trackingUrl: draft.trackingUrl ?? order.tracking_url ?? "",
+          tracking_number:
+            draft.tracking_number ?? order.tracking_number ?? "",
+          tracking_url: draft.tracking_url ?? order.tracking_url ?? "",
         }),
       });
 
@@ -347,10 +348,10 @@ export default function AdminOrdersPage() {
                         </label>
                         <input
                           type="text"
-                          value={draft.trackingNumber ?? order.tracking_number ?? ""}
+                          value={draft.tracking_number ?? order.tracking_number ?? ""}
                           onChange={(e) =>
                             updateDraft(order.id, {
-                              trackingNumber: e.target.value,
+                              tracking_number: e.target.value,
                             })
                           }
                           placeholder="Enter tracking number"
@@ -426,8 +427,8 @@ export default function AdminOrdersPage() {
                             [order.id]: {
                               status: order.status || "pending",
                               carrier: order.carrier || "",
-                              trackingNumber: order.tracking_number || "",
-                              trackingUrl: order.tracking_url || "",
+                              tracking_number: order.tracking_number || "",
+                              tracking_url: order.tracking_url || "",
                             },
                           }))
                         }
