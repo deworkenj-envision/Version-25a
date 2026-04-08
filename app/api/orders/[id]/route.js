@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 
-export async function PUT(req, { params }) {
+export async function PUT(req, context) {
   try {
-    const id = params?.id;
+    const { id } = await context.params;
 
     if (!id) {
       return NextResponse.json(

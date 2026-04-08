@@ -3,7 +3,7 @@ import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 
 export async function PUT(req, context) {
   try {
-    const id = context?.params?.id;
+    const { id } = await context.params;
 
     if (!id) {
       return NextResponse.json(
