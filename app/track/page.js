@@ -264,25 +264,34 @@ export default function TrackPage() {
                       </div>
 
                       <div className="grid gap-4 md:grid-cols-4">
-                        {steps.map((step, index) => (
-                          <div key={step.key} className="relative">
-                            <div
-                              className={`rounded-2xl border p-4 ${
-                                step.complete
-                                  ? "border-neutral-900 bg-neutral-950 text-white"
-                                  : "border-neutral-200 bg-neutral-50 text-neutral-500"
-                              }`}
-                            >
-                              <div className="text-xs uppercase tracking-[0.16em] opacity-70">
-                                Step {index + 1}
-                              </div>
-                              <div className="mt-2 text-sm font-semibold">
-                                {step.label}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+{steps.map((step, index) => {
+  let style = "border-neutral-200 bg-neutral-50 text-neutral-500";
+  let label = `Step ${index + 1}`;
+
+  if (step.complete && !step.active) {
+    style = "border-emerald-300 bg-emerald-50 text-emerald-700";
+    label = "Complete";
+  }
+
+  if (step.active) {
+    style = "border-blue-400 bg-blue-50 text-blue-700";
+    label = "In Progress";
+  }
+
+  return (
+    <div key={step.key} className="relative">
+      <div className={`rounded-2xl border p-4 ${style}`}>
+        <div className="text-xs uppercase tracking-[0.16em] font-semibold">
+          {label}
+        </div>
+
+        <div className="mt-2 text-sm font-semibold">
+          {step.label}
+        </div>
+      </div>
+    </div>
+  );
+})}                      </div>
                     </div>
 
                     <div className="mt-8 grid gap-4 sm:grid-cols-2">
