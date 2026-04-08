@@ -45,8 +45,9 @@ function getStatusSteps(status) {
 
   return steps.map((step, index) => ({
     ...step,
-    complete: index <= activeIndex,
+    complete: index < activeIndex,
     active: index === activeIndex,
+    upcoming: index > activeIndex,
   }));
 }
 
@@ -77,6 +78,31 @@ function prettyStatus(status) {
   if (normalized === "printing") return "In Production";
 
   return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+function StepIcon({ step }) {
+  if (step.complete) {
+    return (
+      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-emerald-300 bg-emerald-500 text-lg font-bold text-white shadow-sm">
+        ✓
+      </div>
+    );
+  }
+
+  if (step.active) {
+    return (
+      <div className="relative flex h-12 w-12 items-center justify-center rounded-full border border-blue-300 bg-blue-500 text-sm font-bold text-white shadow-sm">
+        <div className="absolute inset-0 rounded-full ring-4 ring-blue-100" />
+        <span className="relative">•</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-neutral-300 bg-white text-sm font-semibold text-neutral-500 shadow-sm">
+      •
+    </div>
+  );
 }
 
 export default function TrackPage() {
@@ -259,39 +285,111 @@ export default function TrackPage() {
                     </div>
 
                     <div className="pt-6">
-                      <div className="mb-5 text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                        Order Progress
+                      <div className="mb-6 text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+                        Order Timeline
                       </div>
 
-                      <div className="grid gap-4 md:grid-cols-4">
-{steps.map((step, index) => {
-  let style = "border-neutral-200 bg-neutral-50 text-neutral-500";
-  let label = `Step ${index + 1}`;
+                      <div className="hidden md:flex items-start justify-between">
+                        {steps.map((step, index) => (
+                          <div
+                            key={step.key}
+                            className="relative flex min-w-0 flex-1 flex-col items-center text-center"
+                          >
+                            {index < steps.length - 1 && (
+                              <div className="absolute left-[50%] top-6 h-[3px] w-full">
+                                <div className="mx-8 h-full rounded-full bg-neutral-200">
+                                  <div
+                                    className={`h-full rounded-full ${
+                                      step.complete
+                                        ? "bg-emerald-500"
+                                        : step.active
+                                        ? "bg-blue-500 w-1/2"
+                                        : "bg-transparent w-0"
+                                    }`}
+                                  />
+                                </div>
+                              </div>
+                            )}
 
-  if (step.complete && !step.active) {
-    style = "border-emerald-300 bg-emerald-50 text-emerald-700";
-    label = "Complete";
-  }
+                            <div className="relative z-10">
+                              <StepIcon step={step} />
+                            </div>
 
-  if (step.active) {
-    style = "border-blue-400 bg-blue-50 text-blue-700";
-    label = "In Progress";
-  }
+                            <div className="mt-4">
+                              <div
+                                className={`text-xs font-semibold uppercase tracking-[0.16em] ${
+                                  step.complete
+                                    ? "text-emerald-600"
+                                    : step.active
+                                    ? "text-blue-600"
+                                    : "text-neutral-400"
+                                }`}
+                              >
+                                {step.complete
+                                  ? "Complete"
+                                  : step.active
+                                  ? "In Progress"
+                                  : "Upcoming"}
+                              </div>
 
-  return (
-    <div key={step.key} className="relative">
-      <div className={`rounded-2xl border p-4 ${style}`}>
-        <div className="text-xs uppercase tracking-[0.16em] font-semibold">
-          {label}
-        </div>
+                              <div
+                                className={`mt-2 text-sm font-semibold ${
+                                  step.complete || step.active
+                                    ? "text-neutral-950"
+                                    : "text-neutral-500"
+                                }`}
+                              >
+                                {step.label}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
 
-        <div className="mt-2 text-sm font-semibold">
-          {step.label}
-        </div>
-      </div>
-    </div>
-  );
-})}                      </div>
+                      <div className="space-y-4 md:hidden">
+                        {steps.map((step, index) => (
+                          <div key={step.key} className="flex gap-4">
+                            <div className="flex flex-col items-center">
+                              <StepIcon step={step} />
+                              {index < steps.length - 1 && (
+                                <div
+                                  className={`mt-2 h-12 w-[3px] rounded-full ${
+                                    step.complete ? "bg-emerald-500" : "bg-neutral-200"
+                                  }`}
+                                />
+                              )}
+                            </div>
+
+                            <div className="pt-1">
+                              <div
+                                className={`text-xs font-semibold uppercase tracking-[0.16em] ${
+                                  step.complete
+                                    ? "text-emerald-600"
+                                    : step.active
+                                    ? "text-blue-600"
+                                    : "text-neutral-400"
+                                }`}
+                              >
+                                {step.complete
+                                  ? "Complete"
+                                  : step.active
+                                  ? "In Progress"
+                                  : "Upcoming"}
+                              </div>
+
+                              <div
+                                className={`mt-1 text-sm font-semibold ${
+                                  step.complete || step.active
+                                    ? "text-neutral-950"
+                                    : "text-neutral-500"
+                                }`}
+                              >
+                                {step.label}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="mt-8 grid gap-4 sm:grid-cols-2">
