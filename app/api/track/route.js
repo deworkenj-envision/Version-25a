@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
-export async function POST(req) {
+export async function GET(req) {
   try {
-    const body = await req.json();
-    const orderNumber = (body.orderNumber || "").trim().toUpperCase();
-    const email = (body.email || "").trim().toLowerCase();
+    const { searchParams } = new URL(req.url);
+    const orderNumber = (searchParams.get("orderNumber") || "").trim();
+    const email = (searchParams.get("email") || "").trim().toLowerCase();
 
     if (!orderNumber || !email) {
       return NextResponse.json(
@@ -16,46 +16,28 @@ export async function POST(req) {
 
     const { data, error } = await supabaseAdmin
       .from("orders")
-      .select(`
-        id,
-        order_number,
-        customer_name,
-        customer_email,
-        product_name,
-        quantity,
-        total,
-        shipping,
-        status,
-        artwork_url,
-        file_name,
-        created_at,
-        tracking_carrier,
-        tracking_number
-      `)
-      .ilike("order_number", orderNumber)
-      .ilike("customer_email", email)
-      .maybeSingle();
+      .select(
+        "order_number, customer_email, customer_name, product_name, status, carrier, tracking_number, tracking_url, created_at"
+      )
+      .eq("order_number", orderNumber)
+      .eq("customer_email", email)
+      .single();
 
-    if (error) {
-      console.error("Track order lookup error:", error);
+    if (error || !data) {
       return NextResponse.json(
-        { error: "Failed to look up order." },
-        { status: 500 }
-      );
-    }
-
-    if (!data) {
-      return NextResponse.json(
-        { error: "No matching order found." },
+        { error: "Order not found." },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ order: data }, { status: 200 });
+    return NextResponse.json({
+      success: true,
+      order: data,
+    });
   } catch (err) {
-    console.error("Track order API error:", err);
+    console.error("Track order GET error:", err);
     return NextResponse.json(
-      { error: "Something went wrong." },
+      { error: err.message || "Server error." },
       { status: 500 }
     );
   }

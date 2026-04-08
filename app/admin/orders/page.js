@@ -111,8 +111,7 @@ export default function AdminOrdersPage() {
         body: JSON.stringify({
           status: draft.status ?? order.status ?? "pending",
           carrier: draft.carrier ?? order.carrier ?? "",
-          tracking_number:
-            draft.tracking_number ?? order.tracking_number ?? "",
+          tracking_number: draft.tracking_number ?? order.tracking_number ?? "",
           tracking_url: draft.tracking_url ?? order.tracking_url ?? "",
         }),
       });
