@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function PUT(req, context) {
   try {
@@ -19,14 +22,6 @@ export async function PUT(req, context) {
     const tracking_number = body?.tracking_number ?? "";
     const tracking_url = body?.tracking_url ?? "";
 
-    console.log("Updating order:", {
-      id,
-      status,
-      carrier,
-      tracking_number,
-      tracking_url,
-    });
-
     const { data, error } = await supabaseAdmin
       .from("orders")
       .update({
@@ -45,6 +40,30 @@ export async function PUT(req, context) {
         { error: error.message || "Failed to update order." },
         { status: 500 }
       );
+    }
+
+    // 🔥 SEND EMAIL WHEN SHIPPED
+    if (status === "shipped") {
+      try {
+        await resend.emails.send({
+          from: "orders@envisiondirect.net",
+          to: data.customer_email,
+          subject: `Your order ${data.order_number} has shipped`,
+          html: `
+            <h2>Your order has shipped!</h2>
+            <p><strong>Order:</strong> ${data.order_number}</p>
+            <p><strong>Carrier:</strong> ${carrier}</p>
+            <p><strong>Tracking Number:</strong> ${tracking_number}</p>
+            ${
+              tracking_url
+                ? `<p><a href="${tracking_url}">Track your package</a></p>`
+                : ""
+            }
+          `,
+        });
+      } catch (emailError) {
+        console.error("Email failed:", emailError);
+      }
     }
 
     return NextResponse.json({
