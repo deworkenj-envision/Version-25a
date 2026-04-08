@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const raw = searchParams.get("orderNumber") || searchParams.get("q") || "";
-
     const lookup = raw.trim();
 
     if (!lookup) {
