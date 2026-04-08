@@ -40,6 +40,7 @@ export default function AdminOrdersPage() {
       else setLoading(true);
 
       setError("");
+      setSuccessMessage("");
 
       const res = await fetch("/api/orders", {
         cache: "no-store",
@@ -102,7 +103,7 @@ export default function AdminOrdersPage() {
         throw new Error("Order not found.");
       }
 
-      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
