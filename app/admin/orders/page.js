@@ -107,9 +107,9 @@ export default function AdminOrdersPage() {
         },
         body: JSON.stringify({
           status: draft.status ?? order.status ?? "pending",
-          trackingCarrier:
+          tracking_carrier:
             draft.trackingCarrier ?? order.tracking_carrier ?? "",
-          trackingNumber:
+          tracking_number:
             draft.trackingNumber ?? order.tracking_number ?? "",
         }),
       });
@@ -120,26 +120,12 @@ export default function AdminOrdersPage() {
         throw new Error(data?.error || "Failed to update order.");
       }
 
-      const updatedOrder = normalizeOrder(data?.order || order);
-
-      setOrders((prev) =>
-        prev.map((item) => (item.id === orderId ? updatedOrder : item))
+      setSuccessMessage(
+        data?.message ||
+          `Order ${order.order_number || ""} updated successfully.`
       );
 
-      setDrafts((prev) => ({
-        ...prev,
-        [orderId]: {
-          status: updatedOrder.status || "pending",
-          trackingCarrier: updatedOrder.tracking_carrier || "",
-          trackingNumber: updatedOrder.tracking_number || "",
-        },
-      }));
-
-      const message = data?.emailNotice
-        ? `Order ${updatedOrder.order_number || ""} updated. ${data.emailNotice}`
-        : `Order ${updatedOrder.order_number || ""} updated successfully.`;
-
-      setSuccessMessage(message);
+      await loadOrders(true);
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to update order.");
