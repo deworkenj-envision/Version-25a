@@ -19,8 +19,9 @@ function normalizeOrder(order) {
   return {
     ...order,
     status: order.status || "pending",
-    tracking_carrier: order.tracking_carrier || "",
+    carrier: order.carrier || "",
     tracking_number: order.tracking_number || "",
+    tracking_url: order.tracking_url || "",
   };
 }
 
@@ -59,8 +60,9 @@ export default function AdminOrdersPage() {
       normalized.forEach((order) => {
         nextDrafts[order.id] = {
           status: order.status || "pending",
-          trackingCarrier: order.tracking_carrier || "",
+          carrier: order.carrier || "",
           trackingNumber: order.tracking_number || "",
+          trackingUrl: order.tracking_url || "",
         };
       });
       setDrafts(nextDrafts);
@@ -107,10 +109,9 @@ export default function AdminOrdersPage() {
         },
         body: JSON.stringify({
           status: draft.status ?? order.status ?? "pending",
-          tracking_carrier:
-            draft.trackingCarrier ?? order.tracking_carrier ?? "",
-          tracking_number:
-            draft.trackingNumber ?? order.tracking_number ?? "",
+          carrier: draft.carrier ?? order.carrier ?? "",
+          trackingNumber: draft.trackingNumber ?? order.tracking_number ?? "",
+          trackingUrl: draft.trackingUrl ?? order.tracking_url ?? "",
         }),
       });
 
@@ -325,14 +326,10 @@ export default function AdminOrdersPage() {
                           Carrier
                         </label>
                         <select
-                          value={
-                            draft.trackingCarrier ??
-                            order.tracking_carrier ??
-                            ""
-                          }
+                          value={draft.carrier ?? order.carrier ?? ""}
                           onChange={(e) =>
                             updateDraft(order.id, {
-                              trackingCarrier: e.target.value,
+                              carrier: e.target.value,
                             })
                           }
                           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-500"
@@ -340,7 +337,7 @@ export default function AdminOrdersPage() {
                           <option value="">Select carrier</option>
                           <option value="UPS">UPS</option>
                           <option value="USPS">USPS</option>
-                          <option value="FEDEX">FedEx</option>
+                          <option value="FedEx">FedEx</option>
                         </select>
                       </div>
 
@@ -350,11 +347,7 @@ export default function AdminOrdersPage() {
                         </label>
                         <input
                           type="text"
-                          value={
-                            draft.trackingNumber ??
-                            order.tracking_number ??
-                            ""
-                          }
+                          value={draft.trackingNumber ?? order.tracking_number ?? ""}
                           onChange={(e) =>
                             updateDraft(order.id, {
                               trackingNumber: e.target.value,
@@ -372,7 +365,7 @@ export default function AdminOrdersPage() {
                           Saved Carrier
                         </p>
                         <p className="mt-1 font-semibold text-slate-900 break-all">
-                          {order.tracking_carrier || "-"}
+                          {order.carrier || "-"}
                         </p>
                       </div>
 
@@ -432,8 +425,9 @@ export default function AdminOrdersPage() {
                             ...prev,
                             [order.id]: {
                               status: order.status || "pending",
-                              trackingCarrier: order.tracking_carrier || "",
+                              carrier: order.carrier || "",
                               trackingNumber: order.tracking_number || "",
+                              trackingUrl: order.tracking_url || "",
                             },
                           }))
                         }
