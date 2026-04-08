@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 
 export async function PUT(req, { params }) {
   try {
-    const { id } = params;
+    const id = params?.id;
 
     if (!id) {
       return NextResponse.json(
@@ -15,39 +15,43 @@ export async function PUT(req, { params }) {
     const body = await req.json();
 
     const {
+      status = "pending",
+      carrier = "",
+      tracking_number = "",
+      tracking_url = "",
+    } = body || {};
+
+    const updateData = {
       status,
+      carrier,
       tracking_number,
-      carrier
-    } = body;
+      tracking_url,
+    };
 
     const { data, error } = await supabaseAdmin
       .from("orders")
-      .update({
-        status,
-        tracking_number,
-        carrier
-      })
+      .update(updateData)
       .eq("id", id)
       .select()
       .single();
 
     if (error) {
-      console.error("Update error:", error);
+      console.error("Supabase update error:", error);
       return NextResponse.json(
-        { error: "Failed to update order" },
+        { error: error.message || "Failed to update order." },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      order: data
+      message: `Order ${data?.order_number || id} updated successfully.`,
+      order: data,
     });
-
   } catch (err) {
-    console.error("Server error:", err);
+    console.error("Order update server error:", err);
     return NextResponse.json(
-      { error: "Server error" },
+      { error: err.message || "Server error." },
       { status: 500 }
     );
   }
