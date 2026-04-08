@@ -29,7 +29,7 @@ function getTrackingLink(carrier, trackingNumber) {
 
 export async function PUT(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
 
     const status = body?.status || "";
@@ -43,6 +43,7 @@ export async function PUT(req, { params }) {
       .single();
 
     if (fetchError || !order) {
+      console.error("Order fetch failed:", { id, fetchError });
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 

@@ -3,7 +3,7 @@ import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 
 export async function GET(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const { data, error } = await supabaseAdmin
       .from("orders")
