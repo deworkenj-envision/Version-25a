@@ -2,18 +2,8 @@
 
 import { useState } from "react";
 
-function formatDate(value) {
-  if (!value) return "-";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
-}
-
-export default function TrackOrderPage() {
+export default function TrackPage() {
   const [orderNumber, setOrderNumber] = useState("");
-  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [order, setOrder] = useState(null);
@@ -25,157 +15,88 @@ export default function TrackOrderPage() {
     setOrder(null);
 
     try {
+      const cleaned = orderNumber.trim().toUpperCase();
+
       const res = await fetch(
-        `/api/track?orderNumber=${encodeURIComponent(orderNumber)}&email=${encodeURIComponent(email)}`,
-        { cache: "no-store" }
+        `/api/orders/track?orderNumber=${encodeURIComponent(cleaned)}`
       );
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data?.error || "Could not find order.");
+        setError(data.error || "Order not found");
+        return;
       }
 
-      setOrder(data.order);
+      setOrder(data.order || null);
     } catch (err) {
-      setError(err.message || "Could not find order.");
+      setError("Something went wrong while tracking the order.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-          <h1 className="text-3xl font-bold text-slate-900">Track Your Order</h1>
-          <p className="mt-2 text-slate-600">
-            Enter your order number and email address to check status.
-          </p>
+    <main className="mx-auto max-w-3xl px-6 py-12">
+      <h1 className="text-3xl font-bold mb-3">Track Your Order</h1>
+      <p className="text-gray-600 mb-8">
+        Enter your order number like <strong>EV-10087</strong>.
+      </p>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+      <form onSubmit={handleSubmit} className="flex gap-3 mb-8">
+        <input
+          type="text"
+          value={orderNumber}
+          onChange={(e) => setOrderNumber(e.target.value)}
+          placeholder="EV-10087"
+          className="flex-1 rounded-xl border px-4 py-3"
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="rounded-xl bg-black text-white px-5 py-3"
+        >
+          {loading ? "Searching..." : "Track Order"}
+        </button>
+      </form>
+
+      {error ? (
+        <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
+          {error}
+        </div>
+      ) : null}
+
+      {order ? (
+        <div className="rounded-2xl border p-6 space-y-3">
+          <div>
+            <span className="font-semibold">Order Number:</span>{" "}
+            {order.order_number || order.id}
+          </div>
+          <div>
+            <span className="font-semibold">Status:</span> {order.status}
+          </div>
+          <div>
+            <span className="font-semibold">Product:</span> {order.product_name}
+          </div>
+          <div>
+            <span className="font-semibold">Customer:</span> {order.customer_name}
+          </div>
+          <div>
+            <span className="font-semibold">Email:</span> {order.customer_email}
+          </div>
+          {order.carrier ? (
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Order Number
-              </label>
-              <input
-                type="text"
-                value={orderNumber}
-                onChange={(e) => setOrderNumber(e.target.value)}
-                placeholder="EV-10087"
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
-            >
-              {loading ? "Checking..." : "Track Order"}
-            </button>
-          </form>
-
-          {error ? (
-            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-              {error}
+              <span className="font-semibold">Carrier:</span> {order.carrier}
             </div>
           ) : null}
-
-          {order ? (
-            <div className="mt-8 space-y-4">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">
-                  Order Number
-                </p>
-                <p className="mt-1 font-semibold text-slate-900">
-                  {order.order_number || "-"}
-                </p>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">
-                    Customer
-                  </p>
-                  <p className="mt-1 font-semibold text-slate-900">
-                    {order.customer_name || "-"}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">
-                    Product
-                  </p>
-                  <p className="mt-1 font-semibold text-slate-900">
-                    {order.product_name || "-"}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">
-                    Status
-                  </p>
-                  <p className="mt-1 font-semibold text-blue-700">
-                    {order.status || "-"}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">
-                    Order Date
-                  </p>
-                  <p className="mt-1 font-semibold text-slate-900">
-                    {formatDate(order.created_at)}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">
-                    Carrier
-                  </p>
-                  <p className="mt-1 font-semibold text-slate-900">
-                    {order.carrier || "-"}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">
-                    Tracking Number
-                  </p>
-                  <p className="mt-1 font-semibold text-slate-900">
-                    {order.tracking_number || "-"}
-                  </p>
-                </div>
-              </div>
-
-              {order.tracking_url ? (
-                <a
-                  href={order.tracking_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
-                >
-                  Track Shipment
-                </a>
-              ) : null}
+          {order.tracking_number ? (
+            <div>
+              <span className="font-semibold">Tracking Number:</span>{" "}
+              {order.tracking_number}
             </div>
           ) : null}
         </div>
-      </section>
+      ) : null}
     </main>
   );
 }
