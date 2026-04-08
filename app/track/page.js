@@ -18,7 +18,8 @@ export default function TrackPage() {
       const cleaned = orderNumber.trim().toUpperCase();
 
       const res = await fetch(
-        `/api/orders/track?orderNumber=${encodeURIComponent(cleaned)}`
+        `/api/orders/track?orderNumber=${encodeURIComponent(cleaned)}`,
+        { cache: "no-store" }
       );
 
       const data = await res.json();
@@ -28,8 +29,14 @@ export default function TrackPage() {
         return;
       }
 
-      setOrder(data.order || null);
+      if (!data.order) {
+        setError("Order not found");
+        return;
+      }
+
+      setOrder(data.order);
     } catch (err) {
+      console.error("Track page error:", err);
       setError("Something went wrong while tracking the order.");
     } finally {
       setLoading(false);
@@ -60,43 +67,50 @@ export default function TrackPage() {
         </button>
       </form>
 
-      {error ? (
-        <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
+      {error && (
+        <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-red-700 mb-6">
           {error}
         </div>
-      ) : null}
+      )}
 
-      {order ? (
+      {order && (
         <div className="rounded-2xl border p-6 space-y-3">
           <div>
             <span className="font-semibold">Order Number:</span>{" "}
             {order.order_number || order.id}
           </div>
+
           <div>
             <span className="font-semibold">Status:</span> {order.status}
           </div>
+
           <div>
             <span className="font-semibold">Product:</span> {order.product_name}
           </div>
+
           <div>
             <span className="font-semibold">Customer:</span> {order.customer_name}
           </div>
+
           <div>
             <span className="font-semibold">Email:</span> {order.customer_email}
           </div>
-          {order.carrier ? (
+
+          {(order.tracking_carrier || order.carrier) && (
             <div>
-              <span className="font-semibold">Carrier:</span> {order.carrier}
+              <span className="font-semibold">Carrier:</span>{" "}
+              {order.tracking_carrier || order.carrier}
             </div>
-          ) : null}
-          {order.tracking_number ? (
+          )}
+
+          {order.tracking_number && (
             <div>
               <span className="font-semibold">Tracking Number:</span>{" "}
               {order.tracking_number}
             </div>
-          ) : null}
+          )}
         </div>
-      ) : null}
+      )}
     </main>
   );
 }
