@@ -14,25 +14,29 @@ export async function PUT(req, context) {
 
     const body = await req.json();
 
-    const {
-      status = "pending",
-      carrier = "",
-      tracking_number = "",
-      tracking_url = "",
-    } = body || {};
+    const status = body?.status ?? "pending";
+    const carrier = body?.carrier ?? "";
+    const tracking_number = body?.tracking_number ?? "";
+    const tracking_url = body?.tracking_url ?? "";
 
-    const updateData = {
+    console.log("Updating order:", {
+      id,
       status,
       carrier,
       tracking_number,
       tracking_url,
-    };
+    });
 
     const { data, error } = await supabaseAdmin
       .from("orders")
-      .update(updateData)
+      .update({
+        status,
+        carrier,
+        tracking_number,
+        tracking_url,
+      })
       .eq("id", id)
-      .select()
+      .select("*")
       .single();
 
     if (error) {
