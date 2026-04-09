@@ -63,7 +63,7 @@ export default function HomePage() {
               </div>
 
               <h1 className="max-w-3xl text-4xl font-semibold leading-tight tracking-[-0.03em] md:text-6xl">
-                Print that feels premium from the first click to final delivery.
+                Premium printing at inductry leading low prices.
               </h1>
 
               <p className="mt-6 max-w-2xl text-base leading-7 text-black/65 md:text-lg">
