@@ -144,27 +144,38 @@ function getFirst(arr) {
   return Array.isArray(arr) && arr.length ? String(arr[0]) : "";
 }
 
-function optionCard(title, value) {
-  return { title, value };
-}
-
 function Field({ label, value, onChange, options }) {
   return (
     <div>
-      <label className="mb-2 block text-[13px] font-semibold tracking-wide text-neutral-700">
+      <label className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
         {label}
       </label>
       <select
         value={value}
         onChange={onChange}
-        className="h-11 w-full rounded-xl border border-black bg-white px-3 text-[14px] text-black shadow-[0_1px_0_rgba(0,0,0,0.05)] outline-none transition focus:ring-2 focus:ring-black/10"
+        className="h-11 w-full rounded-xl border border-black/90 bg-white px-3 text-[14px] text-black outline-none transition focus:ring-2 focus:ring-black/10"
       >
-        {options.map((option) => (
-          <option key={String(option)} value={String(option)}>
-            {String(option)}
-          </option>
-        ))}
+        {options.map((option) => {
+          const normalized =
+            typeof option === "string" || typeof option === "number"
+              ? { value: String(option), label: String(option) }
+              : option;
+
+          return (
+            <option key={normalized.value} value={normalized.value}>
+              {normalized.label}
+            </option>
+          );
+        })}
       </select>
+    </div>
+  );
+}
+
+function InfoChip({ children }) {
+  return (
+    <div className="rounded-full border border-black bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-neutral-700 backdrop-blur">
+      {children}
     </div>
   );
 }
@@ -228,8 +239,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const nextPapers = product.options.paper[size] || [];
-    const nextPaper = getFirst(nextPapers);
-    setPaper(nextPaper);
+    setPaper(getFirst(nextPapers));
     setTrimSize(size);
   }, [product, size]);
 
@@ -282,7 +292,6 @@ export default function HomePage() {
     if (turnaround.includes("Rush")) baseUnit += 0.04;
 
     if (bundling !== "No Bundling") baseUnit += 0.005;
-
     if (ver > 1) baseUnit += (ver - 1) * 0.01;
 
     if (qty >= 5000) baseUnit *= 0.72;
@@ -302,16 +311,14 @@ export default function HomePage() {
     };
   }, [product, size, paper, color, coating, turnaround, bundling, quantity, versions]);
 
-  const summaryCards = [
-    optionCard("Product", product.label),
-    optionCard("Size", size),
-    optionCard("Paper", paper),
-    optionCard("Color", color),
-  ];
+  const productOptions = productList.map((item) => ({
+    value: item.key,
+    label: item.label,
+  }));
 
   return (
-    <main className="min-h-screen bg-[#f4f4f2] text-black">
-      <section className="border-b border-black bg-white">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#f6f2ea_0%,#f7f7f4_32%,#f2f4ef_100%)] text-black">
+      <section className="border-b border-black bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:px-10 lg:px-12">
           <div>
             <div className="text-2xl font-bold tracking-[-0.03em]">EnVision Direct</div>
@@ -336,227 +343,263 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-8 md:px-10 lg:px-12">
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-          <div className="overflow-hidden rounded-[28px] border border-black bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)]">
-            <div className="border-b border-black bg-[#ece8df] px-6 py-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-600">
-                Digital print products
-              </p>
-              <h1 className="mt-2 text-3xl font-bold tracking-[-0.03em]">{product.pageTitle}</h1>
+        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+          <div className="overflow-hidden rounded-[30px] border border-black bg-white shadow-[0_18px_45px_rgba(0,0,0,0.08)]">
+            <div className="relative border-b border-black bg-[linear-gradient(135deg,#f4eee3_0%,#ece6db_48%,#e4ece5_100%)] px-6 py-6">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(0,0,0,0.05),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(0,0,0,0.03),transparent_26%)]" />
+              <div className="relative">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-600">
+                  Digital print products
+                </p>
+                <h1 className="mt-2 text-3xl font-bold tracking-[-0.03em]">
+                  {product.pageTitle}
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-neutral-700">
+                  Live pricing, cascading options, and a cleaner way to build a print order.
+                </p>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <InfoChip>Live estimator</InfoChip>
+                  <InfoChip>Upload print-ready artwork</InfoChip>
+                  <InfoChip>Modern product options</InfoChip>
+                </div>
+              </div>
             </div>
 
-            <div className="grid lg:grid-cols-[1.08fr_0.92fr]">
+            <div className="grid gap-0 lg:grid-cols-[1.08fr_0.92fr]">
               <div className="border-b border-black p-6 lg:border-b-0 lg:border-r">
-                <div className="mb-4 flex justify-between gap-3">
-                  <div className="rounded-full border border-black bg-[#f5f3ee] px-4 py-2 text-xs font-semibold uppercase tracking-wide">
-                    Upload print-ready artwork
-                  </div>
-                  <Link
-                    href={`/order?product=${encodeURIComponent(product.label)}`}
-                    className="rounded-xl border border-black bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-                  >
-                    Upload File
-                  </Link>
-                </div>
-
-                <div className="overflow-hidden rounded-[22px] border border-black">
-                  <img
-                    src={product.heroImage}
-                    alt={product.label}
-                    className="h-[320px] w-full object-cover"
-                  />
-                </div>
-
-                <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  {summaryCards.map((card) => (
-                    <div
-                      key={card.title}
-                      className="rounded-[18px] border border-black bg-[#f7f6f2] px-4 py-4"
-                    >
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-neutral-500">
-                        {card.title}
+                <div className="overflow-hidden rounded-[24px] border border-black bg-black">
+                  <div className="relative">
+                    <img
+                      src={product.heroImage}
+                      alt={product.label}
+                      className="h-[340px] w-full object-cover opacity-95"
+                    />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.02)_0%,rgba(0,0,0,0.28)_100%)]" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80">
+                        {product.label}
                       </div>
-                      <div className="mt-2 text-sm font-semibold text-neutral-900">{card.value}</div>
+                      <div className="mt-2 text-2xl font-bold tracking-[-0.02em]">
+                        Built for real print ordering
+                      </div>
                     </div>
-                  ))}
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-[22px] border border-black bg-[linear-gradient(135deg,#fbfaf7_0%,#f4f0e8_100%)] p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-bold tracking-[-0.02em]">Product overview</h2>
+                      <p className="mt-3 text-sm leading-7 text-neutral-700">
+                        {product.description}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/order?product=${encodeURIComponent(product.label)}`}
+                      className="shrink-0 rounded-xl border border-black bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                    >
+                      Upload File
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  <div className="rounded-[22px] border border-black bg-white p-5">
+                    <h3 className="text-lg font-bold tracking-[-0.02em]">How options change</h3>
+                    <div className="mt-4 space-y-3">
+                      {[
+                        "Product changes sizes and paper stocks",
+                        "Paper changes color and coating choices",
+                        "Size changes quantity tiers",
+                        "Pricing updates as selections change",
+                      ].map((item) => (
+                        <div
+                          key={item}
+                          className="rounded-[16px] border border-black bg-[#f7f7f3] px-4 py-3 text-sm font-medium"
+                        >
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[22px] border border-black bg-[linear-gradient(135deg,#edf2ea_0%,#e4ece5_100%)] p-5">
+                    <h3 className="text-lg font-bold tracking-[-0.02em]">Related products</h3>
+                    <div className="mt-4 space-y-3">
+                      {product.related.map((item) => (
+                        <div
+                          key={item}
+                          className="rounded-[16px] border border-black bg-white px-4 py-3 text-sm font-medium"
+                        >
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="p-6">
-                <div className="flex flex-wrap gap-2">
-                  {["Overview", "Specs", "Options", "Turnaround"].map((tab, index) => (
-                    <span
-                      key={tab}
-                      className={`rounded-full border border-black px-4 py-2 text-xs font-semibold uppercase tracking-wide ${
-                        index === 0 ? "bg-black text-white" : "bg-[#f5f3ee] text-neutral-700"
-                      }`}
-                    >
-                      {tab}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="mt-6 rounded-[22px] border border-black bg-[#f7f6f2] p-5">
-                  <h2 className="text-xl font-bold tracking-[-0.02em]">Product overview</h2>
-                  <p className="mt-3 text-sm leading-7 text-neutral-700">{product.description}</p>
-                  <p className="mt-3 text-sm leading-7 text-neutral-700">
-                    Use the estimator on the right to change product options and see pricing update
-                    as selections change.
+                <div className="rounded-[22px] border border-black bg-[linear-gradient(135deg,#1f1f1f_0%,#2d2d2d_100%)] p-5 text-white">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
+                    Live estimator
+                  </div>
+                  <div className="mt-1 text-2xl font-bold tracking-[-0.02em]">
+                    Build your print order
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-white/80">
+                    Adjust options and see the estimate update in real time.
                   </p>
                 </div>
 
-                <div className="mt-5 rounded-[22px] border border-black bg-white p-5">
-                  <h3 className="text-lg font-bold tracking-[-0.02em]">Related products</h3>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    {product.related.map((item) => (
-                      <div
-                        key={item}
-                        className="rounded-[16px] border border-black bg-[#faf9f6] px-4 py-3 text-sm font-semibold"
-                      >
-                        {item}
-                      </div>
-                    ))}
+                <div className="mt-5 rounded-[22px] border border-black bg-[#f7f4ee] p-5">
+                  <div className="grid gap-4">
+                    <Field
+                      label="Product"
+                      value={productKey}
+                      onChange={(e) => setProductKey(e.target.value)}
+                      options={productOptions}
+                    />
+
+                    <Field
+                      label="Size"
+                      value={size}
+                      onChange={(e) => setSize(e.target.value)}
+                      options={availableSizes}
+                    />
+
+                    <div>
+                      <label className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
+                        Trim Size
+                      </label>
+                      <input
+                        value={trimSize}
+                        onChange={(e) => setTrimSize(e.target.value)}
+                        className="h-11 w-full rounded-xl border border-black/90 bg-white px-3 text-[14px] text-black outline-none transition focus:ring-2 focus:ring-black/10"
+                      />
+                    </div>
+
+                    <Field
+                      label="Paper"
+                      value={paper}
+                      onChange={(e) => setPaper(e.target.value)}
+                      options={availablePapers}
+                    />
+
+                    <Field
+                      label="Color"
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      options={availableColors}
+                    />
+
+                    <Field
+                      label="Coating"
+                      value={coating}
+                      onChange={(e) => setCoating(e.target.value)}
+                      options={availableCoatings}
+                    />
+
+                    <Field
+                      label="Turnaround"
+                      value={turnaround}
+                      onChange={(e) => setTurnaround(e.target.value)}
+                      options={availableTurnarounds}
+                    />
+
+                    <Field
+                      label="Bundle in Sets"
+                      value={bundling}
+                      onChange={(e) => setBundling(e.target.value)}
+                      options={availableBundling}
+                    />
+
+                    <Field
+                      label="Quantity"
+                      value={quantity}
+                      onChange={(e) => setQuantity(e.target.value)}
+                      options={availableQuantities}
+                    />
+
+                    <Field
+                      label="Versions"
+                      value={versions}
+                      onChange={(e) => setVersions(e.target.value)}
+                      options={availableVersions}
+                    />
                   </div>
                 </div>
 
-                <div className="mt-5 rounded-[22px] border border-black bg-[#e8efe8] p-5">
-                  <h3 className="text-lg font-bold tracking-[-0.02em]">How this estimator works</h3>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    {[
-                      "Product changes available sizes and papers",
-                      "Paper changes color and coating choices",
-                      "Size changes valid quantity tiers",
-                      "Pricing updates as options change",
-                    ].map((item) => (
-                      <div
-                        key={item}
-                        className="rounded-[16px] border border-black bg-white px-4 py-3 text-sm font-semibold"
-                      >
-                        {item}
-                      </div>
-                    ))}
+                <div className="mt-5 rounded-[22px] border border-black bg-[linear-gradient(135deg,#f2ec9a_0%,#e7dd7e_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]">
+                  <div className="flex items-center justify-between text-sm font-bold">
+                    <span>Printing Total</span>
+                    <span>${pricing.printingTotal.toFixed(2)}</span>
                   </div>
+                  <div className="mt-2 flex items-center justify-between text-sm font-bold">
+                    <span>Unit Price</span>
+                    <span>${pricing.unitPrice.toFixed(3)}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between rounded-[18px] border border-black bg-white px-4 py-3">
+                  <span className="text-sm font-semibold">Reward Points</span>
+                  <span className="text-sm font-bold">{pricing.rewardPoints}</span>
+                </div>
+
+                <Link
+                  href={`/order?product=${encodeURIComponent(product.label)}`}
+                  className="mt-4 block rounded-[18px] border border-black bg-black px-4 py-3 text-center text-[15px] font-bold text-white hover:opacity-92"
+                >
+                  Place Order
+                </Link>
+
+                <div className="mt-3 text-right text-xs font-medium text-neutral-600">
+                  Live estimate preview
                 </div>
               </div>
             </div>
           </div>
 
-          <aside className="self-start overflow-hidden rounded-[24px] border border-black bg-[#e7e3db] shadow-[0_10px_26px_rgba(0,0,0,0.08)]">
-            <div className="border-b border-black bg-[#d9d1c4] px-4 py-4">
+          <aside className="self-start rounded-[24px] border border-black bg-white shadow-[0_14px_34px_rgba(0,0,0,0.08)]">
+            <div className="border-b border-black bg-[linear-gradient(135deg,#f3ede3_0%,#e6dfd3_100%)] px-5 py-5">
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-600">
-                Live estimator
+                Current setup
               </div>
-              <div className="mt-1 text-xl font-bold tracking-[-0.02em]">Build your print order</div>
+              <div className="mt-1 text-xl font-bold tracking-[-0.02em]">
+                {product.label}
+              </div>
             </div>
 
-            <div className="border-b border-black bg-white px-4 py-4">
-              <Field
-                label="Product"
-                value={productKey}
-                onChange={(e) => setProductKey(e.target.value)}
-                options={productList.map((p) => ({ value: p.key, label: p.label })).map((x) => x.value)}
-              />
-            </div>
-
-            <div className="space-y-4 px-4 py-4">
-              <div className="rounded-[18px] border border-black bg-[#f8f6f0] p-4">
-                <div className="mb-3 text-sm font-bold">{product.label}</div>
-
-                <div className="space-y-4">
-                  <Field
-                    label="Size"
-                    value={size}
-                    onChange={(e) => setSize(e.target.value)}
-                    options={availableSizes}
-                  />
-
-                  <div>
-                    <label className="mb-2 block text-[13px] font-semibold tracking-wide text-neutral-700">
-                      Trim Size
-                    </label>
-                    <input
-                      value={trimSize}
-                      onChange={(e) => setTrimSize(e.target.value)}
-                      className="h-11 w-full rounded-xl border border-black bg-white px-3 text-[14px] text-black outline-none transition focus:ring-2 focus:ring-black/10"
-                    />
+            <div className="space-y-3 px-5 py-5">
+              {[
+                { label: "Size", value: size },
+                { label: "Paper", value: paper },
+                { label: "Color", value: color },
+                { label: "Coating", value: coating },
+                { label: "Turnaround", value: turnaround },
+                { label: "Quantity", value: quantity },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-[16px] border border-black bg-[#faf8f3] px-4 py-3"
+                >
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
+                    {item.label}
                   </div>
-
-                  <Field
-                    label="Paper"
-                    value={paper}
-                    onChange={(e) => setPaper(e.target.value)}
-                    options={availablePapers}
-                  />
-
-                  <Field
-                    label="Color"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    options={availableColors}
-                  />
-
-                  <Field
-                    label="Coating"
-                    value={coating}
-                    onChange={(e) => setCoating(e.target.value)}
-                    options={availableCoatings}
-                  />
-
-                  <Field
-                    label="Turnaround"
-                    value={turnaround}
-                    onChange={(e) => setTurnaround(e.target.value)}
-                    options={availableTurnarounds}
-                  />
-
-                  <Field
-                    label="Bundle in Sets"
-                    value={bundling}
-                    onChange={(e) => setBundling(e.target.value)}
-                    options={availableBundling}
-                  />
-
-                  <Field
-                    label="Quantity"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    options={availableQuantities}
-                  />
-
-                  <Field
-                    label="Versions"
-                    value={versions}
-                    onChange={(e) => setVersions(e.target.value)}
-                    options={availableVersions}
-                  />
+                  <div className="mt-1 text-sm font-semibold text-neutral-900">
+                    {item.value}
+                  </div>
                 </div>
-              </div>
+              ))}
 
-              <div className="rounded-[18px] border border-black bg-[#f3efb7] p-4">
-                <div className="flex items-center justify-between text-sm font-bold">
-                  <span>Printing Total</span>
-                  <span>${pricing.printingTotal.toFixed(2)}</span>
+              <div className="rounded-[18px] border border-black bg-[linear-gradient(135deg,#edf2ea_0%,#e3ebe3_100%)] p-4">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
+                  Quick note
                 </div>
-                <div className="mt-2 flex items-center justify-between text-sm font-bold">
-                  <span>Unit Price</span>
-                  <span>${pricing.unitPrice.toFixed(3)}</span>
+                <div className="mt-2 text-sm leading-6 text-neutral-700">
+                  This side panel now only shows the current order summary, so the left side stays cleaner.
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between rounded-[16px] border border-black bg-white px-4 py-3">
-                <span className="text-sm font-semibold">Reward Points</span>
-                <span className="text-sm font-bold">{pricing.rewardPoints}</span>
-              </div>
-
-              <Link
-                href={`/order?product=${encodeURIComponent(product.label)}`}
-                className="block rounded-[16px] border border-black bg-black px-4 py-3 text-center text-[15px] font-bold text-white hover:opacity-92"
-              >
-                Place Order
-              </Link>
-
-              <div className="text-right text-xs font-medium text-neutral-600">
-                Live estimate preview
               </div>
             </div>
           </aside>
