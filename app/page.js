@@ -1,89 +1,163 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const products = {
-  "Postcards - Digital": {
-    productName: "Postcards",
-    sizes: ["4 x 6", "5 x 7", "5.5 x 8.5", "6 x 9", "8.5 x 11"],
-    trimSizes: ["4 x 6", "5 x 7", "5.5 x 8.5", "6 x 9", "8.5 x 11"],
-    papers: [
-      "14pt C2S (Gloss Cover)",
-      "16pt C2S",
-      "14pt Matte Cover",
-      "16pt Matte Cover",
-    ],
-    colors: [
-      "4/4 (Full Color Both Sides)",
-      "4/0 (Full Color Front Only)",
-      "1/1 (Black Both Sides)",
-    ],
-    coatings: ["No Coating", "Gloss UV Front", "AQ Both Sides", "Matte Finish"],
-    turnarounds: ["1-2 Day", "2-4 Day", "4-6 Day"],
-    bundling: ["No Bundling", "Bundle in 25s", "Bundle in 50s"],
-    quantities: [100, 250, 500, 1000, 2500],
-    versions: [1, 2, 3, 4],
-    image:
+const PRODUCT_CONFIG = {
+  postcards: {
+    key: "postcards",
+    label: "Postcards",
+    pageTitle: "Digital Postcards",
+    heroImage:
       "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=80",
     description:
-      "Postcards are a strong option for promotions, handouts, direct mail, and event marketing.",
+      "Postcards work well for promotions, direct mail, handouts, thank-you cards, and event marketing.",
+    related: ["EDDM Postcards", "Rack Cards", "Club Flyers", "Tear Cards"],
+    options: {
+      size: ["4 x 6", "5 x 7", "5.5 x 8.5", "6 x 9", "8.5 x 11"],
+      quantity: {
+        "4 x 6": [100, 250, 500, 1000, 2500],
+        "5 x 7": [100, 250, 500, 1000],
+        "5.5 x 8.5": [100, 250, 500, 1000],
+        "6 x 9": [100, 250, 500],
+        "8.5 x 11": [100, 250, 500],
+      },
+      paper: {
+        "4 x 6": ["14pt Gloss Cover", "16pt Matte Cover", "14pt Uncoated"],
+        "5 x 7": ["14pt Gloss Cover", "16pt Matte Cover"],
+        "5.5 x 8.5": ["14pt Gloss Cover", "16pt Matte Cover"],
+        "6 x 9": ["14pt Gloss Cover", "16pt Matte Cover"],
+        "8.5 x 11": ["100lb Gloss Cover", "100lb Matte Cover"],
+      },
+      color: {
+        "14pt Gloss Cover": ["4/4 Full Color Both Sides", "4/0 Full Color Front Only"],
+        "16pt Matte Cover": ["4/4 Full Color Both Sides", "4/0 Full Color Front Only"],
+        "14pt Uncoated": ["4/4 Full Color Both Sides", "1/1 Black Both Sides"],
+        "100lb Gloss Cover": ["4/4 Full Color Both Sides", "4/0 Full Color Front Only"],
+        "100lb Matte Cover": ["4/4 Full Color Both Sides", "4/0 Full Color Front Only"],
+      },
+      coating: {
+        "14pt Gloss Cover": ["No Coating", "Gloss UV Front", "AQ Both Sides"],
+        "16pt Matte Cover": ["No Coating", "Soft Touch", "Matte Finish"],
+        "14pt Uncoated": ["No Coating"],
+        "100lb Gloss Cover": ["No Coating", "AQ Both Sides"],
+        "100lb Matte Cover": ["No Coating", "Matte Finish"],
+      },
+      turnaround: {
+        default: ["Standard 3-4 Business Days", "Rush 1-2 Business Days"],
+      },
+      bundling: {
+        default: ["No Bundling", "Bundle in 25s", "Bundle in 50s"],
+      },
+      versions: {
+        default: [1, 2, 3, 4],
+      },
+    },
   },
-  "Business Cards - Digital": {
-    productName: "Business Cards",
-    sizes: ["3.5 x 2", "2 x 3.5 Vertical"],
-    trimSizes: ["3.5 x 2", "2 x 3.5 Vertical"],
-    papers: [
-      "16pt C2S",
-      "14pt C2S",
-      "16pt Matte",
-      "14pt Uncoated",
-    ],
-    colors: [
-      "4/4 (Full Color Both Sides)",
-      "4/0 (Full Color Front Only)",
-      "1/1 (Black Both Sides)",
-    ],
-    coatings: ["No Coating", "Gloss UV Front", "Soft Touch", "Matte Finish"],
-    turnarounds: ["1-2 Day", "2-4 Day", "4-6 Day"],
-    bundling: ["No Bundling", "Bundle in 50s", "Bundle in 100s"],
-    quantities: [250, 500, 1000, 2500, 5000],
-    versions: [1, 2, 3],
-    image:
+
+  businessCards: {
+    key: "businessCards",
+    label: "Business Cards",
+    pageTitle: "Digital Business Cards",
+    heroImage:
       "https://images.unsplash.com/photo-1586282391129-76a6df230234?auto=format&fit=crop&w=1400&q=80",
     description:
-      "Business cards are ideal for networking, handouts, appointments, and everyday customer contact.",
+      "Business cards are ideal for networking, appointments, leave-behinds, and everyday customer contact.",
+    related: ["Rounded Corner Cards", "Folded Cards", "Spot UV Cards", "Appointment Cards"],
+    options: {
+      size: ["3.5 x 2", "2 x 3.5 Vertical"],
+      quantity: {
+        "3.5 x 2": [250, 500, 1000, 2500, 5000],
+        "2 x 3.5 Vertical": [250, 500, 1000, 2500],
+      },
+      paper: {
+        "3.5 x 2": ["16pt Gloss Cover", "16pt Matte Cover", "14pt Uncoated"],
+        "2 x 3.5 Vertical": ["16pt Gloss Cover", "16pt Matte Cover"],
+      },
+      color: {
+        "16pt Gloss Cover": ["4/4 Full Color Both Sides", "4/0 Full Color Front Only"],
+        "16pt Matte Cover": ["4/4 Full Color Both Sides", "4/0 Full Color Front Only"],
+        "14pt Uncoated": ["4/4 Full Color Both Sides", "1/1 Black Both Sides"],
+      },
+      coating: {
+        "16pt Gloss Cover": ["No Coating", "Gloss UV Front"],
+        "16pt Matte Cover": ["No Coating", "Soft Touch"],
+        "14pt Uncoated": ["No Coating"],
+      },
+      turnaround: {
+        default: ["Standard 3-4 Business Days", "Rush 1-2 Business Days"],
+      },
+      bundling: {
+        default: ["No Bundling", "Bundle in 50s", "Bundle in 100s"],
+      },
+      versions: {
+        default: [1, 2, 3],
+      },
+    },
   },
-  "Flyers - Digital": {
-    productName: "Flyers",
-    sizes: ["4 x 6", "5.5 x 8.5", "8.5 x 11", "11 x 17"],
-    trimSizes: ["4 x 6", "5.5 x 8.5", "8.5 x 11", "11 x 17"],
-    papers: ["100lb Gloss Text", "100lb Gloss Cover", "80lb Uncoated"],
-    colors: [
-      "4/4 (Full Color Both Sides)",
-      "4/0 (Full Color Front Only)",
-      "1/0 (Black Front Only)",
-    ],
-    coatings: ["No Coating", "AQ Front", "AQ Both Sides"],
-    turnarounds: ["1-2 Day", "2-4 Day", "4-6 Day"],
-    bundling: ["No Bundling", "Bundle in 50s", "Bundle in 100s"],
-    quantities: [100, 250, 500, 1000, 2500],
-    versions: [1, 2, 3],
-    image:
+
+  flyers: {
+    key: "flyers",
+    label: "Flyers",
+    pageTitle: "Digital Flyers",
+    heroImage:
       "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80",
     description:
-      "Flyers are useful for promotions, menus, sales sheets, event marketing, and everyday advertising.",
+      "Flyers are useful for sales, menus, promotions, event handouts, and local advertising.",
+    related: ["Brochures", "Menus", "Sell Sheets", "Door Hangers"],
+    options: {
+      size: ["5.5 x 8.5", "8.5 x 11", "11 x 17"],
+      quantity: {
+        "5.5 x 8.5": [100, 250, 500, 1000],
+        "8.5 x 11": [100, 250, 500, 1000, 2500],
+        "11 x 17": [100, 250, 500, 1000],
+      },
+      paper: {
+        "5.5 x 8.5": ["100lb Gloss Text", "100lb Gloss Cover", "80lb Uncoated"],
+        "8.5 x 11": ["100lb Gloss Text", "100lb Gloss Cover", "80lb Uncoated"],
+        "11 x 17": ["100lb Gloss Text", "100lb Gloss Cover"],
+      },
+      color: {
+        "100lb Gloss Text": ["4/4 Full Color Both Sides", "4/0 Full Color Front Only"],
+        "100lb Gloss Cover": ["4/4 Full Color Both Sides", "4/0 Full Color Front Only"],
+        "80lb Uncoated": ["4/4 Full Color Both Sides", "1/0 Black Front Only"],
+      },
+      coating: {
+        "100lb Gloss Text": ["No Coating", "AQ Front"],
+        "100lb Gloss Cover": ["No Coating", "AQ Both Sides"],
+        "80lb Uncoated": ["No Coating"],
+      },
+      turnaround: {
+        default: ["Standard 3-4 Business Days", "Rush 1-2 Business Days"],
+      },
+      bundling: {
+        default: ["No Bundling", "Bundle in 50s", "Bundle in 100s"],
+      },
+      versions: {
+        default: [1, 2, 3],
+      },
+    },
   },
 };
+
+function getFirst(arr) {
+  return Array.isArray(arr) && arr.length ? String(arr[0]) : "";
+}
+
+function optionCard(title, value) {
+  return { title, value };
+}
 
 function Field({ label, value, onChange, options }) {
   return (
     <div>
-      <label className="mb-1 block text-[13px] font-bold text-black">{label}</label>
+      <label className="mb-2 block text-[13px] font-semibold tracking-wide text-neutral-700">
+        {label}
+      </label>
       <select
         value={value}
         onChange={onChange}
-        className="h-10 w-full rounded border border-[#8b8b8b] bg-[#e9e9ee] px-3 text-[14px] text-black outline-none"
+        className="h-11 w-full rounded-xl border border-black bg-white px-3 text-[14px] text-black shadow-[0_1px_0_rgba(0,0,0,0.05)] outline-none transition focus:ring-2 focus:ring-black/10"
       >
         {options.map((option) => (
           <option key={String(option)} value={String(option)}>
@@ -96,72 +170,128 @@ function Field({ label, value, onChange, options }) {
 }
 
 export default function HomePage() {
-  const productKeys = Object.keys(products);
-  const [selectedProduct, setSelectedProduct] = useState(productKeys[0]);
+  const productList = Object.values(PRODUCT_CONFIG);
+  const [productKey, setProductKey] = useState(productList[0].key);
 
-  const product = products[selectedProduct];
+  const product = PRODUCT_CONFIG[productKey];
 
-  const [size, setSize] = useState(product.sizes[0]);
-  const [trimSize, setTrimSize] = useState(product.trimSizes[0]);
-  const [paper, setPaper] = useState(product.papers[0]);
-  const [color, setColor] = useState(product.colors[0]);
-  const [coating, setCoating] = useState(product.coatings[0]);
-  const [turnaround, setTurnaround] = useState(product.turnarounds[0]);
-  const [bundling, setBundling] = useState(product.bundling[0]);
-  const [quantity, setQuantity] = useState(String(product.quantities[1] || product.quantities[0]));
-  const [versions, setVersions] = useState(String(product.versions[0]));
+  const availableSizes = product.options.size;
+  const [size, setSize] = useState(getFirst(availableSizes));
 
-  function handleProductChange(nextProductKey) {
-    const next = products[nextProductKey];
-    setSelectedProduct(nextProductKey);
-    setSize(next.sizes[0]);
-    setTrimSize(next.trimSizes[0]);
-    setPaper(next.papers[0]);
-    setColor(next.colors[0]);
-    setCoating(next.coatings[0]);
-    setTurnaround(next.turnarounds[0]);
-    setBundling(next.bundling[0]);
-    setQuantity(String(next.quantities[1] || next.quantities[0]));
-    setVersions(String(next.versions[0]));
-  }
+  const availablePapers = useMemo(
+    () => product.options.paper[size] || [],
+    [product, size]
+  );
+  const [paper, setPaper] = useState(getFirst(availablePapers));
+
+  const availableColors = useMemo(
+    () => product.options.color[paper] || [],
+    [product, paper]
+  );
+  const [color, setColor] = useState(getFirst(availableColors));
+
+  const availableCoatings = useMemo(
+    () => product.options.coating[paper] || [],
+    [product, paper]
+  );
+  const [coating, setCoating] = useState(getFirst(availableCoatings));
+
+  const availableQuantities = useMemo(
+    () => (product.options.quantity[size] || []).map(String),
+    [product, size]
+  );
+  const [quantity, setQuantity] = useState(getFirst(availableQuantities));
+
+  const availableTurnarounds = useMemo(
+    () => product.options.turnaround.default || [],
+    [product]
+  );
+  const [turnaround, setTurnaround] = useState(getFirst(availableTurnarounds));
+
+  const availableBundling = useMemo(
+    () => product.options.bundling.default || [],
+    [product]
+  );
+  const [bundling, setBundling] = useState(getFirst(availableBundling));
+
+  const availableVersions = useMemo(
+    () => (product.options.versions.default || []).map(String),
+    [product]
+  );
+  const [versions, setVersions] = useState(getFirst(availableVersions));
+
+  const [trimSize, setTrimSize] = useState(getFirst(availableSizes));
+
+  useEffect(() => {
+    setSize(getFirst(availableSizes));
+  }, [productKey]);
+
+  useEffect(() => {
+    const nextPapers = product.options.paper[size] || [];
+    const nextPaper = getFirst(nextPapers);
+    setPaper(nextPaper);
+    setTrimSize(size);
+  }, [product, size]);
+
+  useEffect(() => {
+    const nextColors = product.options.color[paper] || [];
+    setColor(getFirst(nextColors));
+
+    const nextCoatings = product.options.coating[paper] || [];
+    setCoating(getFirst(nextCoatings));
+  }, [product, paper]);
+
+  useEffect(() => {
+    const nextQty = (product.options.quantity[size] || []).map(String);
+    setQuantity(getFirst(nextQty));
+  }, [product, size]);
+
+  useEffect(() => {
+    setTurnaround(getFirst(product.options.turnaround.default || []));
+    setBundling(getFirst(product.options.bundling.default || []));
+    setVersions(getFirst((product.options.versions.default || []).map(String)));
+  }, [productKey, product]);
 
   const pricing = useMemo(() => {
-    let base = 0;
+    const qty = Number(quantity || 0);
+    const ver = Number(versions || 1);
 
-    if (product.productName === "Postcards") base = 0.26;
-    if (product.productName === "Business Cards") base = 0.11;
-    if (product.productName === "Flyers") base = 0.18;
+    let baseUnit = 0.12;
+    if (product.key === "postcards") baseUnit = 0.24;
+    if (product.key === "businessCards") baseUnit = 0.10;
+    if (product.key === "flyers") baseUnit = 0.16;
 
-    const qty = Number(quantity);
-    const ver = Number(versions);
+    if (size.includes("8.5 x 11")) baseUnit += 0.08;
+    if (size.includes("11 x 17")) baseUnit += 0.14;
+    if (size.includes("6 x 9")) baseUnit += 0.04;
+    if (size.includes("5.5 x 8.5")) baseUnit += 0.03;
 
-    let paperAdj = 0;
-    if (paper.includes("16pt")) paperAdj += 0.03;
-    if (paper.includes("Matte")) paperAdj += 0.015;
-    if (paper.includes("Gloss Cover")) paperAdj += 0.02;
+    if (paper.includes("16pt")) baseUnit += 0.03;
+    if (paper.includes("100lb Gloss Cover")) baseUnit += 0.05;
+    if (paper.includes("100lb Gloss Text")) baseUnit += 0.03;
+    if (paper.includes("Matte")) baseUnit += 0.02;
 
-    let coatingAdj = 0;
-    if (coating.includes("Gloss UV")) coatingAdj += 0.03;
-    if (coating.includes("Soft Touch")) coatingAdj += 0.05;
-    if (coating.includes("AQ")) coatingAdj += 0.02;
-    if (coating === "No Coating") coatingAdj += 0;
+    if (color.includes("4/4")) baseUnit += 0.03;
+    if (color.includes("4/0")) baseUnit += 0.015;
 
-    let turnaroundAdj = 0;
-    if (turnaround === "1-2 Day") turnaroundAdj += 0.04;
-    if (turnaround === "2-4 Day") turnaroundAdj += 0.02;
+    if (coating.includes("Gloss UV")) baseUnit += 0.03;
+    if (coating.includes("Soft Touch")) baseUnit += 0.05;
+    if (coating.includes("AQ")) baseUnit += 0.02;
+    if (coating.includes("Matte Finish")) baseUnit += 0.02;
 
-    let sideAdj = 0;
-    if (color.includes("4/4")) sideAdj += 0.03;
-    if (color.includes("4/0")) sideAdj += 0.015;
+    if (turnaround.includes("Rush")) baseUnit += 0.04;
 
-    let versionAdj = (ver - 1) * 0.01;
+    if (bundling !== "No Bundling") baseUnit += 0.005;
 
-    let unitPrice = base + paperAdj + coatingAdj + turnaroundAdj + sideAdj + versionAdj;
+    if (ver > 1) baseUnit += (ver - 1) * 0.01;
 
-    if (qty >= 1000) unitPrice *= 0.8;
-    else if (qty >= 500) unitPrice *= 0.88;
-    else if (qty >= 250) unitPrice *= 0.95;
+    if (qty >= 5000) baseUnit *= 0.72;
+    else if (qty >= 2500) baseUnit *= 0.78;
+    else if (qty >= 1000) baseUnit *= 0.84;
+    else if (qty >= 500) baseUnit *= 0.90;
+    else if (qty >= 250) baseUnit *= 0.95;
 
+    const unitPrice = baseUnit;
     const printingTotal = unitPrice * qty;
     const rewardPoints = Math.round(printingTotal);
 
@@ -170,27 +300,34 @@ export default function HomePage() {
       printingTotal,
       rewardPoints,
     };
-  }, [product, quantity, versions, paper, coating, turnaround, color]);
+  }, [product, size, paper, color, coating, turnaround, bundling, quantity, versions]);
+
+  const summaryCards = [
+    optionCard("Product", product.label),
+    optionCard("Size", size),
+    optionCard("Paper", paper),
+    optionCard("Color", color),
+  ];
 
   return (
-    <main className="min-h-screen bg-[#f3f4f7] text-black">
+    <main className="min-h-screen bg-[#f4f4f2] text-black">
       <section className="border-b border-black bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:px-10 lg:px-12">
           <div>
-            <div className="text-2xl font-extrabold">EnVision Direct</div>
-            <div className="text-sm text-gray-600">Online print ordering</div>
+            <div className="text-2xl font-bold tracking-[-0.03em]">EnVision Direct</div>
+            <div className="text-sm text-neutral-600">Print ordering and live estimating</div>
           </div>
 
           <div className="flex gap-2">
             <Link
               href="/order"
-              className="rounded-md border border-black bg-white px-4 py-2 text-sm font-bold hover:bg-gray-100"
+              className="rounded-xl border border-black bg-white px-4 py-2 text-sm font-semibold hover:bg-neutral-100"
             >
               Order
             </Link>
             <Link
               href="/track"
-              className="rounded-md border border-black bg-[#0b7fd1] px-4 py-2 text-sm font-bold text-white hover:opacity-90"
+              className="rounded-xl border border-black bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
             >
               Track
             </Link>
@@ -199,214 +336,228 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-8 md:px-10 lg:px-12">
-        <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-          <div className="rounded border border-[#b9b9b9] bg-white shadow-sm">
-            <div className="border-b border-[#cfcfcf] bg-[#f5f5f5] px-6 py-5">
-              <p className="text-sm font-bold uppercase tracking-wide text-[#0b7fd1]">
-                4-Color Digital Printing
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+          <div className="overflow-hidden rounded-[28px] border border-black bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)]">
+            <div className="border-b border-black bg-[#ece8df] px-6 py-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-600">
+                Digital print products
               </p>
-              <h1 className="mt-2 text-3xl font-bold">{product.productName}</h1>
+              <h1 className="mt-2 text-3xl font-bold tracking-[-0.03em]">{product.pageTitle}</h1>
             </div>
 
-            <div className="grid gap-0 md:grid-cols-[1fr_1fr]">
-              <div className="border-b border-r border-[#d2d2d2] bg-[#f7f7f7] p-6 md:border-b-0">
-                <div className="mb-4 flex justify-end">
+            <div className="grid lg:grid-cols-[1.08fr_0.92fr]">
+              <div className="border-b border-black p-6 lg:border-b-0 lg:border-r">
+                <div className="mb-4 flex justify-between gap-3">
+                  <div className="rounded-full border border-black bg-[#f5f3ee] px-4 py-2 text-xs font-semibold uppercase tracking-wide">
+                    Upload print-ready artwork
+                  </div>
                   <Link
-                    href="/order"
-                    className="inline-flex items-center gap-2 rounded border border-[#b7b7b7] bg-[#f0f0f0] px-4 py-2 text-sm font-bold hover:bg-[#e5e5e5]"
+                    href={`/order?product=${encodeURIComponent(product.label)}`}
+                    className="rounded-xl border border-black bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
                   >
                     Upload File
                   </Link>
                 </div>
 
-                <div className="overflow-hidden rounded border border-[#c5c5c5] bg-white">
+                <div className="overflow-hidden rounded-[22px] border border-black">
                   <img
-                    src={product.image}
-                    alt={product.productName}
-                    className="h-[260px] w-full object-cover"
+                    src={product.heroImage}
+                    alt={product.label}
+                    className="h-[320px] w-full object-cover"
                   />
+                </div>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {summaryCards.map((card) => (
+                    <div
+                      key={card.title}
+                      className="rounded-[18px] border border-black bg-[#f7f6f2] px-4 py-4"
+                    >
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-neutral-500">
+                        {card.title}
+                      </div>
+                      <div className="mt-2 text-sm font-semibold text-neutral-900">{card.value}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               <div className="p-6">
-                <div className="border-b border-[#d8d8d8] pb-4">
-                  <div className="flex flex-wrap gap-2 text-xs font-bold">
-                    {["Info", "Size", "Paper", "Color", "Coating", "Turnaround", "Quantity", "File Setup"].map(
-                      (tab) => (
-                        <span
-                          key={tab}
-                          className={`rounded border px-3 py-2 ${
-                            tab === "Info"
-                              ? "border-[#0b7fd1] bg-[#dff1ff] text-[#0b7fd1]"
-                              : "border-[#c8c8c8] bg-[#f3f3f3] text-gray-700"
-                          }`}
-                        >
-                          {tab}
-                        </span>
-                      )
-                    )}
-                  </div>
+                <div className="flex flex-wrap gap-2">
+                  {["Overview", "Specs", "Options", "Turnaround"].map((tab, index) => (
+                    <span
+                      key={tab}
+                      className={`rounded-full border border-black px-4 py-2 text-xs font-semibold uppercase tracking-wide ${
+                        index === 0 ? "bg-black text-white" : "bg-[#f5f3ee] text-neutral-700"
+                      }`}
+                    >
+                      {tab}
+                    </span>
+                  ))}
                 </div>
 
-                <div className="mt-5 grid gap-4 md:grid-cols-[170px_1fr]">
-                  <div className="space-y-3">
-                    {["Description", "Recommendations", "Marketing Tips", "Versions"].map((item, index) => (
+                <div className="mt-6 rounded-[22px] border border-black bg-[#f7f6f2] p-5">
+                  <h2 className="text-xl font-bold tracking-[-0.02em]">Product overview</h2>
+                  <p className="mt-3 text-sm leading-7 text-neutral-700">{product.description}</p>
+                  <p className="mt-3 text-sm leading-7 text-neutral-700">
+                    Use the estimator on the right to change product options and see pricing update
+                    as selections change.
+                  </p>
+                </div>
+
+                <div className="mt-5 rounded-[22px] border border-black bg-white p-5">
+                  <h3 className="text-lg font-bold tracking-[-0.02em]">Related products</h3>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {product.related.map((item) => (
                       <div
                         key={item}
-                        className={`px-4 py-3 text-sm font-bold ${
-                          index === 0
-                            ? "bg-[#3aa6df] text-white"
-                            : "bg-[#dfeaf1] text-[#42515a]"
-                        }`}
-                        style={{
-                          clipPath:
-                            "polygon(0 0, 88% 0, 100% 50%, 88% 100%, 0 100%, 0 0)",
-                        }}
+                        className="rounded-[16px] border border-black bg-[#faf9f6] px-4 py-3 text-sm font-semibold"
                       >
                         {item}
                       </div>
                     ))}
                   </div>
+                </div>
 
-                  <div>
-                    <h2 className="text-lg font-bold text-[#0b7fd1]">Description</h2>
-                    <p className="mt-3 text-sm leading-6 text-gray-700">
-                      {product.description}
-                    </p>
-                    <p className="mt-3 text-sm leading-6 text-gray-700">
-                      Choose your size, paper, color, coating, turnaround, and quantity from
-                      the calculator on the right to begin the order.
-                    </p>
+                <div className="mt-5 rounded-[22px] border border-black bg-[#e8efe8] p-5">
+                  <h3 className="text-lg font-bold tracking-[-0.02em]">How this estimator works</h3>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {[
+                      "Product changes available sizes and papers",
+                      "Paper changes color and coating choices",
+                      "Size changes valid quantity tiers",
+                      "Pricing updates as options change",
+                    ].map((item) => (
+                      <div
+                        key={item}
+                        className="rounded-[16px] border border-black bg-white px-4 py-3 text-sm font-semibold"
+                      >
+                        {item}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
-
-            <div className="border-t border-[#d2d2d2] bg-[#f5f5f5] px-6 py-5">
-              <h3 className="text-2xl font-bold text-[#0b7fd1]">Other Related Products</h3>
-              <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {["Postcards w/ Mailing", "Digital Rack Cards", "Digital Tear Cards", "Digital Club Flyers"].map(
-                  (item) => (
-                    <div
-                      key={item}
-                      className="rounded border border-[#c6c6c6] bg-white p-4 text-center text-sm font-bold"
-                    >
-                      {item}
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
           </div>
 
-          <aside className="self-start rounded border border-[#9a9a9a] bg-[#d7d7dc] shadow-sm">
-            <div className="border-b border-[#b6b6b6] bg-[linear-gradient(#f4f4f4,#d9d9de)] px-3 py-3 text-center">
-              <div className="text-[16px] font-medium text-[#0b7fd1]">Pricing Calculator</div>
+          <aside className="self-start overflow-hidden rounded-[24px] border border-black bg-[#e7e3db] shadow-[0_10px_26px_rgba(0,0,0,0.08)]">
+            <div className="border-b border-black bg-[#d9d1c4] px-4 py-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-600">
+                Live estimator
+              </div>
+              <div className="mt-1 text-xl font-bold tracking-[-0.02em]">Build your print order</div>
             </div>
 
-            <div className="border-b border-[#b6b6b6] bg-[#efefef] px-3 py-3 text-[15px]">
-              {selectedProduct}
-            </div>
-
-            <div className="space-y-3 px-3 py-3">
+            <div className="border-b border-black bg-white px-4 py-4">
               <Field
                 label="Product"
-                value={selectedProduct}
-                onChange={(e) => handleProductChange(e.target.value)}
-                options={productKeys}
+                value={productKey}
+                onChange={(e) => setProductKey(e.target.value)}
+                options={productList.map((p) => ({ value: p.key, label: p.label })).map((x) => x.value)}
               />
+            </div>
 
-              <Field
-                label="Size"
-                value={size}
-                onChange={(e) => setSize(e.target.value)}
-                options={product.sizes}
-              />
+            <div className="space-y-4 px-4 py-4">
+              <div className="rounded-[18px] border border-black bg-[#f8f6f0] p-4">
+                <div className="mb-3 text-sm font-bold">{product.label}</div>
 
-              <div>
-                <label className="mb-1 block text-[13px] font-bold text-black">
-                  Any Trim Size <span className="font-normal">(Edit Size Below)</span>
-                </label>
-                <input
-                  value={trimSize}
-                  onChange={(e) => setTrimSize(e.target.value)}
-                  className="h-10 w-full rounded border border-[#8b8b8b] bg-[#e9e9ee] px-3 text-[14px] text-black outline-none"
-                />
+                <div className="space-y-4">
+                  <Field
+                    label="Size"
+                    value={size}
+                    onChange={(e) => setSize(e.target.value)}
+                    options={availableSizes}
+                  />
+
+                  <div>
+                    <label className="mb-2 block text-[13px] font-semibold tracking-wide text-neutral-700">
+                      Trim Size
+                    </label>
+                    <input
+                      value={trimSize}
+                      onChange={(e) => setTrimSize(e.target.value)}
+                      className="h-11 w-full rounded-xl border border-black bg-white px-3 text-[14px] text-black outline-none transition focus:ring-2 focus:ring-black/10"
+                    />
+                  </div>
+
+                  <Field
+                    label="Paper"
+                    value={paper}
+                    onChange={(e) => setPaper(e.target.value)}
+                    options={availablePapers}
+                  />
+
+                  <Field
+                    label="Color"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    options={availableColors}
+                  />
+
+                  <Field
+                    label="Coating"
+                    value={coating}
+                    onChange={(e) => setCoating(e.target.value)}
+                    options={availableCoatings}
+                  />
+
+                  <Field
+                    label="Turnaround"
+                    value={turnaround}
+                    onChange={(e) => setTurnaround(e.target.value)}
+                    options={availableTurnarounds}
+                  />
+
+                  <Field
+                    label="Bundle in Sets"
+                    value={bundling}
+                    onChange={(e) => setBundling(e.target.value)}
+                    options={availableBundling}
+                  />
+
+                  <Field
+                    label="Quantity"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    options={availableQuantities}
+                  />
+
+                  <Field
+                    label="Versions"
+                    value={versions}
+                    onChange={(e) => setVersions(e.target.value)}
+                    options={availableVersions}
+                  />
+                </div>
               </div>
 
-              <Field
-                label="Paper"
-                value={paper}
-                onChange={(e) => setPaper(e.target.value)}
-                options={product.papers}
-              />
-
-              <Field
-                label="Color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                options={product.colors}
-              />
-
-              <Field
-                label="Coating"
-                value={coating}
-                onChange={(e) => setCoating(e.target.value)}
-                options={product.coatings}
-              />
-
-              <Field
-                label="Turnaround"
-                value={turnaround}
-                onChange={(e) => setTurnaround(e.target.value)}
-                options={product.turnarounds}
-              />
-
-              <Field
-                label="Bundle in Sets"
-                value={bundling}
-                onChange={(e) => setBundling(e.target.value)}
-                options={product.bundling}
-              />
-
-              <Field
-                label="Quantity"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                options={product.quantities.map(String)}
-              />
-
-              <Field
-                label="Versions"
-                value={versions}
-                onChange={(e) => setVersions(e.target.value)}
-                options={product.versions.map(String)}
-              />
-
-              <div className="rounded border border-[#c4c16a] bg-[#f2ef99] px-3 py-3 text-[15px]">
-                <div className="flex items-center justify-between font-bold">
+              <div className="rounded-[18px] border border-black bg-[#f3efb7] p-4">
+                <div className="flex items-center justify-between text-sm font-bold">
                   <span>Printing Total</span>
                   <span>${pricing.printingTotal.toFixed(2)}</span>
                 </div>
-                <div className="mt-1 flex items-center justify-between font-bold">
+                <div className="mt-2 flex items-center justify-between text-sm font-bold">
                   <span>Unit Price</span>
                   <span>${pricing.unitPrice.toFixed(3)}</span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between rounded border border-[#8b8b8b] bg-[#d3d3d6] px-3 py-2 text-[15px]">
-                <span>Reward Points</span>
-                <span className="font-bold">{pricing.rewardPoints}</span>
+              <div className="flex items-center justify-between rounded-[16px] border border-black bg-white px-4 py-3">
+                <span className="text-sm font-semibold">Reward Points</span>
+                <span className="text-sm font-bold">{pricing.rewardPoints}</span>
               </div>
 
               <Link
-                href={`/order?product=${encodeURIComponent(product.productName)}`}
-                className="block rounded-md border border-[#0068ab] bg-[linear-gradient(#21a2ea,#0b7fd1)] px-4 py-3 text-center text-[16px] font-bold text-white hover:opacity-95"
+                href={`/order?product=${encodeURIComponent(product.label)}`}
+                className="block rounded-[16px] border border-black bg-black px-4 py-3 text-center text-[15px] font-bold text-white hover:opacity-92"
               >
                 Place Order
               </Link>
 
-              <div className="text-right text-[13px] text-gray-700">Print Estimate</div>
+              <div className="text-right text-xs font-medium text-neutral-600">
+                Live estimate preview
+              </div>
             </div>
           </aside>
         </div>
