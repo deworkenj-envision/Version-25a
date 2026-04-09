@@ -7,25 +7,21 @@ const featuredProducts = [
     name: "Business Cards",
     desc: "Premium cards with sharp print, rich color, and finishes that feel high-end.",
     href: "/order?product=Business%20Cards",
-    accent: "from-blue-500 to-cyan-400",
   },
   {
     name: "Postcards",
     desc: "Direct-mail and promo postcards built to stand out and drive response.",
     href: "/order?product=Postcards",
-    accent: "from-violet-500 to-fuchsia-400",
   },
   {
     name: "Flyers",
     desc: "Clean, bold marketing prints for events, promotions, and local advertising.",
     href: "/order?product=Flyers",
-    accent: "from-emerald-500 to-teal-400",
   },
   {
     name: "Banners",
     desc: "Large-format signage for stores, events, launches, and everyday visibility.",
     href: "/order?product=Banners",
-    accent: "from-amber-400 to-orange-500",
   },
 ];
 
@@ -57,12 +53,12 @@ const processSteps = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#eef4ff_0%,#f7fbff_24%,#f8fafc_55%,#eef7f7_100%)] text-slate-900">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#f3f7ff_0%,#f8fbff_26%,#ffffff_58%,#f6f9ff_100%)] text-slate-900">
       <section className="mx-auto max-w-7xl px-6 pb-10 pt-8 md:px-10 lg:px-12">
-        <div className="overflow-hidden rounded-[36px] border border-blue-100/80 bg-white/85 shadow-[0_25px_90px_rgba(37,99,235,0.12)] backdrop-blur">
+        <div className="overflow-hidden rounded-[36px] border border-blue-100/80 bg-white/90 shadow-[0_24px_80px_rgba(37,99,235,0.10)] backdrop-blur">
           <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="relative px-7 py-10 md:px-10 md:py-14">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_36%),radial-gradient(circle_at_70%_30%,rgba(168,85,247,0.10),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.08),transparent_30%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.10),transparent_36%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.08),transparent_30%)]" />
               <div className="relative">
                 <div className="mb-6 inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-700">
                   Premium Print Ordering
@@ -80,7 +76,7 @@ export default function HomePage() {
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <Link
                     href="/order"
-                    className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-7 text-sm font-semibold text-white shadow-[0_14px_35px_rgba(79,70,229,0.35)] transition hover:scale-[1.01] hover:opacity-95"
+                    className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 text-sm font-semibold text-white shadow-[0_14px_35px_rgba(79,70,229,0.28)] transition hover:scale-[1.01] hover:opacity-95"
                   >
                     Start Your Order
                   </Link>
@@ -93,22 +89,12 @@ export default function HomePage() {
                 </div>
 
                 <div className="mt-10 grid gap-3 sm:grid-cols-2">
-                  {trustPoints.map((item, index) => (
+                  {trustPoints.map((item) => (
                     <div
                       key={item}
-                      className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-4 shadow-sm"
+                      className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/85 px-4 py-4 shadow-sm"
                     >
-                      <div
-                        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white ${
-                          index === 0
-                            ? "bg-gradient-to-br from-blue-500 to-cyan-400"
-                            : index === 1
-                            ? "bg-gradient-to-br from-violet-500 to-fuchsia-400"
-                            : index === 2
-                            ? "bg-gradient-to-br from-emerald-500 to-teal-400"
-                            : "bg-gradient-to-br from-orange-500 to-amber-400"
-                        }`}
-                      >
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-500 text-sm font-bold text-white">
                         ✓
                       </div>
                       <span className="text-sm font-medium text-slate-700">{item}</span>
@@ -118,21 +104,19 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="border-t border-blue-100 bg-[linear-gradient(180deg,rgba(219,234,254,0.72),rgba(238,242,255,0.82),rgba(255,255,255,0.95))] px-7 py-10 lg:border-l lg:border-t-0 md:px-10 md:py-14">
-              <div className="rounded-[30px] border border-white/60 bg-white/75 p-5 shadow-[0_16px_45px_rgba(59,130,246,0.14)] backdrop-blur">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-blue-700/70">
-                      Featured Experience
-                    </p>
-                    <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
-                      Clean ordering, professional results
-                    </h2>
-                  </div>
+            <div className="border-t border-blue-100 bg-[linear-gradient(180deg,rgba(219,234,254,0.62),rgba(238,242,255,0.72),rgba(255,255,255,0.94))] px-7 py-10 lg:border-l lg:border-t-0 md:px-10 md:py-14">
+              <div className="rounded-[30px] border border-white/60 bg-white/80 p-5 shadow-[0_16px_45px_rgba(59,130,246,0.12)] backdrop-blur">
+                <div className="mb-4">
+                  <p className="text-[11px] uppercase tracking-[0.25em] text-blue-700/70">
+                    Featured Experience
+                  </p>
+                  <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+                    Clean ordering, professional results
+                  </h2>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-5 text-white shadow-[0_18px_40px_rgba(30,41,59,0.35)]">
+                  <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-5 text-white shadow-[0_18px_40px_rgba(30,41,59,0.30)]">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-blue-200/80">
                       Fast ordering
                     </p>
@@ -142,7 +126,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 to-cyan-50 p-5">
+                    <div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-5">
                       <p className="text-[11px] uppercase tracking-[0.24em] text-blue-700/65">
                         Live status
                       </p>
@@ -154,8 +138,8 @@ export default function HomePage() {
                       </p>
                     </div>
 
-                    <div className="rounded-3xl border border-violet-100 bg-gradient-to-br from-violet-50 to-fuchsia-50 p-5">
-                      <p className="text-[11px] uppercase tracking-[0.24em] text-violet-700/65">
+                    <div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-5">
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-blue-700/65">
                         Premium feel
                       </p>
                       <p className="mt-3 text-lg font-semibold text-slate-900">
@@ -173,18 +157,10 @@ export default function HomePage() {
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {["Business printing", "Marketing materials", "Repeat customers", "Fast fulfillment"].map(
-                        (tag, idx) => (
+                        (tag) => (
                           <span
                             key={tag}
-                            className={`rounded-full px-3 py-2 text-xs font-semibold ${
-                              idx === 0
-                                ? "bg-blue-100 text-blue-700"
-                                : idx === 1
-                                ? "bg-violet-100 text-violet-700"
-                                : idx === 2
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-amber-100 text-amber-700"
-                            }`}
+                            className="rounded-full bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700"
                           >
                             {tag}
                           </span>
@@ -197,7 +173,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="border-t border-blue-100 bg-[linear-gradient(90deg,rgba(239,246,255,0.9),rgba(245,243,255,0.9),rgba(236,253,245,0.9))] px-7 py-6 md:px-10">
+          <div className="border-t border-blue-100 bg-[linear-gradient(90deg,rgba(239,246,255,0.95),rgba(244,247,255,0.95),rgba(239,246,255,0.95))] px-7 py-6 md:px-10">
             <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.26em] text-slate-500">
@@ -210,7 +186,7 @@ export default function HomePage() {
               <div className="rounded-2xl border border-blue-100 bg-white/90 px-5 py-4 text-sm text-slate-600 shadow-sm">
                 Simple upload flow and clean order submission for less friction at checkout.
               </div>
-              <div className="rounded-2xl border border-emerald-100 bg-white/90 px-5 py-4 text-sm text-slate-600 shadow-sm">
+              <div className="rounded-2xl border border-blue-100 bg-white/90 px-5 py-4 text-sm text-slate-600 shadow-sm">
                 Order tracking and status visibility create a stronger post-purchase experience.
               </div>
             </div>
@@ -241,13 +217,11 @@ export default function HomePage() {
             <Link
               key={product.name}
               href={product.href}
-              className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_14px_38px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(59,130,246,0.16)]"
+              className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_14px_38px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(59,130,246,0.14)]"
             >
-              <div className={`h-2 w-full bg-gradient-to-r ${product.accent}`} />
+              <div className="h-2 w-full bg-gradient-to-r from-blue-600 to-indigo-500" />
               <div className="p-6">
-                <div
-                  className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${product.accent} text-lg font-semibold text-white shadow-lg`}
-                >
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-500 text-lg font-semibold text-white shadow-lg">
                   {product.name.charAt(0)}
                 </div>
                 <h3 className="mt-5 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
@@ -265,7 +239,7 @@ export default function HomePage() {
 
       <section className="mx-auto max-w-7xl px-6 py-6 md:px-10 lg:px-12">
         <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-[32px] bg-[linear-gradient(145deg,#0f172a_0%,#1d4ed8_48%,#6d28d9_100%)] p-7 text-white shadow-[0_22px_70px_rgba(79,70,229,0.28)] md:p-10">
+          <div className="rounded-[32px] bg-[linear-gradient(145deg,#0f172a_0%,#1d4ed8_52%,#4338ca_100%)] p-7 text-white shadow-[0_22px_70px_rgba(79,70,229,0.22)] md:p-10">
             <p className="text-[11px] uppercase tracking-[0.26em] text-blue-100/75">
               Built for confidence
             </p>
@@ -301,17 +275,7 @@ export default function HomePage() {
                   key={step.title}
                   className="flex gap-4 rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-5"
                 >
-                  <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white ${
-                      index === 0
-                        ? "bg-gradient-to-br from-blue-500 to-cyan-400"
-                        : index === 1
-                        ? "bg-gradient-to-br from-violet-500 to-fuchsia-400"
-                        : index === 2
-                        ? "bg-gradient-to-br from-emerald-500 to-teal-400"
-                        : "bg-gradient-to-br from-orange-500 to-amber-400"
-                    }`}
-                  >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-500 text-sm font-semibold text-white">
                     {index + 1}
                   </div>
                   <div>
@@ -325,7 +289,7 @@ export default function HomePage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/order"
-                className="inline-flex h-13 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(79,70,229,0.25)] transition hover:opacity-95"
+                className="inline-flex h-13 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(79,70,229,0.24)] transition hover:opacity-95"
               >
                 Place an Order
               </Link>
@@ -341,7 +305,7 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-6 pb-12 pt-6 md:px-10 lg:px-12">
-        <div className="rounded-[32px] border border-slate-200 bg-[linear-gradient(120deg,#ffffff_0%,#eff6ff_45%,#f5f3ff_80%,#ecfeff_100%)] px-7 py-10 shadow-[0_14px_40px_rgba(59,130,246,0.08)] md:px-10">
+        <div className="rounded-[32px] border border-slate-200 bg-[linear-gradient(120deg,#ffffff_0%,#eff6ff_55%,#eef2ff_100%)] px-7 py-10 shadow-[0_14px_40px_rgba(59,130,246,0.07)] md:px-10">
           <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
               <p className="text-[11px] uppercase tracking-[0.26em] text-slate-500">
@@ -359,7 +323,7 @@ export default function HomePage() {
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
               <Link
                 href="/order"
-                className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-7 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(79,70,229,0.25)] transition hover:opacity-95"
+                className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(79,70,229,0.24)] transition hover:opacity-95"
               >
                 Start Your Order
               </Link>
