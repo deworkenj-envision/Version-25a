@@ -185,6 +185,7 @@ function ProductTag({ children }) {
 export default function HomePage() {
   const productList = Object.values(PRODUCT_CONFIG);
   const [productKey, setProductKey] = useState(productList[0].key);
+  const [heroSrc, setHeroSrc] = useState("/logo-hero.png");
 
   const product = PRODUCT_CONFIG[productKey];
 
@@ -364,9 +365,10 @@ export default function HomePage() {
 
               <div className="overflow-hidden rounded-[24px] border border-white/25 bg-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.15)] backdrop-blur">
                 <img
-                  src="/logo-hero.webp"
-                  alt="EnVision Direct print product collage"
+                  src={heroSrc}
+                  alt="EnVision Direct logo banner"
                   className="h-[260px] w-full object-cover md:h-[320px]"
+                  onError={() => setHeroSrc("/hero_desktop_fallback.jpg")}
                 />
               </div>
             </div>
