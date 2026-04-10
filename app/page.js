@@ -364,7 +364,7 @@ export default function HomePage() {
 
               <div className="overflow-hidden rounded-[24px] border border-white/25 bg-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.15)] backdrop-blur">
                 <img
-                  src="/hero_desktop.webp"
+                  src="/logo-hero.webp"
                   alt="EnVision Direct print product collage"
                   className="h-[260px] w-full object-cover md:h-[320px]"
                 />
