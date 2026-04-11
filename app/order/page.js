@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -95,7 +95,7 @@ function estimatePrice(product, quantity) {
   return base + qty * unit;
 }
 
-export default function OrderPage() {
+function OrderPageContent() {
   const searchParams = useSearchParams();
   const productNames = Object.keys(PRODUCT_OPTIONS);
 
@@ -115,7 +115,7 @@ export default function OrderPage() {
 
   useEffect(() => {
     const qpProduct = searchParams.get("product");
-    const nextProduct = PRODUCT_OPTIONS[qpProduct] ? qpProduct : "Business Cards";
+    const nextProduct = qpProduct && PRODUCT_OPTIONS[qpProduct] ? qpProduct : "Business Cards";
     const nextConfig = PRODUCT_OPTIONS[nextProduct];
 
     const qpSize = searchParams.get("size");
@@ -125,12 +125,14 @@ export default function OrderPage() {
     const qpQuantity = searchParams.get("quantity");
 
     setProduct(nextProduct);
-    setSize(nextConfig.sizes.includes(qpSize) ? qpSize : nextConfig.sizes[0]);
-    setPaper(nextConfig.papers.includes(qpPaper) ? qpPaper : nextConfig.papers[0]);
-    setFinish(nextConfig.finishes.includes(qpFinish) ? qpFinish : nextConfig.finishes[0]);
-    setSides(nextConfig.sides.includes(qpSides) ? qpSides : nextConfig.sides[0]);
+    setSize(qpSize && nextConfig.sizes.includes(qpSize) ? qpSize : nextConfig.sizes[0]);
+    setPaper(qpPaper && nextConfig.papers.includes(qpPaper) ? qpPaper : nextConfig.papers[0]);
+    setFinish(
+      qpFinish && nextConfig.finishes.includes(qpFinish) ? qpFinish : nextConfig.finishes[0]
+    );
+    setSides(qpSides && nextConfig.sides.includes(qpSides) ? qpSides : nextConfig.sides[0]);
     setQuantity(
-      nextConfig.quantities.map(String).includes(String(qpQuantity))
+      qpQuantity && nextConfig.quantities.map(String).includes(String(qpQuantity))
         ? Number(qpQuantity)
         : nextConfig.quantities[0]
     );
@@ -441,5 +443,23 @@ export default function OrderPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function OrderPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-50">
+          <section className="mx-auto max-w-7xl px-4 py-8 md:px-6 lg:px-8">
+            <div className="rounded-[28px] bg-white p-8 shadow-lg ring-1 ring-slate-200">
+              <p className="text-lg font-semibold text-slate-700">Loading order page...</p>
+            </div>
+          </section>
+        </main>
+      }
+    >
+      <OrderPageContent />
+    </Suspense>
   );
 }
