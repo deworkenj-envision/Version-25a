@@ -125,34 +125,22 @@ export default function HomePage() {
           <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_.95fr]">
             <div className="max-w-2xl">
               <h1 className="text-4xl font-bold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
-                Top Quality Printing
-                <span className="mt-2 block">Best Prices. Fast Turnaround.</span>
+                <span className="block">Top Quality Printing.</span>
+                <span className="mt-2 block">Fast Turnaround.</span>
+                <span className="mt-2 block">The Best Prices.</span>
               </h1>
 
-              <div className="mt-6">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <p className="text-base font-medium text-white/95 md:text-lg">
+                  Already placed an order? Track it here:
+                </p>
+
                 <Link
                   href="/track"
-                  className="inline-flex items-center rounded-full bg-black px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-neutral-900"
+                  className="inline-flex items-center justify-center rounded-full bg-black px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-neutral-900"
                 >
                   Track Your Order
                 </Link>
-              </div>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                {productNames.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => handleProductChange(item)}
-                    className={`rounded-full px-5 py-2 text-sm font-semibold tracking-wide transition ${
-                      product === item
-                        ? "bg-white text-blue-700 shadow-lg"
-                        : "border border-white/30 bg-white/10 text-white hover:bg-white/20"
-                    }`}
-                  >
-                    {item.toUpperCase()}
-                  </button>
-                ))}
               </div>
             </div>
 
