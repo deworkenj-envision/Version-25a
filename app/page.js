@@ -160,15 +160,15 @@ export default function HomePage() {
               <div className="w-full max-w-[520px] space-y-4">
                 <div className="flex justify-center rounded-[24px] bg-white/12 p-5 shadow-2xl backdrop-blur-md">
                   <img
-                    src="/images/logo.png"
+                    src="/images/logo-hero.png"
                     alt="EnVision Direct logo"
-                    className="h-auto max-h-[110px] w-auto object-contain"
+                    className="h-auto max-h-[150px] w-auto object-contain"
                   />
                 </div>
 
                 <div className="overflow-hidden rounded-[24px] bg-white/10 p-2 shadow-2xl backdrop-blur-md">
                   <img
-                    src="/images/hero-collage.png"
+                    src="/images/hero_desktop.webp"
                     alt="Printed products collage"
                     className="h-auto w-full rounded-[18px] object-cover"
                   />
