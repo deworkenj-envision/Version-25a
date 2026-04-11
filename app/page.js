@@ -157,12 +157,22 @@ export default function HomePage() {
             </div>
 
             <div className="flex justify-center lg:justify-end">
-              <div className="overflow-hidden rounded-[24px] bg-white/10 p-2 shadow-2xl backdrop-blur-md">
-                <img
-                  src="/hero-collage.png"
-                  alt="Printed products collage"
-                  className="h-auto w-full max-w-[520px] rounded-[18px] object-cover"
-                />
+              <div className="w-full max-w-[520px] space-y-4">
+                <div className="flex justify-center rounded-[24px] bg-white/12 p-5 shadow-2xl backdrop-blur-md">
+                  <img
+                    src="/logo.webp"
+                    alt="EnVision Direct logo"
+                    className="h-auto max-h-[110px] w-auto object-contain"
+                  />
+                </div>
+
+                <div className="overflow-hidden rounded-[24px] bg-white/10 p-2 shadow-2xl backdrop-blur-md">
+                  <img
+                    src="/hero-collage.png"
+                    alt="Printed products collage"
+                    className="h-auto w-full rounded-[18px] object-cover"
+                  />
+                </div>
               </div>
             </div>
           </div>
