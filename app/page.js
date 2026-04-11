@@ -118,6 +118,12 @@ export default function HomePage() {
 
   const estimatedTotal = estimatePrice(product, quantity);
 
+  const orderHref = `/order?product=${encodeURIComponent(product)}&size=${encodeURIComponent(
+    size
+  )}&paper=${encodeURIComponent(paper)}&finish=${encodeURIComponent(
+    finish
+  )}&sides=${encodeURIComponent(sides)}&quantity=${encodeURIComponent(quantity)}`;
+
   return (
     <main className="min-h-screen bg-slate-50">
       <section className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:px-8">
@@ -292,7 +298,7 @@ export default function HomePage() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href="/order"
+                href={orderHref}
                 className="inline-flex items-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700"
               >
                 Continue to Full Order Page
