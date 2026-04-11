@@ -94,38 +94,6 @@ function estimatePrice(product, quantity) {
   return base + qty * unit;
 }
 
-function SmartImage({
-  candidates,
-  alt,
-  className = "",
-  wrapperClassName = "",
-  fallbackText = "Image not found",
-}) {
-  const [index, setIndex] = useState(0);
-  const currentSrc = candidates[index];
-
-  return (
-    <div className={wrapperClassName}>
-      {currentSrc ? (
-        <img
-          src={currentSrc}
-          alt={alt}
-          className={className}
-          onError={() => {
-            if (index < candidates.length - 1) {
-              setIndex(index + 1);
-            }
-          }}
-        />
-      ) : (
-        <div className="flex min-h-[120px] items-center justify-center rounded-[18px] border border-dashed border-white/30 text-sm text-white/80">
-          {fallbackText}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function HomePage() {
   const productNames = Object.keys(PRODUCT_OPTIONS);
   const [product, setProduct] = useState("Business Cards");
@@ -149,35 +117,6 @@ export default function HomePage() {
   }
 
   const estimatedTotal = estimatePrice(product, quantity);
-
-  const logoCandidates = [
-    "/logo.webp",
-    "/logo.png",
-    "/logo.jpg",
-    "/logo.jpeg",
-    "/envision-logo.webp",
-    "/envision-logo.png",
-    "/envisiondirect-logo.webp",
-    "/envisiondirect-logo.png",
-    "/EnVision-Direct-logo.webp",
-    "/EnVision-Direct-logo.png",
-  ];
-
-  const collageCandidates = [
-    "/hero-collage.webp",
-    "/hero-collage.png",
-    "/hero-collage.jpg",
-    "/hero-collage.jpeg",
-    "/collage.webp",
-    "/collage.png",
-    "/collage.jpg",
-    "/products-collage.webp",
-    "/products-collage.png",
-    "/print-collage.webp",
-    "/print-collage.png",
-    "/hero-image.webp",
-    "/hero-image.png",
-  ];
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -219,21 +158,19 @@ export default function HomePage() {
 
             <div className="flex justify-center lg:justify-end">
               <div className="w-full max-w-[520px] space-y-4">
-                <div className="rounded-[24px] bg-white/12 p-5 shadow-2xl backdrop-blur-md">
-                  <SmartImage
-                    candidates={logoCandidates}
+                <div className="flex justify-center rounded-[24px] bg-white/12 p-5 shadow-2xl backdrop-blur-md">
+                  <img
+                    src="/images/logo.png"
                     alt="EnVision Direct logo"
-                    className="mx-auto h-auto max-h-[110px] w-auto object-contain"
-                    fallbackText="Logo image not found in /public"
+                    className="h-auto max-h-[110px] w-auto object-contain"
                   />
                 </div>
 
                 <div className="overflow-hidden rounded-[24px] bg-white/10 p-2 shadow-2xl backdrop-blur-md">
-                  <SmartImage
-                    candidates={collageCandidates}
+                  <img
+                    src="/images/hero-collage.png"
                     alt="Printed products collage"
                     className="h-auto w-full rounded-[18px] object-cover"
-                    fallbackText="Collage image not found in /public"
                   />
                 </div>
               </div>
