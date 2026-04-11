@@ -100,11 +100,11 @@ export default function HomePage() {
 
   const current = useMemo(() => PRODUCT_OPTIONS[product], [product]);
 
-  const [size, setSize] = useState(PRODUCT_OPTIONS["Business Cards"].sizes[0]);
-  const [paper, setPaper] = useState(PRODUCT_OPTIONS["Business Cards"].papers[0]);
-  const [finish, setFinish] = useState(PRODUCT_OPTIONS["Business Cards"].finishes[0]);
-  const [sides, setSides] = useState(PRODUCT_OPTIONS["Business Cards"].sides[0]);
-  const [quantity, setQuantity] = useState(PRODUCT_OPTIONS["Business Cards"].quantities[0]);
+  const [size, setSize] = useState(current.sizes[0]);
+  const [paper, setPaper] = useState(current.papers[0]);
+  const [finish, setFinish] = useState(current.finishes[0]);
+  const [sides, setSides] = useState(current.sides[0]);
+  const [quantity, setQuantity] = useState(current.quantities[0]);
 
   function handleProductChange(nextProduct) {
     const next = PRODUCT_OPTIONS[nextProduct];
@@ -120,19 +120,26 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <section className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-[30px] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 px-6 py-10 text-white shadow-2xl md:px-10 md:py-14">
-          <div className="grid gap-10 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
-            <div className="max-w-2xl">
-              <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl">
+      
+      {/* HERO */}
+      <section className="mx-auto max-w-7xl px-4 py-6">
+        <div className="rounded-[30px] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 p-6 md:p-10 text-white shadow-2xl">
+          
+          <div className="grid lg:grid-cols-[1.1fr_.9fr] gap-10 items-center">
+
+            {/* LEFT SIDE */}
+            <div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
                 Top Quality Printing
-                <span className="mt-2 block">Best Prices. Fast Turnaround.</span>
+                <span className="block mt-2">
+                  Best Prices. Fast Turnaround.
+                </span>
               </h1>
 
               <div className="mt-6">
                 <Link
                   href="/track"
-                  className="inline-flex items-center rounded-full bg-black px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.02] hover:bg-neutral-900"
+                  className="bg-black px-6 py-3 rounded-full text-white font-semibold shadow-lg hover:bg-neutral-900 transition"
                 >
                   Track Your Order
                 </Link>
@@ -142,12 +149,11 @@ export default function HomePage() {
                 {productNames.map((item) => (
                   <button
                     key={item}
-                    type="button"
                     onClick={() => handleProductChange(item)}
-                    className={`rounded-full border px-5 py-2 text-sm font-semibold tracking-wide backdrop-blur-sm transition ${
+                    className={`px-5 py-2 rounded-full text-sm font-semibold ${
                       product === item
-                        ? "border-white bg-white text-blue-700 shadow-lg"
-                        : "border-white/30 bg-white/10 text-white hover:bg-white/20"
+                        ? "bg-white text-blue-700"
+                        : "bg-white/10 border border-white/30"
                     }`}
                   >
                     {item.toUpperCase()}
@@ -156,224 +162,100 @@ export default function HomePage() {
               </div>
             </div>
 
+            {/* RIGHT SIDE (FIXED HERO) */}
             <div className="flex justify-center lg:justify-end">
-              <div className="w-full max-w-[520px] space-y-4">
-                <div className="flex justify-center rounded-[24px] bg-white/12 p-5 shadow-2xl backdrop-blur-md">
-                  <img
-                    src="/images/logo-hero.png"
-                    alt="EnVision Direct logo"
-                    className="h-auto max-h-[150px] w-auto object-contain"
-                  />
+              <div className="w-full max-w-[520px] space-y-6">
+
+                {/* LOGO */}
+                <div className="rounded-[32px] bg-white/10 p-2 shadow-2xl backdrop-blur-md overflow-hidden">
+                  <div className="rounded-[26px] overflow-hidden">
+                    <img
+                      src="/images/logo-hero.png"
+                      alt="logo"
+                      className="w-full h-[150px] object-cover scale-115"
+                    />
+                  </div>
                 </div>
 
-                <div className="overflow-hidden rounded-[24px] bg-white/10 p-2 shadow-2xl backdrop-blur-md">
-                  <img
-                    src="/images/hero_desktop.webp"
-                    alt="Printed products collage"
-                    className="h-auto w-full rounded-[18px] object-cover"
-                  />
+                {/* COLLAGE */}
+                <div className="rounded-[32px] bg-white/10 p-2 shadow-2xl backdrop-blur-md overflow-hidden">
+                  <div className="rounded-[26px] overflow-hidden">
+                    <img
+                      src="/images/hero_desktop.webp"
+                      alt="collage"
+                      className="w-full h-[280px] object-cover"
+                    />
+                  </div>
                 </div>
+
               </div>
             </div>
+
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-12 md:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[1.05fr_.95fr]">
-          <div className="rounded-[28px] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
-            <div className="mb-6">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-                Start Your Order
-              </p>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-                Build your print order
-              </h2>
-              <p className="mt-3 max-w-2xl text-slate-600">
-                Choose your product, select the options you want, and continue to the full order page.
-              </p>
+      {/* ORDER + ESTIMATE */}
+      <section className="mx-auto max-w-7xl px-4 pb-12">
+        <div className="grid lg:grid-cols-2 gap-8">
+
+          {/* ORDER */}
+          <div className="bg-white p-6 rounded-[28px] shadow-lg">
+            <h2 className="text-2xl font-bold mb-4">Build your order</h2>
+
+            <div className="grid grid-cols-2 gap-4">
+              {[["Product", productNames, product, handleProductChange],
+                ["Size", current.sizes, size, setSize],
+                ["Paper", current.papers, paper, setPaper],
+                ["Finish", current.finishes, finish, setFinish],
+                ["Sides", current.sides, sides, setSides],
+                ["Quantity", current.quantities, quantity, setQuantity]
+              ].map(([label, options, value, setter]) => (
+                <div key={label}>
+                  <label className="text-sm font-medium">{label}</label>
+                  <select
+                    value={value}
+                    onChange={(e) => setter(e.target.value)}
+                    className="w-full mt-1 p-3 border rounded-xl"
+                  >
+                    {options.map((o) => (
+                      <option key={o}>{o}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Product
-                </label>
-                <select
-                  value={product}
-                  onChange={(e) => handleProductChange(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {productNames.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Size
-                </label>
-                <select
-                  value={size}
-                  onChange={(e) => setSize(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.sizes.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Paper / Material
-                </label>
-                <select
-                  value={paper}
-                  onChange={(e) => setPaper(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.papers.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Finish
-                </label>
-                <select
-                  value={finish}
-                  onChange={(e) => setFinish(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.finishes.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Sides
-                </label>
-                <select
-                  value={sides}
-                  onChange={(e) => setSides(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.sides.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Quantity
-                </label>
-                <select
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.quantities.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                href="/order"
-                className="inline-flex items-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700"
-              >
-                Continue to Full Order Page
+            <div className="mt-6 flex gap-3">
+              <Link href="/order" className="bg-blue-600 text-white px-6 py-3 rounded-full">
+                Continue Order
               </Link>
-
-              <Link
-                href="/pricing"
-                className="inline-flex items-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
-              >
-                View Pricing
+              <Link href="/pricing" className="border px-6 py-3 rounded-full">
+                Pricing
               </Link>
             </div>
           </div>
 
-          <div className="rounded-[28px] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-              Quick Estimate
-            </p>
-            <h3 className="mt-2 text-2xl font-bold text-slate-900">{product}</h3>
+          {/* ESTIMATE */}
+          <div className="bg-white p-6 rounded-[28px] shadow-lg">
+            <h3 className="text-xl font-bold mb-4">{product}</h3>
 
-            <div className="mt-6 space-y-4 rounded-[24px] bg-slate-50 p-5 ring-1 ring-slate-200">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Size</span>
-                <span className="text-right font-semibold text-slate-900">{size}</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Paper / Material</span>
-                <span className="text-right font-semibold text-slate-900">{paper}</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Finish</span>
-                <span className="text-right font-semibold text-slate-900">{finish}</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Sides</span>
-                <span className="text-right font-semibold text-slate-900">{sides}</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Quantity</span>
-                <span className="text-right font-semibold text-slate-900">{quantity}</span>
-              </div>
-
-              <div className="border-t border-slate-200 pt-4">
-                <div className="flex items-end justify-between gap-4">
-                  <span className="text-slate-600">Estimated starting price</span>
-                  <span className="text-3xl font-bold tracking-tight text-slate-900">
-                    ${estimatedTotal.toFixed(2)}
-                  </span>
-                </div>
-              </div>
+            <div className="space-y-2">
+              <div>Size: {size}</div>
+              <div>Paper: {paper}</div>
+              <div>Finish: {finish}</div>
+              <div>Sides: {sides}</div>
+              <div>Qty: {quantity}</div>
             </div>
 
-            <div className="mt-6 rounded-[24px] bg-blue-50 p-5 ring-1 ring-blue-100">
-              <h4 className="text-lg font-semibold text-slate-900">Why order with us</h4>
-              <div className="mt-4 grid gap-3 text-sm text-slate-700">
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200">
-                  Easy online ordering
-                </div>
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200">
-                  Upload print-ready artwork
-                </div>
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200">
-                  Fast turnaround and tracking
-                </div>
-              </div>
+            <div className="mt-6 text-3xl font-bold">
+              ${estimatedTotal.toFixed(2)}
             </div>
           </div>
+
         </div>
       </section>
+
     </main>
   );
 }
