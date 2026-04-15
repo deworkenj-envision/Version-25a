@@ -15,9 +15,7 @@ export async function GET(req) {
     let query = supabaseAdmin
       .from("pricing")
       .select("*")
-      .eq("active", true)
-      .order("sort_order", { ascending: true })
-      .order("quantity", { ascending: true });
+      .eq("active", true);
 
     if (product_name) query = query.eq("product_name", product_name);
     if (size) query = query.eq("size", size);
@@ -25,6 +23,10 @@ export async function GET(req) {
     if (finish) query = query.eq("finish", finish);
     if (sides) query = query.eq("sides", sides);
     if (quantity) query = query.eq("quantity", Number(quantity));
+
+    query = query
+      .order("sort_order", { ascending: true })
+      .order("quantity", { ascending: true });
 
     const { data, error } = await query;
 
@@ -35,9 +37,23 @@ export async function GET(req) {
       );
     }
 
+    const rows = data || [];
+
+    const exactMatch =
+      product_name &&
+      size &&
+      paper &&
+      finish &&
+      sides &&
+      quantity
+        ? rows[0] || null
+        : null;
+
     return NextResponse.json({
       success: true,
-      pricing: data || [],
+      pricing: rows,
+      exactPrice: exactMatch ? Number(exactMatch.price) : null,
+      exactMatch,
     });
   } catch (err) {
     return NextResponse.json(
