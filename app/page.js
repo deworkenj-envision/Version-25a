@@ -74,7 +74,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-white text-slate-900">
       <section className="px-5 pt-5 lg:px-8 lg:pt-8">
         <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white shadow-2xl">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-8 py-10 lg:grid-cols-[0.9fr_1.16fr] lg:gap-24 lg:px-10 lg:py-12 xl:gap-28">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 px-8 py-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-24 lg:px-10 lg:py-12">
             <div className="flex flex-col justify-center">
               <div className="mb-8">
                 <Image
@@ -87,12 +87,10 @@ export default function HomePage() {
                 />
               </div>
 
-              <h1 className="max-w-3xl text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl lg:text-[4.15rem]">
-                <span className="block">Top Quality</span>
-                <span className="block">Printing.</span>
-                <span className="block mt-3">Fast</span>
-                <span className="block">Turnaround.</span>
-                <span className="block mt-3">The Best Prices.</span>
+              <h1 className="text-[4.25rem] font-extrabold leading-[0.95] tracking-tight">
+                <span className="block whitespace-nowrap">Top Quality Printing.</span>
+                <span className="block whitespace-nowrap mt-4">Fast Turnaround.</span>
+                <span className="block whitespace-nowrap mt-4">The Best Prices.</span>
               </h1>
 
               <p className="mt-10 max-w-xl text-lg leading-8 text-blue-50">
@@ -131,14 +129,14 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center justify-center lg:justify-end">
-              <div className="w-full max-w-[860px]">
-                <div className="relative aspect-[15/10] w-full">
+              <div className="w-full max-w-[760px]">
+                <div className="relative aspect-[14/9] w-full">
                   <Image
                     src="/images/hero_desktop.webp"
                     alt="Print product collage"
                     fill
                     priority
-                    sizes="(min-width: 1024px) 58vw, 100vw"
+                    sizes="(min-width: 1024px) 46vw, 100vw"
                     className="object-contain"
                   />
                 </div>
