@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const SHIPPING_FLAT_RATE = 9.95;
-
 function formatMoney(value) {
   const number = Number(value || 0);
   return `$${number.toFixed(2)}`;
@@ -34,6 +32,9 @@ export default function OrderPage() {
 
   const [livePrice, setLivePrice] = useState(null);
   const [pricingLoading, setPricingLoading] = useState(false);
+
+  const [shippingPrice, setShippingPrice] = useState(0);
+  const [shippingLoading, setShippingLoading] = useState(false);
 
   const [artworkFile, setArtworkFile] = useState(null);
   const [uploadingArtwork, setUploadingArtwork] = useState(false);
@@ -212,7 +213,7 @@ export default function OrderPage() {
   }, [productName]);
 
   const subtotal = Number(livePrice || 0);
-  const shipping = subtotal > 0 ? SHIPPING_FLAT_RATE : 0;
+  const shipping = Number(shippingPrice || 0);
   const total = subtotal + shipping;
 
   useEffect(() => {
@@ -354,6 +355,43 @@ export default function OrderPage() {
 
     fetchLivePrice();
   }, [productName, size, paper, finish, sides, quantity]);
+
+  useEffect(() => {
+    async function fetchShipping() {
+      if (!productName || !quantity) {
+        setShippingPrice(0);
+        return;
+      }
+
+      try {
+        setShippingLoading(true);
+
+        const params = new URLSearchParams({
+          product_name: productName,
+          quantity: String(quantity),
+        });
+
+        const res = await fetch(`/api/shipping?${params.toString()}`, {
+          cache: "no-store",
+        });
+
+        const data = await res.json();
+
+        if (data?.success && typeof data?.shipping === "number") {
+          setShippingPrice(Number(data.shipping));
+        } else {
+          setShippingPrice(0);
+        }
+      } catch (error) {
+        console.error("Shipping fetch error:", error);
+        setShippingPrice(0);
+      } finally {
+        setShippingLoading(false);
+      }
+    }
+
+    fetchShipping();
+  }, [productName, quantity]);
 
   async function handleArtworkUpload() {
     if (!artworkFile) {
@@ -502,18 +540,10 @@ export default function OrderPage() {
                   ))
                 ) : (
                   <>
-                    <span className="rounded-full bg-white/15 px-4 py-2">
-                      Business Cards
-                    </span>
-                    <span className="rounded-full bg-white/15 px-4 py-2">
-                      Flyers
-                    </span>
-                    <span className="rounded-full bg-white/15 px-4 py-2">
-                      Postcards
-                    </span>
-                    <span className="rounded-full bg-white/15 px-4 py-2">
-                      Banners
-                    </span>
+                    <span className="rounded-full bg-white/15 px-4 py-2">Business Cards</span>
+                    <span className="rounded-full bg-white/15 px-4 py-2">Flyers</span>
+                    <span className="rounded-full bg-white/15 px-4 py-2">Postcards</span>
+                    <span className="rounded-full bg-white/15 px-4 py-2">Banners</span>
                   </>
                 )}
               </div>
@@ -558,7 +588,10 @@ export default function OrderPage() {
                         : "-"
                     }
                   />
-                  <MetricCard label="Shipping" value={formatMoney(shipping)} />
+                  <MetricCard
+                    label="Shipping"
+                    value={shippingLoading ? "Loading..." : formatMoney(shipping)}
+                  />
                   <MetricCard
                     label="Selected Qty"
                     value={quantity ? String(quantity) : "-"}
@@ -566,7 +599,7 @@ export default function OrderPage() {
                   <div className="col-span-2 rounded-2xl bg-blue-700 p-5 text-white shadow-lg">
                     <div className="text-blue-100">Estimated Total</div>
                     <div className="mt-1 text-3xl font-bold">
-                      {pricingLoading || pricingTableLoading
+                      {pricingLoading || pricingTableLoading || shippingLoading
                         ? "Loading..."
                         : formatMoney(total)}
                     </div>
@@ -597,8 +630,8 @@ export default function OrderPage() {
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-slate-900">Build Your Order</h2>
               <p className="mt-2 text-slate-600">
-                These options come from your live pricing table, and the estimator
-                now highlights quantity value more clearly.
+                Live pricing and shipping now update automatically based on your
+                selected product and quantity.
               </p>
             </div>
 
@@ -699,8 +732,7 @@ export default function OrderPage() {
                         const optionRow = quantityRows.find(
                           (row) => Number(row.quantity) === Number(option)
                         );
-                        const isSelected =
-                          Number(quantity) === Number(option);
+                        const isSelected = Number(quantity) === Number(option);
                         const isBestValue =
                           bestValueRow &&
                           Number(bestValueRow.quantity) === Number(option);
@@ -734,8 +766,7 @@ export default function OrderPage() {
                             <div className="mt-1 text-xs text-slate-400">
                               {optionRow?.quantity && optionRow?.price
                                 ? `${formatMoney(
-                                    Number(optionRow.price) /
-                                      Number(optionRow.quantity)
+                                    Number(optionRow.price) / Number(optionRow.quantity)
                                   )} each`
                                 : ""}
                             </div>
@@ -868,12 +899,14 @@ export default function OrderPage() {
 
               <div className="mt-3 flex items-center justify-between text-sm text-slate-600">
                 <span>Shipping</span>
-                <span>{formatMoney(shipping)}</span>
+                <span>{shippingLoading ? "Loading..." : formatMoney(shipping)}</span>
               </div>
 
               <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4 text-lg font-bold text-slate-900">
                 <span>Total</span>
-                <span>{pricingLoading ? "Loading..." : formatMoney(total)}</span>
+                <span>
+                  {pricingLoading || shippingLoading ? "Loading..." : formatMoney(total)}
+                </span>
               </div>
             </div>
 
@@ -885,6 +918,7 @@ export default function OrderPage() {
                 uploadingArtwork ||
                 pricingLoading ||
                 pricingTableLoading ||
+                shippingLoading ||
                 livePrice === null ||
                 !uploadedArtwork?.publicUrl
               }
