@@ -1,141 +1,142 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 import { Resend } from "resend";
+import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
+import {
+  buildDeliveredEmail,
+  buildShippedEmail,
+} from "../../../../../lib/emailTemplates";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-function buildTrackingUrl(carrier, trackingNumber) {
-  const cleanCarrier = String(carrier || "").trim().toLowerCase();
-  const cleanTracking = encodeURIComponent(String(trackingNumber || "").trim());
+const EMAIL_FROM =
+  process.env.RESEND_FROM || "EnVision Direct <orders@envisiondirect.net>";
 
-  if (!cleanTracking) return "";
-
-  if (cleanCarrier === "ups") {
-    return `https://www.ups.com/track?tracknum=${cleanTracking}`;
+async function sendEmail({ to, subject, html }) {
+  if (!resend) {
+    return { success: false, error: "RESEND_API_KEY is missing." };
   }
 
-  if (cleanCarrier === "usps") {
-    return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${cleanTracking}`;
-  }
-
-  if (cleanCarrier === "fedex") {
-    return `https://www.fedex.com/fedextrack/?trknbr=${cleanTracking}`;
-  }
-
-  return "";
-}
-
-async function sendShipmentEmail(order) {
-  if (!resend || !order?.customer_email) return;
-
-  const trackingBlock = order.tracking_url
-    ? `<p><a href="${order.tracking_url}" target="_blank" rel="noopener noreferrer">Track your package</a></p>`
-    : "";
-
-  await resend.emails.send({
-    from: "Envision Direct <orders@envisiondirect.net>",
-    to: [order.customer_email],
-    subject: `Your order ${order.order_number} has shipped`,
-    html: `
-      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
-        <h2>Your order has shipped</h2>
-        <p>Hi ${order.customer_name || "there"},</p>
-        <p>Your order <strong>${order.order_number}</strong> is now on the way.</p>
-        <p><strong>Carrier:</strong> ${order.carrier || "-"}</p>
-        <p><strong>Tracking Number:</strong> ${order.tracking_number || "-"}</p>
-        ${trackingBlock}
-        <p>You can also track your order on our website anytime.</p>
-        <p>Thank you,<br />Envision Direct</p>
-      </div>
-    `,
-  });
-}
-
-async function sendDeliveredEmail(order) {
-  if (!resend || !order?.customer_email) return;
-
-  await resend.emails.send({
-    from: "Envision Direct <orders@envisiondirect.net>",
-    to: [order.customer_email],
-    subject: `Your order ${order.order_number} was delivered`,
-    html: `
-      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
-        <h2>Your order was delivered</h2>
-        <p>Hi ${order.customer_name || "there"},</p>
-        <p>Your order <strong>${order.order_number}</strong> has been marked as delivered.</p>
-        <p>We appreciate your business and hope everything looks great.</p>
-        <p>Thank you,<br />Envision Direct</p>
-      </div>
-    `,
-  });
-}
-
-export async function PUT(req, context) {
   try {
-    const { id } = await context.params;
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject,
+      html,
+    });
 
-    if (!id) {
-      return NextResponse.json({ error: "Missing order ID" }, { status: 400 });
-    }
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message || "Email send failed." };
+  }
+}
 
+export async function PUT(req, { params }) {
+  try {
+    const { id } = await params;
     const body = await req.json();
 
-    const status = body?.status ?? "pending";
-    const carrier = body?.carrier ?? "";
-    const tracking_number = body?.tracking_number ?? "";
-    const incomingTrackingUrl = body?.tracking_url ?? "";
-    const tracking_url =
-      incomingTrackingUrl || buildTrackingUrl(carrier, tracking_number);
+    const nextStatus = body?.status || null;
+    const trackingNumber = body?.tracking_number || body?.trackingNumber || "";
+    const trackingCarrier = body?.tracking_carrier || body?.trackingCarrier || "";
 
-    const { data, error } = await supabaseAdmin
+    if (!id) {
+      return NextResponse.json({ error: "Missing order id." }, { status: 400 });
+    }
+
+    const { data: existingOrder, error: existingError } = await supabaseAdmin
       .from("orders")
-      .update({
-        status,
-        carrier,
-        tracking_number,
-        tracking_url,
-      })
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (existingError || !existingOrder) {
+      return NextResponse.json({ error: "Order not found." }, { status: 404 });
+    }
+
+    const updatePayload = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (nextStatus) updatePayload.status = nextStatus;
+    if (trackingNumber !== undefined) updatePayload.tracking_number = trackingNumber;
+    if (trackingCarrier !== undefined) updatePayload.tracking_carrier = trackingCarrier;
+
+    const { data: updatedOrder, error: updateError } = await supabaseAdmin
+      .from("orders")
+      .update(updatePayload)
       .eq("id", id)
       .select("*")
       .single();
 
-    if (error) {
-      console.error("Supabase update error:", error);
+    if (updateError || !updatedOrder) {
       return NextResponse.json(
-        { error: error.message || "Failed to update order." },
+        { error: updateError?.message || "Failed to update order." },
         { status: 500 }
       );
     }
 
-    try {
-      if (status === "shipped") {
-        await sendShipmentEmail(data);
-      }
+    let emailMessage = "";
 
-      if (status === "delivered") {
-        await sendDeliveredEmail(data);
-      }
-    } catch (emailError) {
-      console.error("Email send error:", emailError);
+    const customerEmail = updatedOrder.customer_email;
+    const customerName = updatedOrder.customer_name;
+    const orderNumber = updatedOrder.order_number || updatedOrder.id;
+    const productName = updatedOrder.product_name;
 
-      return NextResponse.json({
-        success: true,
-        message: `Order ${data?.order_number || id} updated, but email failed.`,
-        order: data,
+    if (
+      nextStatus === "shipped" &&
+      customerEmail &&
+      trackingNumber &&
+      trackingCarrier
+    ) {
+      const shippedEmail = buildShippedEmail({
+        orderNumber,
+        customerName,
+        productName,
+        carrier: trackingCarrier,
+        trackingNumber,
       });
+
+      const emailResult = await sendEmail({
+        to: customerEmail,
+        subject: shippedEmail.subject,
+        html: shippedEmail.html,
+      });
+
+      emailMessage = emailResult.success
+        ? " Shipment email sent."
+        : ` Shipment email failed: ${emailResult.error}`;
+    }
+
+    if (nextStatus === "delivered" && customerEmail) {
+      const deliveredEmail = buildDeliveredEmail({
+        orderNumber,
+        customerName,
+        productName,
+      });
+
+      const emailResult = await sendEmail({
+        to: customerEmail,
+        subject: deliveredEmail.subject,
+        html: deliveredEmail.html,
+      });
+
+      emailMessage = emailResult.success
+        ? " Delivered email sent."
+        : ` Delivered email failed: ${emailResult.error}`;
     }
 
     return NextResponse.json({
       success: true,
-      message: `Order ${data?.order_number || id} updated successfully.`,
-      order: data,
+      message: `Order ${orderNumber} updated.${emailMessage}`,
+      order: updatedOrder,
     });
-  } catch (err) {
-    console.error("Order status update server error:", err);
+  } catch (error) {
+    console.error("Order status update error:", error);
+
     return NextResponse.json(
-      { error: err.message || "Server error." },
+      { error: error.message || "Server error." },
       { status: 500 }
     );
   }
