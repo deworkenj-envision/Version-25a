@@ -1,465 +1,580 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
 const PRODUCT_OPTIONS = {
   "Business Cards": {
-    sizes: ["2 x 3.5"],
-    papers: ["Standard", "Premium", "Linen"],
-    finishes: ["Matte", "Gloss", "Soft Touch"],
+    sizes: ["3.5 x 2"],
+    papers: ["Standard"],
+    finishes: ["Matte", "Gloss"],
     sides: ["Front Only", "Front and Back"],
-    quantities: [100, 250, 500, 1000],
-  },
-  Postcards: {
-    sizes: ["4 x 6", "5 x 7", "6 x 9"],
-    papers: ["Standard", "Premium"],
-    finishes: ["Matte", "Gloss", "UV"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [100, 250, 500, 1000],
+    quantities: [100],
+    description:
+      "Professional business cards with clean finishes and sharp print quality.",
   },
   Flyers: {
-    sizes: ["4 x 6", "5.5 x 8.5", "8.5 x 11"],
-    papers: ["Standard", "Premium"],
-    finishes: ["Matte", "Gloss"],
+    sizes: ["8.5 x 11"],
+    papers: ["100lb Gloss Text"],
+    finishes: ["Gloss"],
     sides: ["Front Only", "Front and Back"],
-    quantities: [100, 250, 500, 1000, 2500],
+    quantities: [100],
+    description:
+      "High-impact flyers for promotions, events, menus, and handouts.",
   },
-  Brochures: {
-    sizes: ["8.5 x 11", "8.5 x 14", "11 x 17"],
-    papers: ["Standard", "Premium"],
-    finishes: ["Matte", "Gloss"],
-    sides: ["Front and Back"],
-    quantities: [100, 250, 500, 1000],
+  Postcards: {
+    sizes: ["4 x 6"],
+    papers: ["14pt"],
+    finishes: ["Matte"],
+    sides: ["Front Only", "Front and Back"],
+    quantities: [100],
+    description:
+      "Premium postcards perfect for marketing, direct mail, and announcements.",
   },
   Banners: {
-    sizes: ["2 x 4 ft", "3 x 6 ft", "4 x 8 ft"],
-    papers: ["13 oz Vinyl", "15 oz Vinyl", "Mesh"],
-    finishes: ["Standard"],
+    sizes: ["2 x 4"],
+    papers: ["13oz Vinyl"],
+    finishes: ["Matte"],
     sides: ["Front Only"],
-    quantities: [1, 2, 5, 10],
-  },
-  "Yard Signs": {
-    sizes: ['18" x 24"', '24" x 36"'],
-    papers: ["4mm Coroplast", "6mm Coroplast"],
-    finishes: ["Standard"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [1, 5, 10, 25, 50],
-  },
-  Menus: {
-    sizes: ["8.5 x 11", "8.5 x 14", "11 x 17"],
-    papers: ["Standard", "Premium", "Laminated"],
-    finishes: ["Matte", "Gloss"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [50, 100, 250, 500],
-  },
-  "Rack Cards": {
-    sizes: ["4 x 9"],
-    papers: ["Standard", "Premium"],
-    finishes: ["Matte", "Gloss", "UV"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [100, 250, 500, 1000],
+    quantities: [1],
+    description:
+      "Durable indoor and outdoor banners with vibrant full-color printing.",
   },
 };
 
-function estimatePrice(product, quantity) {
-  const qty = Number(quantity || 0);
+const SHIPPING_FLAT_RATE = 9.95;
 
-  const baseMap = {
-    "Business Cards": 24.99,
-    Postcards: 34.99,
-    Flyers: 39.99,
-    Brochures: 79.99,
-    Banners: 49.99,
-    "Yard Signs": 19.99,
-    Menus: 44.99,
-    "Rack Cards": 32.99,
-  };
-
-  const unitMap = {
-    "Business Cards": 0.08,
-    Postcards: 0.12,
-    Flyers: 0.1,
-    Brochures: 0.22,
-    Banners: 12,
-    "Yard Signs": 8,
-    Menus: 0.14,
-    "Rack Cards": 0.11,
-  };
-
-  const base = baseMap[product] ?? 25;
-  const unit = unitMap[product] ?? 0.1;
-
-  if (!qty) return base;
-  return base + qty * unit;
+function formatMoney(value) {
+  const number = Number(value || 0);
+  return `$${number.toFixed(2)}`;
 }
 
-function OrderPageContent() {
-  const searchParams = useSearchParams();
-  const productNames = Object.keys(PRODUCT_OPTIONS);
+export default function OrderPage() {
+  const defaultProduct = "Business Cards";
 
-  const [product, setProduct] = useState("Business Cards");
-  const current = useMemo(() => PRODUCT_OPTIONS[product], [product]);
+  const [productName, setProductName] = useState(defaultProduct);
+  const [size, setSize] = useState(PRODUCT_OPTIONS[defaultProduct].sizes[0]);
+  const [paper, setPaper] = useState(PRODUCT_OPTIONS[defaultProduct].papers[0]);
+  const [finish, setFinish] = useState(PRODUCT_OPTIONS[defaultProduct].finishes[0]);
+  const [sides, setSides] = useState(PRODUCT_OPTIONS[defaultProduct].sides[0]);
+  const [quantity, setQuantity] = useState(PRODUCT_OPTIONS[defaultProduct].quantities[0]);
 
-  const [size, setSize] = useState(PRODUCT_OPTIONS["Business Cards"].sizes[0]);
-  const [paper, setPaper] = useState(PRODUCT_OPTIONS["Business Cards"].papers[0]);
-  const [finish, setFinish] = useState(PRODUCT_OPTIONS["Business Cards"].finishes[0]);
-  const [sides, setSides] = useState(PRODUCT_OPTIONS["Business Cards"].sides[0]);
-  const [quantity, setQuantity] = useState(PRODUCT_OPTIONS["Business Cards"].quantities[0]);
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [notes, setNotes] = useState("");
-  const [fileName, setFileName] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+
+  const [livePrice, setLivePrice] = useState(null);
+  const [pricingLoading, setPricingLoading] = useState(false);
+
+  const [artworkFile, setArtworkFile] = useState(null);
+  const [uploadingArtwork, setUploadingArtwork] = useState(false);
+  const [uploadedArtwork, setUploadedArtwork] = useState(null);
+
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const currentOptions = useMemo(() => {
+    return PRODUCT_OPTIONS[productName] || PRODUCT_OPTIONS[defaultProduct];
+  }, [productName]);
+
+  const subtotal = Number(livePrice || 0);
+  const shipping = subtotal > 0 ? SHIPPING_FLAT_RATE : 0;
+  const total = subtotal + shipping;
 
   useEffect(() => {
-    const qpProduct = searchParams.get("product");
-    const nextProduct = qpProduct && PRODUCT_OPTIONS[qpProduct] ? qpProduct : "Business Cards";
-    const nextConfig = PRODUCT_OPTIONS[nextProduct];
+    const options = PRODUCT_OPTIONS[productName];
+    if (!options) return;
 
-    const qpSize = searchParams.get("size");
-    const qpPaper = searchParams.get("paper");
-    const qpFinish = searchParams.get("finish");
-    const qpSides = searchParams.get("sides");
-    const qpQuantity = searchParams.get("quantity");
+    setSize(options.sizes[0] || "");
+    setPaper(options.papers[0] || "");
+    setFinish(options.finishes[0] || "");
+    setSides(options.sides[0] || "");
+    setQuantity(options.quantities[0] || 0);
+    setLivePrice(null);
+  }, [productName]);
 
-    setProduct(nextProduct);
-    setSize(qpSize && nextConfig.sizes.includes(qpSize) ? qpSize : nextConfig.sizes[0]);
-    setPaper(qpPaper && nextConfig.papers.includes(qpPaper) ? qpPaper : nextConfig.papers[0]);
-    setFinish(
-      qpFinish && nextConfig.finishes.includes(qpFinish) ? qpFinish : nextConfig.finishes[0]
-    );
-    setSides(qpSides && nextConfig.sides.includes(qpSides) ? qpSides : nextConfig.sides[0]);
-    setQuantity(
-      qpQuantity && nextConfig.quantities.map(String).includes(String(qpQuantity))
-        ? Number(qpQuantity)
-        : nextConfig.quantities[0]
-    );
-  }, [searchParams]);
+  useEffect(() => {
+    async function fetchLivePrice() {
+      if (!productName || !size || !paper || !finish || !sides || !quantity) {
+        setLivePrice(null);
+        return;
+      }
 
-  function handleProductChange(nextProduct) {
-    const next = PRODUCT_OPTIONS[nextProduct];
-    setProduct(nextProduct);
-    setSize(next.sizes[0]);
-    setPaper(next.papers[0]);
-    setFinish(next.finishes[0]);
-    setSides(next.sides[0]);
-    setQuantity(next.quantities[0]);
-  }
+      try {
+        setPricingLoading(true);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setSubmitting(true);
+        const params = new URLSearchParams({
+          product_name: productName,
+          size,
+          paper,
+          finish,
+          sides,
+          quantity: String(quantity),
+        });
+
+        const res = await fetch(`/api/pricing?${params.toString()}`, {
+          cache: "no-store",
+        });
+
+        const data = await res.json();
+
+        if (data?.success && typeof data?.exactPrice === "number") {
+          setLivePrice(Number(data.exactPrice));
+        } else {
+          setLivePrice(null);
+        }
+      } catch (error) {
+        console.error("Pricing fetch error:", error);
+        setLivePrice(null);
+      } finally {
+        setPricingLoading(false);
+      }
+    }
+
+    fetchLivePrice();
+  }, [productName, size, paper, finish, sides, quantity]);
+
+  async function handleArtworkUpload() {
+    if (!artworkFile) {
+      setMessage("Please choose an artwork file first.");
+      return null;
+    }
 
     try {
-      alert("Selections carried over successfully. Your order form is ready.");
+      setUploadingArtwork(true);
+      setMessage("");
+
+      const formData = new FormData();
+      formData.append("file", artworkFile);
+
+      const res = await fetch("/api/upload-artwork", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || "Artwork upload failed.");
+      }
+
+      const uploaded = {
+        fileName: data.fileName || artworkFile.name,
+        filePath: data.filePath || "",
+        publicUrl: data.publicUrl || "",
+      };
+
+      setUploadedArtwork(uploaded);
+      setMessage("Artwork uploaded successfully.");
+      return uploaded;
     } catch (error) {
       console.error(error);
-      alert("Something went wrong.");
+      setMessage(error.message || "Artwork upload failed.");
+      return null;
     } finally {
-      setSubmitting(false);
+      setUploadingArtwork(false);
     }
   }
 
-  const estimatedTotal = estimatePrice(product, quantity);
+  async function handleCheckout() {
+    if (!customerName.trim()) {
+      setMessage("Please enter your name.");
+      return;
+    }
+
+    if (!customerEmail.trim()) {
+      setMessage("Please enter your email address.");
+      return;
+    }
+
+    if (!uploadedArtwork?.publicUrl) {
+      setMessage("Please upload your artwork before checkout.");
+      return;
+    }
+
+    if (livePrice === null) {
+      setMessage("Pricing is unavailable for this selection.");
+      return;
+    }
+
+    try {
+      setCheckoutLoading(true);
+      setMessage("");
+
+      const payload = {
+        customerName: customerName.trim(),
+        customerEmail: customerEmail.trim(),
+        productName,
+        size,
+        paper,
+        finish,
+        sides,
+        quantity: Number(quantity),
+        subtotal: Number(subtotal),
+        shipping: Number(shipping),
+        total: Number(total),
+        notes: notes.trim(),
+        fileName: uploadedArtwork.fileName,
+        artworkUrl: uploadedArtwork.publicUrl,
+      };
+
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Checkout failed.");
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      throw new Error("Checkout session URL was not returned.");
+    } catch (error) {
+      console.error(error);
+      setMessage(error.message || "Checkout failed.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <section className="mx-auto max-w-7xl px-4 py-8 md:px-6 lg:px-8">
-        <div className="mb-8 rounded-[30px] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 p-6 text-white shadow-2xl md:p-10">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
+        <div className="mx-auto max-w-7xl px-6 py-14 lg:px-8">
+          <div className="grid items-center gap-10 lg:grid-cols-2">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/85">
-                Order Form
-              </p>
-              <h1 className="mt-2 text-4xl font-bold tracking-tight md:text-5xl">
-                Complete your print order
+              <div className="mb-4 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1 text-sm font-medium backdrop-blur">
+                EnVision Direct
+              </div>
+
+              <h1 className="max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl">
+                Top Quality Printing.
+                <br />
+                Fast Turnaround.
+                <br />
+                The Best Prices.
               </h1>
-              <p className="mt-3 max-w-2xl text-white/90">
-                Your homepage selections have been carried over. Review them below, add your details,
-                and continue with your order.
+
+              <p className="mt-5 max-w-2xl text-lg text-blue-50">
+                Choose your product, upload print-ready artwork, and get a live
+                price instantly.
               </p>
-            </div>
 
-            <Link
-              href="/"
-              className="inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-blue-700 shadow-lg transition hover:bg-slate-100"
-            >
-              Back to Homepage
-            </Link>
-          </div>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-[1.05fr_.95fr]">
-          <form
-            onSubmit={handleSubmit}
-            className="rounded-[28px] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8"
-          >
-            <div className="mb-6">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-                Order Details
-              </p>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-                Review and customize
-              </h2>
-              <p className="mt-3 max-w-2xl text-slate-600">
-                Adjust any options below before moving to checkout and artwork upload.
-              </p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Product
-                </label>
-                <select
-                  value={product}
-                  onChange={(e) => handleProductChange(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {productNames.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Size
-                </label>
-                <select
-                  value={size}
-                  onChange={(e) => setSize(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.sizes.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Paper / Material
-                </label>
-                <select
-                  value={paper}
-                  onChange={(e) => setPaper(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.papers.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Finish
-                </label>
-                <select
-                  value={finish}
-                  onChange={(e) => setFinish(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.finishes.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Sides
-                </label>
-                <select
-                  value={sides}
-                  onChange={(e) => setSides(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.sides.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Quantity
-                </label>
-                <select
-                  value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.quantities.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Customer Name
-                </label>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Your full name"
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Customer Email
-                </label>
-                <input
-                  type="email"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                />
+              <div className="mt-8 flex flex-wrap gap-3 text-sm">
+                <span className="rounded-full bg-white/15 px-4 py-2">Business Cards</span>
+                <span className="rounded-full bg-white/15 px-4 py-2">Flyers</span>
+                <span className="rounded-full bg-white/15 px-4 py-2">Postcards</span>
+                <span className="rounded-full bg-white/15 px-4 py-2">Banners</span>
               </div>
             </div>
 
-            <div className="mt-4">
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Artwork File
-              </label>
-              <input
-                type="file"
-                onChange={(e) => setFileName(e.target.files?.[0]?.name || "")}
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-              />
-              {fileName ? (
-                <p className="mt-2 text-sm text-slate-600">Selected file: {fileName}</p>
-              ) : null}
-            </div>
-
-            <div className="mt-4">
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Notes
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={4}
-                placeholder="Add any special instructions here"
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-              />
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="inline-flex items-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {submitting ? "Saving..." : "Save Order Details"}
-              </button>
-
-              <Link
-                href="/pricing"
-                className="inline-flex items-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
-              >
-                View Pricing
-              </Link>
-            </div>
-          </form>
-
-          <div className="rounded-[28px] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-              Live Summary
-            </p>
-            <h3 className="mt-2 text-2xl font-bold text-slate-900">{product}</h3>
-
-            <div className="mt-6 space-y-4 rounded-[24px] bg-slate-50 p-5 ring-1 ring-slate-200">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Size</span>
-                <span className="text-right font-semibold text-slate-900">{size}</span>
+            <div className="rounded-3xl bg-white p-6 text-slate-900 shadow-2xl">
+              <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-blue-700">
+                Live Estimate
               </div>
 
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Paper / Material</span>
-                <span className="text-right font-semibold text-slate-900">{paper}</span>
-              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="text-sm text-slate-500">Selected Product</div>
+                <div className="mt-1 text-2xl font-bold">{productName}</div>
+                <p className="mt-2 text-sm text-slate-600">
+                  {currentOptions.description}
+                </p>
 
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Finish</span>
-                <span className="text-right font-semibold text-slate-900">{finish}</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Sides</span>
-                <span className="text-right font-semibold text-slate-900">{sides}</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Quantity</span>
-                <span className="text-right font-semibold text-slate-900">{quantity}</span>
-              </div>
-
-              <div className="border-t border-slate-200 pt-4">
-                <div className="flex items-end justify-between gap-4">
-                  <span className="text-slate-600">Estimated starting price</span>
-                  <span className="text-3xl font-bold tracking-tight text-slate-900">
-                    ${estimatedTotal.toFixed(2)}
-                  </span>
+                <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-xl bg-white p-3">
+                    <div className="text-slate-500">Subtotal</div>
+                    <div className="mt-1 font-semibold">{formatMoney(subtotal)}</div>
+                  </div>
+                  <div className="rounded-xl bg-white p-3">
+                    <div className="text-slate-500">Shipping</div>
+                    <div className="mt-1 font-semibold">{formatMoney(shipping)}</div>
+                  </div>
+                  <div className="col-span-2 rounded-xl bg-blue-700 p-4 text-white">
+                    <div className="text-blue-100">Estimated Total</div>
+                    <div className="mt-1 text-3xl font-bold">
+                      {pricingLoading ? "Loading..." : formatMoney(total)}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="mt-6 rounded-[24px] bg-blue-50 p-5 ring-1 ring-blue-100">
-              <h4 className="text-lg font-semibold text-slate-900">What happens next</h4>
-              <div className="mt-4 grid gap-3 text-sm text-slate-700">
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200">
-                  Review your options
-                </div>
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200">
-                  Upload print-ready artwork
-                </div>
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200">
-                  Continue to checkout
-                </div>
+                {livePrice === null && !pricingLoading ? (
+                  <p className="mt-4 text-sm text-amber-600">
+                    No exact price was found for this combination yet.
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      <section className="-mt-6 pb-16">
+        <div className="mx-auto grid max-w-7xl gap-8 px-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8">
+          <div className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-slate-900">Build Your Order</h2>
+              <p className="mt-2 text-slate-600">
+                Select your print options below. Pricing updates automatically from
+                your live pricing table.
+              </p>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <Field label="Product">
+                <select
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                  className="input"
+                >
+                  {Object.keys(PRODUCT_OPTIONS).map((product) => (
+                    <option key={product} value={product}>
+                      {product}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Size">
+                <select
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  className="input"
+                >
+                  {currentOptions.sizes.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Paper">
+                <select
+                  value={paper}
+                  onChange={(e) => setPaper(e.target.value)}
+                  className="input"
+                >
+                  {currentOptions.papers.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Finish">
+                <select
+                  value={finish}
+                  onChange={(e) => setFinish(e.target.value)}
+                  className="input"
+                >
+                  {currentOptions.finishes.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Sides">
+                <select
+                  value={sides}
+                  onChange={(e) => setSides(e.target.value)}
+                  className="input"
+                >
+                  {currentOptions.sides.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Quantity">
+                <select
+                  value={quantity}
+                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  className="input"
+                >
+                  {currentOptions.quantities.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+
+            <div className="mt-8 grid gap-5 md:grid-cols-2">
+              <Field label="Your Name">
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="input"
+                  placeholder="Enter your full name"
+                />
+              </Field>
+
+              <Field label="Email Address">
+                <input
+                  type="email"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  className="input"
+                  placeholder="Enter your email"
+                />
+              </Field>
+            </div>
+
+            <div className="mt-5">
+              <Field label="Notes / Special Instructions">
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="input min-h-[120px]"
+                  placeholder="Add any print instructions or special notes here"
+                />
+              </Field>
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
+              <div className="text-base font-semibold text-slate-900">Upload Artwork</div>
+              <p className="mt-1 text-sm text-slate-600">
+                Upload your print-ready file before checkout.
+              </p>
+
+              <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center">
+                <input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setArtworkFile(file);
+                    setUploadedArtwork(null);
+                    setMessage("");
+                  }}
+                  className="block w-full text-sm text-slate-700 file:mr-4 file:rounded-full file:border-0 file:bg-blue-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-800"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleArtworkUpload}
+                  disabled={!artworkFile || uploadingArtwork}
+                  className="rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {uploadingArtwork ? "Uploading..." : "Upload Artwork"}
+                </button>
+              </div>
+
+              {uploadedArtwork?.publicUrl ? (
+                <div className="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-700">
+                  Uploaded: <span className="font-semibold">{uploadedArtwork.fileName}</span>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <aside className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200">
+            <h3 className="text-2xl font-bold text-slate-900">Order Summary</h3>
+
+            <div className="mt-6 space-y-4">
+              <SummaryRow label="Product" value={productName} />
+              <SummaryRow label="Size" value={size} />
+              <SummaryRow label="Paper" value={paper} />
+              <SummaryRow label="Finish" value={finish} />
+              <SummaryRow label="Sides" value={sides} />
+              <SummaryRow label="Quantity" value={String(quantity)} />
+            </div>
+
+            <div className="mt-6 border-t border-slate-200 pt-6">
+              <div className="flex items-center justify-between text-sm text-slate-600">
+                <span>Print Price</span>
+                <span>{pricingLoading ? "Loading..." : formatMoney(subtotal)}</span>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between text-sm text-slate-600">
+                <span>Shipping</span>
+                <span>{formatMoney(shipping)}</span>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4 text-lg font-bold text-slate-900">
+                <span>Total</span>
+                <span>{pricingLoading ? "Loading..." : formatMoney(total)}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCheckout}
+              disabled={
+                checkoutLoading ||
+                uploadingArtwork ||
+                livePrice === null ||
+                !uploadedArtwork?.publicUrl
+              }
+              className="mt-8 w-full rounded-2xl bg-blue-700 px-6 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {checkoutLoading ? "Starting Checkout..." : "Proceed to Checkout"}
+            </button>
+
+            <p className="mt-3 text-center text-sm text-slate-500">
+              Artwork upload is required before checkout.
+            </p>
+
+            {message ? (
+              <div className="mt-5 rounded-2xl bg-slate-100 p-4 text-sm text-slate-700">
+                {message}
+              </div>
+            ) : null}
+          </aside>
+        </div>
+      </section>
+
+      <style jsx>{`
+        .input {
+          width: 100%;
+          border-radius: 1rem;
+          border: 1px solid #cbd5e1;
+          background: white;
+          padding: 0.9rem 1rem;
+          font-size: 0.95rem;
+          color: #0f172a;
+          outline: none;
+          transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .input:focus {
+          border-color: #2563eb;
+          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+      `}</style>
     </main>
   );
 }
 
-export default function OrderPage() {
+function Field({ label, children }) {
   return (
-    <Suspense
-      fallback={
-        <main className="min-h-screen bg-slate-50">
-          <section className="mx-auto max-w-7xl px-4 py-8 md:px-6 lg:px-8">
-            <div className="rounded-[28px] bg-white p-8 shadow-lg ring-1 ring-slate-200">
-              <p className="text-lg font-semibold text-slate-700">Loading order page...</p>
-            </div>
-          </section>
-        </main>
-      }
-    >
-      <OrderPageContent />
-    </Suspense>
+    <label className="block">
+      <div className="mb-2 text-sm font-medium text-slate-700">{label}</div>
+      {children}
+    </label>
+  );
+}
+
+function SummaryRow({ label, value }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <span className="text-sm text-slate-500">{label}</span>
+      <span className="text-right text-sm font-medium text-slate-900">{value}</span>
+    </div>
   );
 }
