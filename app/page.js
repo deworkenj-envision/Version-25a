@@ -74,7 +74,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-white text-slate-900">
       <section className="px-5 pt-5 lg:px-8 lg:pt-8">
         <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white shadow-2xl">
-          <div className="mx-auto grid max-w-7xl gap-10 px-8 py-10 lg:grid-cols-[0.92fr_1.08fr] lg:px-10 lg:py-12">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 px-8 py-10 lg:grid-cols-[0.9fr_1.16fr] lg:gap-24 lg:px-10 lg:py-12 xl:gap-28">
             <div className="flex flex-col justify-center">
               <div className="mb-8">
                 <Image
@@ -90,8 +90,9 @@ export default function HomePage() {
               <h1 className="max-w-3xl text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl lg:text-[4.15rem]">
                 <span className="block">Top Quality</span>
                 <span className="block">Printing.</span>
-                <span className="block">Fast Turnaround.</span>
-                <span className="block">The Best Prices.</span>
+                <span className="block mt-3">Fast</span>
+                <span className="block">Turnaround.</span>
+                <span className="block mt-3">The Best Prices.</span>
               </h1>
 
               <p className="mt-10 max-w-xl text-lg leading-8 text-blue-50">
@@ -129,19 +130,17 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="flex items-center">
-              <div className="w-full rounded-[2rem] bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
-                <div className="overflow-hidden rounded-[1.6rem] bg-white">
-                  <div className="relative aspect-[15/10] w-full bg-white">
-                    <Image
-                      src="/images/hero_desktop.webp"
-                      alt="Print product collage"
-                      fill
-                      priority
-                      sizes="(min-width: 1024px) 52vw, 100vw"
-                      className="object-contain"
-                    />
-                  </div>
+            <div className="flex items-center justify-center lg:justify-end">
+              <div className="w-full max-w-[860px]">
+                <div className="relative aspect-[15/10] w-full">
+                  <Image
+                    src="/images/hero_desktop.webp"
+                    alt="Print product collage"
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 58vw, 100vw"
+                    className="object-contain"
+                  />
                 </div>
               </div>
             </div>
