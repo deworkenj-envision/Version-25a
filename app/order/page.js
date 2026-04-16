@@ -2,45 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const PRODUCT_OPTIONS = {
-  "Business Cards": {
-    sizes: ["3.5 x 2"],
-    papers: ["Standard"],
-    finishes: ["Matte", "Gloss"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [100],
-    description:
-      "Professional business cards with clean finishes and sharp print quality.",
-  },
-  Flyers: {
-    sizes: ["8.5 x 11"],
-    papers: ["100lb Gloss Text"],
-    finishes: ["Gloss"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [100],
-    description:
-      "High-impact flyers for promotions, events, menus, and handouts.",
-  },
-  Postcards: {
-    sizes: ["4 x 6"],
-    papers: ["14pt"],
-    finishes: ["Matte"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [100],
-    description:
-      "Premium postcards perfect for marketing, direct mail, and announcements.",
-  },
-  Banners: {
-    sizes: ["2 x 4"],
-    papers: ["13oz Vinyl"],
-    finishes: ["Matte"],
-    sides: ["Front Only"],
-    quantities: [1],
-    description:
-      "Durable indoor and outdoor banners with vibrant full-color printing.",
-  },
-};
-
 const SHIPPING_FLAT_RATE = 9.95;
 
 function formatMoney(value) {
@@ -48,15 +9,24 @@ function formatMoney(value) {
   return `$${number.toFixed(2)}`;
 }
 
-export default function OrderPage() {
-  const defaultProduct = "Business Cards";
+function uniqueValues(rows, key) {
+  return [...new Set((rows || []).map((row) => row[key]).filter(Boolean))];
+}
 
-  const [productName, setProductName] = useState(defaultProduct);
-  const [size, setSize] = useState(PRODUCT_OPTIONS[defaultProduct].sizes[0]);
-  const [paper, setPaper] = useState(PRODUCT_OPTIONS[defaultProduct].papers[0]);
-  const [finish, setFinish] = useState(PRODUCT_OPTIONS[defaultProduct].finishes[0]);
-  const [sides, setSides] = useState(PRODUCT_OPTIONS[defaultProduct].sides[0]);
-  const [quantity, setQuantity] = useState(PRODUCT_OPTIONS[defaultProduct].quantities[0]);
+function getDefaultValue(list, fallback = "") {
+  return Array.isArray(list) && list.length > 0 ? list[0] : fallback;
+}
+
+export default function OrderPage() {
+  const [pricingRows, setPricingRows] = useState([]);
+  const [pricingTableLoading, setPricingTableLoading] = useState(true);
+
+  const [productName, setProductName] = useState("");
+  const [size, setSize] = useState("");
+  const [paper, setPaper] = useState("");
+  const [finish, setFinish] = useState("");
+  const [sides, setSides] = useState("");
+  const [quantity, setQuantity] = useState("");
 
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -72,8 +42,110 @@ export default function OrderPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const currentOptions = useMemo(() => {
-    return PRODUCT_OPTIONS[productName] || PRODUCT_OPTIONS[defaultProduct];
+  useEffect(() => {
+    async function loadPricingTable() {
+      try {
+        setPricingTableLoading(true);
+
+        const res = await fetch("/api/pricing", { cache: "no-store" });
+        const data = await res.json();
+
+        if (!res.ok || !data?.success) {
+          throw new Error(data?.error || "Failed to load pricing table.");
+        }
+
+        const rows = Array.isArray(data.pricing) ? data.pricing : [];
+        setPricingRows(rows);
+
+        if (rows.length > 0) {
+          const first = rows[0];
+          setProductName(first.product_name || "");
+          setSize(first.size || "");
+          setPaper(first.paper || "");
+          setFinish(first.finish || "");
+          setSides(first.sides || "");
+          setQuantity(String(first.quantity ?? ""));
+        }
+      } catch (error) {
+        console.error(error);
+        setMessage(error.message || "Failed to load pricing.");
+      } finally {
+        setPricingTableLoading(false);
+      }
+    }
+
+    loadPricingTable();
+  }, []);
+
+  const allProducts = useMemo(() => {
+    return uniqueValues(pricingRows, "product_name");
+  }, [pricingRows]);
+
+  const rowsForProduct = useMemo(() => {
+    return pricingRows.filter((row) => row.product_name === productName);
+  }, [pricingRows, productName]);
+
+  const availableSizes = useMemo(() => {
+    return uniqueValues(rowsForProduct, "size");
+  }, [rowsForProduct]);
+
+  const rowsForProductAndSize = useMemo(() => {
+    return rowsForProduct.filter((row) => row.size === size);
+  }, [rowsForProduct, size]);
+
+  const availablePapers = useMemo(() => {
+    return uniqueValues(rowsForProductAndSize, "paper");
+  }, [rowsForProductAndSize]);
+
+  const rowsForProductSizePaper = useMemo(() => {
+    return rowsForProductAndSize.filter((row) => row.paper === paper);
+  }, [rowsForProductAndSize, paper]);
+
+  const availableFinishes = useMemo(() => {
+    return uniqueValues(rowsForProductSizePaper, "finish");
+  }, [rowsForProductSizePaper]);
+
+  const rowsForProductSizePaperFinish = useMemo(() => {
+    return rowsForProductSizePaper.filter((row) => row.finish === finish);
+  }, [rowsForProductSizePaper, finish]);
+
+  const availableSides = useMemo(() => {
+    return uniqueValues(rowsForProductSizePaperFinish, "sides");
+  }, [rowsForProductSizePaperFinish]);
+
+  const rowsForFullOptionsMinusQuantity = useMemo(() => {
+    return rowsForProductSizePaperFinish.filter((row) => row.sides === sides);
+  }, [rowsForProductSizePaperFinish, sides]);
+
+  const availableQuantities = useMemo(() => {
+    return [...new Set(rowsForFullOptionsMinusQuantity.map((row) => Number(row.quantity)).filter((v) => !Number.isNaN(v)))].sort((a, b) => a - b);
+  }, [rowsForFullOptionsMinusQuantity]);
+
+  const selectedRow = useMemo(() => {
+    return pricingRows.find(
+      (row) =>
+        row.product_name === productName &&
+        row.size === size &&
+        row.paper === paper &&
+        row.finish === finish &&
+        row.sides === sides &&
+        Number(row.quantity) === Number(quantity)
+    );
+  }, [pricingRows, productName, size, paper, finish, sides, quantity]);
+
+  const productDescription = useMemo(() => {
+    const descriptions = {
+      "Business Cards":
+        "Professional business cards with clean finishes and sharp print quality.",
+      Flyers:
+        "High-impact flyers for promotions, events, menus, and handouts.",
+      Postcards:
+        "Premium postcards perfect for marketing, direct mail, and announcements.",
+      Banners:
+        "Durable indoor and outdoor banners with vibrant full-color printing.",
+    };
+
+    return descriptions[productName] || "Choose your print options and get a live price instantly.";
   }, [productName]);
 
   const subtotal = Number(livePrice || 0);
@@ -81,16 +153,103 @@ export default function OrderPage() {
   const total = subtotal + shipping;
 
   useEffect(() => {
-    const options = PRODUCT_OPTIONS[productName];
-    if (!options) return;
+    if (!pricingRows.length) return;
 
-    setSize(options.sizes[0] || "");
-    setPaper(options.papers[0] || "");
-    setFinish(options.finishes[0] || "");
-    setSides(options.sides[0] || "");
-    setQuantity(options.quantities[0] || 0);
-    setLivePrice(null);
-  }, [productName]);
+    if (!productName || !allProducts.includes(productName)) {
+      const nextProduct = getDefaultValue(allProducts);
+      if (nextProduct) {
+        setProductName(nextProduct);
+      }
+    }
+  }, [pricingRows, allProducts, productName]);
+
+  useEffect(() => {
+    if (!productName) return;
+
+    const nextSizes = uniqueValues(
+      pricingRows.filter((row) => row.product_name === productName),
+      "size"
+    );
+
+    if (!size || !nextSizes.includes(size)) {
+      setSize(getDefaultValue(nextSizes));
+    }
+  }, [pricingRows, productName, size]);
+
+  useEffect(() => {
+    if (!productName || !size) return;
+
+    const nextPapers = uniqueValues(
+      pricingRows.filter(
+        (row) => row.product_name === productName && row.size === size
+      ),
+      "paper"
+    );
+
+    if (!paper || !nextPapers.includes(paper)) {
+      setPaper(getDefaultValue(nextPapers));
+    }
+  }, [pricingRows, productName, size, paper]);
+
+  useEffect(() => {
+    if (!productName || !size || !paper) return;
+
+    const nextFinishes = uniqueValues(
+      pricingRows.filter(
+        (row) =>
+          row.product_name === productName &&
+          row.size === size &&
+          row.paper === paper
+      ),
+      "finish"
+    );
+
+    if (!finish || !nextFinishes.includes(finish)) {
+      setFinish(getDefaultValue(nextFinishes));
+    }
+  }, [pricingRows, productName, size, paper, finish]);
+
+  useEffect(() => {
+    if (!productName || !size || !paper || !finish) return;
+
+    const nextSides = uniqueValues(
+      pricingRows.filter(
+        (row) =>
+          row.product_name === productName &&
+          row.size === size &&
+          row.paper === paper &&
+          row.finish === finish
+      ),
+      "sides"
+    );
+
+    if (!sides || !nextSides.includes(sides)) {
+      setSides(getDefaultValue(nextSides));
+    }
+  }, [pricingRows, productName, size, paper, finish, sides]);
+
+  useEffect(() => {
+    if (!productName || !size || !paper || !finish || !sides) return;
+
+    const nextQuantities = [
+      ...new Set(
+        pricingRows
+          .filter(
+            (row) =>
+              row.product_name === productName &&
+              row.size === size &&
+              row.paper === paper &&
+              row.finish === finish &&
+              row.sides === sides
+          )
+          .map((row) => String(row.quantity))
+      ),
+    ].sort((a, b) => Number(a) - Number(b));
+
+    if (!quantity || !nextQuantities.includes(String(quantity))) {
+      setQuantity(getDefaultValue(nextQuantities));
+    }
+  }, [pricingRows, productName, size, paper, finish, sides, quantity]);
 
   useEffect(() => {
     async function fetchLivePrice() {
@@ -264,15 +423,36 @@ export default function OrderPage() {
               </h1>
 
               <p className="mt-5 max-w-2xl text-lg text-blue-50">
-                Choose your product, upload print-ready artwork, and get a live
-                price instantly.
+                Choose your product, select your exact options, upload print-ready
+                artwork, and get a live price instantly.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3 text-sm">
-                <span className="rounded-full bg-white/15 px-4 py-2">Business Cards</span>
-                <span className="rounded-full bg-white/15 px-4 py-2">Flyers</span>
-                <span className="rounded-full bg-white/15 px-4 py-2">Postcards</span>
-                <span className="rounded-full bg-white/15 px-4 py-2">Banners</span>
+                {allProducts.length > 0 ? (
+                  allProducts.map((product) => (
+                    <span
+                      key={product}
+                      className="rounded-full bg-white/15 px-4 py-2"
+                    >
+                      {product}
+                    </span>
+                  ))
+                ) : (
+                  <>
+                    <span className="rounded-full bg-white/15 px-4 py-2">
+                      Business Cards
+                    </span>
+                    <span className="rounded-full bg-white/15 px-4 py-2">
+                      Flyers
+                    </span>
+                    <span className="rounded-full bg-white/15 px-4 py-2">
+                      Postcards
+                    </span>
+                    <span className="rounded-full bg-white/15 px-4 py-2">
+                      Banners
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -283,10 +463,10 @@ export default function OrderPage() {
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <div className="text-sm text-slate-500">Selected Product</div>
-                <div className="mt-1 text-2xl font-bold">{productName}</div>
-                <p className="mt-2 text-sm text-slate-600">
-                  {currentOptions.description}
-                </p>
+                <div className="mt-1 text-2xl font-bold">
+                  {productName || "Loading..."}
+                </div>
+                <p className="mt-2 text-sm text-slate-600">{productDescription}</p>
 
                 <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
                   <div className="rounded-xl bg-white p-3">
@@ -300,12 +480,14 @@ export default function OrderPage() {
                   <div className="col-span-2 rounded-xl bg-blue-700 p-4 text-white">
                     <div className="text-blue-100">Estimated Total</div>
                     <div className="mt-1 text-3xl font-bold">
-                      {pricingLoading ? "Loading..." : formatMoney(total)}
+                      {pricingLoading || pricingTableLoading
+                        ? "Loading..."
+                        : formatMoney(total)}
                     </div>
                   </div>
                 </div>
 
-                {livePrice === null && !pricingLoading ? (
+                {livePrice === null && !pricingLoading && !pricingTableLoading ? (
                   <p className="mt-4 text-sm text-amber-600">
                     No exact price was found for this combination yet.
                   </p>
@@ -322,8 +504,8 @@ export default function OrderPage() {
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-slate-900">Build Your Order</h2>
               <p className="mt-2 text-slate-600">
-                Select your print options below. Pricing updates automatically from
-                your live pricing table.
+                These dropdowns now come from your live pricing table, so when you
+                add new options in Supabase they can appear here automatically.
               </p>
             </div>
 
@@ -333,8 +515,9 @@ export default function OrderPage() {
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
                   className="input"
+                  disabled={pricingTableLoading || allProducts.length === 0}
                 >
-                  {Object.keys(PRODUCT_OPTIONS).map((product) => (
+                  {allProducts.map((product) => (
                     <option key={product} value={product}>
                       {product}
                     </option>
@@ -347,8 +530,9 @@ export default function OrderPage() {
                   value={size}
                   onChange={(e) => setSize(e.target.value)}
                   className="input"
+                  disabled={pricingTableLoading || availableSizes.length === 0}
                 >
-                  {currentOptions.sizes.map((option) => (
+                  {availableSizes.map((option) => (
                     <option key={option} value={option}>
                       {option}
                     </option>
@@ -361,8 +545,9 @@ export default function OrderPage() {
                   value={paper}
                   onChange={(e) => setPaper(e.target.value)}
                   className="input"
+                  disabled={pricingTableLoading || availablePapers.length === 0}
                 >
-                  {currentOptions.papers.map((option) => (
+                  {availablePapers.map((option) => (
                     <option key={option} value={option}>
                       {option}
                     </option>
@@ -375,8 +560,9 @@ export default function OrderPage() {
                   value={finish}
                   onChange={(e) => setFinish(e.target.value)}
                   className="input"
+                  disabled={pricingTableLoading || availableFinishes.length === 0}
                 >
-                  {currentOptions.finishes.map((option) => (
+                  {availableFinishes.map((option) => (
                     <option key={option} value={option}>
                       {option}
                     </option>
@@ -389,8 +575,9 @@ export default function OrderPage() {
                   value={sides}
                   onChange={(e) => setSides(e.target.value)}
                   className="input"
+                  disabled={pricingTableLoading || availableSides.length === 0}
                 >
-                  {currentOptions.sides.map((option) => (
+                  {availableSides.map((option) => (
                     <option key={option} value={option}>
                       {option}
                     </option>
@@ -401,11 +588,12 @@ export default function OrderPage() {
               <Field label="Quantity">
                 <select
                   value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  onChange={(e) => setQuantity(e.target.value)}
                   className="input"
+                  disabled={pricingTableLoading || availableQuantities.length === 0}
                 >
-                  {currentOptions.quantities.map((option) => (
-                    <option key={option} value={option}>
+                  {availableQuantities.map((option) => (
+                    <option key={option} value={String(option)}>
                       {option}
                     </option>
                   ))}
@@ -487,12 +675,17 @@ export default function OrderPage() {
             <h3 className="text-2xl font-bold text-slate-900">Order Summary</h3>
 
             <div className="mt-6 space-y-4">
-              <SummaryRow label="Product" value={productName} />
-              <SummaryRow label="Size" value={size} />
-              <SummaryRow label="Paper" value={paper} />
-              <SummaryRow label="Finish" value={finish} />
-              <SummaryRow label="Sides" value={sides} />
-              <SummaryRow label="Quantity" value={String(quantity)} />
+              <SummaryRow label="Product" value={productName || "-"} />
+              <SummaryRow label="Size" value={size || "-"} />
+              <SummaryRow label="Paper" value={paper || "-"} />
+              <SummaryRow label="Finish" value={finish || "-"} />
+              <SummaryRow label="Sides" value={sides || "-"} />
+              <SummaryRow label="Quantity" value={quantity || "-"} />
+              {selectedRow?.id ? (
+                <SummaryRow label="Pricing Row" value="Matched" />
+              ) : (
+                <SummaryRow label="Pricing Row" value="No Match" />
+              )}
             </div>
 
             <div className="mt-6 border-t border-slate-200 pt-6">
@@ -518,6 +711,8 @@ export default function OrderPage() {
               disabled={
                 checkoutLoading ||
                 uploadingArtwork ||
+                pricingLoading ||
+                pricingTableLoading ||
                 livePrice === null ||
                 !uploadedArtwork?.publicUrl
               }
