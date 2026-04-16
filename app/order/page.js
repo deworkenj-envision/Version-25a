@@ -118,7 +118,13 @@ export default function OrderPage() {
   }, [rowsForProductSizePaperFinish, sides]);
 
   const availableQuantities = useMemo(() => {
-    return [...new Set(rowsForFullOptionsMinusQuantity.map((row) => Number(row.quantity)).filter((v) => !Number.isNaN(v)))].sort((a, b) => a - b);
+    return [
+      ...new Set(
+        rowsForFullOptionsMinusQuantity
+          .map((row) => Number(row.quantity))
+          .filter((v) => !Number.isNaN(v))
+      ),
+    ].sort((a, b) => a - b);
   }, [rowsForFullOptionsMinusQuantity]);
 
   const selectedRow = useMemo(() => {
@@ -133,6 +139,60 @@ export default function OrderPage() {
     );
   }, [pricingRows, productName, size, paper, finish, sides, quantity]);
 
+  const quantityRows = useMemo(() => {
+    return rowsForFullOptionsMinusQuantity
+      .map((row) => ({
+        ...row,
+        quantity: Number(row.quantity),
+        price: Number(row.price || 0),
+      }))
+      .sort((a, b) => a.quantity - b.quantity);
+  }, [rowsForFullOptionsMinusQuantity]);
+
+  const bestValueRow = useMemo(() => {
+    if (!quantityRows.length) return null;
+
+    let best = null;
+
+    for (const row of quantityRows) {
+      if (!row.quantity || !row.price) continue;
+
+      const unitPrice = row.price / row.quantity;
+
+      if (!best || unitPrice < best.unitPrice) {
+        best = {
+          ...row,
+          unitPrice,
+        };
+      }
+    }
+
+    return best;
+  }, [quantityRows]);
+
+  const currentUnitPrice = useMemo(() => {
+    const qty = Number(quantity);
+    const subtotal = Number(livePrice || 0);
+
+    if (!qty || !subtotal) return 0;
+    return subtotal / qty;
+  }, [quantity, livePrice]);
+
+  const savingsVsSmallestQty = useMemo(() => {
+    if (!quantityRows.length || !livePrice || !quantity) return null;
+
+    const smallest = quantityRows[0];
+    if (!smallest?.quantity || !smallest?.price) return null;
+
+    const smallestUnit = Number(smallest.price) / Number(smallest.quantity);
+    const currentUnit = Number(livePrice) / Number(quantity);
+
+    const savings = smallestUnit - currentUnit;
+    if (savings <= 0) return null;
+
+    return savings;
+  }, [quantityRows, livePrice, quantity]);
+
   const productDescription = useMemo(() => {
     const descriptions = {
       "Business Cards":
@@ -145,7 +205,10 @@ export default function OrderPage() {
         "Durable indoor and outdoor banners with vibrant full-color printing.",
     };
 
-    return descriptions[productName] || "Choose your print options and get a live price instantly.";
+    return (
+      descriptions[productName] ||
+      "Choose your print options and get a live price instantly."
+    );
   }, [productName]);
 
   const subtotal = Number(livePrice || 0);
@@ -458,32 +521,62 @@ export default function OrderPage() {
 
             <div className="rounded-3xl bg-white p-6 text-slate-900 shadow-2xl">
               <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-blue-700">
-                Live Estimate
+                Premium Live Estimate
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <div className="text-sm text-slate-500">Selected Product</div>
-                <div className="mt-1 text-2xl font-bold">
-                  {productName || "Loading..."}
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-sm text-slate-500">Selected Product</div>
+                    <div className="mt-1 text-2xl font-bold">
+                      {productName || "Loading..."}
+                    </div>
+                    <p className="mt-2 text-sm text-slate-600">
+                      {productDescription}
+                    </p>
+                  </div>
+
+                  {bestValueRow ? (
+                    <div className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                      Best value: {bestValueRow.quantity}
+                    </div>
+                  ) : null}
                 </div>
-                <p className="mt-2 text-sm text-slate-600">{productDescription}</p>
 
                 <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-xl bg-white p-3">
-                    <div className="text-slate-500">Subtotal</div>
-                    <div className="mt-1 font-semibold">{formatMoney(subtotal)}</div>
-                  </div>
-                  <div className="rounded-xl bg-white p-3">
-                    <div className="text-slate-500">Shipping</div>
-                    <div className="mt-1 font-semibold">{formatMoney(shipping)}</div>
-                  </div>
-                  <div className="col-span-2 rounded-xl bg-blue-700 p-4 text-white">
+                  <MetricCard
+                    label="Print Price"
+                    value={pricingLoading ? "Loading..." : formatMoney(subtotal)}
+                  />
+                  <MetricCard
+                    label="Per Piece"
+                    value={
+                      pricingLoading
+                        ? "Loading..."
+                        : currentUnitPrice > 0
+                        ? formatMoney(currentUnitPrice)
+                        : "-"
+                    }
+                  />
+                  <MetricCard label="Shipping" value={formatMoney(shipping)} />
+                  <MetricCard
+                    label="Selected Qty"
+                    value={quantity ? String(quantity) : "-"}
+                  />
+                  <div className="col-span-2 rounded-2xl bg-blue-700 p-5 text-white shadow-lg">
                     <div className="text-blue-100">Estimated Total</div>
                     <div className="mt-1 text-3xl font-bold">
                       {pricingLoading || pricingTableLoading
                         ? "Loading..."
                         : formatMoney(total)}
                     </div>
+
+                    {savingsVsSmallestQty ? (
+                      <div className="mt-2 text-sm text-blue-100">
+                        Better unit price than the smallest quantity by{" "}
+                        {formatMoney(savingsVsSmallestQty)} each.
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
@@ -504,8 +597,8 @@ export default function OrderPage() {
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-slate-900">Build Your Order</h2>
               <p className="mt-2 text-slate-600">
-                These dropdowns now come from your live pricing table, so when you
-                add new options in Supabase they can appear here automatically.
+                These options come from your live pricing table, and the estimator
+                now highlights quantity value more clearly.
               </p>
             </div>
 
@@ -586,18 +679,72 @@ export default function OrderPage() {
               </Field>
 
               <Field label="Quantity">
-                <select
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  className="input"
-                  disabled={pricingTableLoading || availableQuantities.length === 0}
-                >
-                  {availableQuantities.map((option) => (
-                    <option key={option} value={String(option)}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                <div className="space-y-3">
+                  <select
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    className="input"
+                    disabled={pricingTableLoading || availableQuantities.length === 0}
+                  >
+                    {availableQuantities.map((option) => (
+                      <option key={option} value={String(option)}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+
+                  {availableQuantities.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {availableQuantities.slice(0, 6).map((option) => {
+                        const optionRow = quantityRows.find(
+                          (row) => Number(row.quantity) === Number(option)
+                        );
+                        const isSelected =
+                          Number(quantity) === Number(option);
+                        const isBestValue =
+                          bestValueRow &&
+                          Number(bestValueRow.quantity) === Number(option);
+
+                        return (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => setQuantity(String(option))}
+                            className={`rounded-2xl border px-3 py-3 text-left transition ${
+                              isSelected
+                                ? "border-blue-700 bg-blue-50 shadow-sm"
+                                : "border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-sm font-semibold text-slate-900">
+                                {option}
+                              </span>
+                              {isBestValue ? (
+                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
+                                  Best
+                                </span>
+                              ) : null}
+                            </div>
+
+                            <div className="mt-1 text-xs text-slate-500">
+                              {optionRow ? formatMoney(optionRow.price) : "-"}
+                            </div>
+
+                            <div className="mt-1 text-xs text-slate-400">
+                              {optionRow?.quantity && optionRow?.price
+                                ? `${formatMoney(
+                                    Number(optionRow.price) /
+                                      Number(optionRow.quantity)
+                                  )} each`
+                                : ""}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
               </Field>
             </div>
 
@@ -672,7 +819,18 @@ export default function OrderPage() {
           </div>
 
           <aside className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200">
-            <h3 className="text-2xl font-bold text-slate-900">Order Summary</h3>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-2xl font-bold text-slate-900">Order Summary</h3>
+              {selectedRow?.id ? (
+                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  Live Match
+                </span>
+              ) : (
+                <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                  No Match
+                </span>
+              )}
+            </div>
 
             <div className="mt-6 space-y-4">
               <SummaryRow label="Product" value={productName || "-"} />
@@ -681,12 +839,26 @@ export default function OrderPage() {
               <SummaryRow label="Finish" value={finish || "-"} />
               <SummaryRow label="Sides" value={sides || "-"} />
               <SummaryRow label="Quantity" value={quantity || "-"} />
-              {selectedRow?.id ? (
-                <SummaryRow label="Pricing Row" value="Matched" />
-              ) : (
-                <SummaryRow label="Pricing Row" value="No Match" />
-              )}
+              <SummaryRow
+                label="Per Piece"
+                value={currentUnitPrice > 0 ? formatMoney(currentUnitPrice) : "-"}
+              />
             </div>
+
+            {bestValueRow ? (
+              <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <div className="text-sm font-semibold text-amber-800">
+                  Best Value Quantity
+                </div>
+                <div className="mt-1 text-2xl font-bold text-slate-900">
+                  {bestValueRow.quantity}
+                </div>
+                <div className="mt-1 text-sm text-slate-600">
+                  {formatMoney(bestValueRow.price)} total ·{" "}
+                  {formatMoney(bestValueRow.unitPrice)} each
+                </div>
+              </div>
+            ) : null}
 
             <div className="mt-6 border-t border-slate-200 pt-6">
               <div className="flex items-center justify-between text-sm text-slate-600">
@@ -770,6 +942,15 @@ function SummaryRow({ label, value }) {
     <div className="flex items-start justify-between gap-4">
       <span className="text-sm text-slate-500">{label}</span>
       <span className="text-right text-sm font-medium text-slate-900">{value}</span>
+    </div>
+  );
+}
+
+function MetricCard({ label, value }) {
+  return (
+    <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+      <div className="text-slate-500">{label}</div>
+      <div className="mt-1 font-semibold text-slate-900">{value}</div>
     </div>
   );
 }
