@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const featuredProducts = [
@@ -74,10 +75,18 @@ export default function HomePage() {
     <main className="min-h-screen bg-white text-slate-900">
       <section className="relative overflow-hidden bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.12),transparent_24%)]" />
+
         <div className="relative mx-auto grid max-w-7xl gap-10 px-6 py-16 lg:grid-cols-2 lg:px-8 lg:py-24">
           <div className="flex flex-col justify-center">
-            <div className="mb-4 inline-flex w-fit rounded-full border border-white/20 bg-white/10 px-4 py-1 text-sm font-semibold backdrop-blur">
-              EnVision Direct
+            <div className="mb-6">
+              <Image
+                src="/images/logo-hero.png"
+                alt="EnVision Direct"
+                width={320}
+                height={110}
+                className="h-auto w-auto max-w-[260px] sm:max-w-[320px]"
+                priority
+              />
             </div>
 
             <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
@@ -118,33 +127,16 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center">
-            <div className="grid w-full grid-cols-2 gap-4">
-              <div className="rounded-3xl bg-white p-4 shadow-2xl">
-                <div className="mb-3 rounded-2xl bg-blue-50 p-3 text-xs font-bold uppercase tracking-wide text-blue-700">
-                  Postcards
-                </div>
-                <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-sky-100 to-blue-200" />
-              </div>
-
-              <div className="rounded-3xl bg-white p-4 shadow-2xl">
-                <div className="mb-3 rounded-2xl bg-blue-50 p-3 text-xs font-bold uppercase tracking-wide text-blue-700">
-                  Business Cards
-                </div>
-                <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-200" />
-              </div>
-
-              <div className="rounded-3xl bg-white p-4 shadow-2xl">
-                <div className="mb-3 rounded-2xl bg-blue-50 p-3 text-xs font-bold uppercase tracking-wide text-blue-700">
-                  Flyers
-                </div>
-                <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-cyan-100 to-sky-200" />
-              </div>
-
-              <div className="rounded-3xl bg-white p-4 shadow-2xl">
-                <div className="mb-3 rounded-2xl bg-blue-50 p-3 text-xs font-bold uppercase tracking-wide text-blue-700">
-                  Banners
-                </div>
-                <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-slate-100 to-blue-100" />
+            <div className="w-full rounded-[2rem] bg-white/10 p-3 shadow-2xl backdrop-blur-sm">
+              <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-2xl">
+                <Image
+                  src="/images/logo-hero.png"
+                  alt="Featured print products"
+                  width={1200}
+                  height={900}
+                  className="h-auto w-full object-cover"
+                  priority
+                />
               </div>
             </div>
           </div>
@@ -177,7 +169,14 @@ export default function HomePage() {
               href={product.href}
               className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
             >
-              <div className="mb-5 h-40 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50" />
+              <div className="mb-5 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+                <div className="flex aspect-[4/3] items-center justify-center rounded-2xl border border-dashed border-blue-200 bg-white">
+                  <span className="text-center text-sm font-bold text-blue-700">
+                    {product.name}
+                  </span>
+                </div>
+              </div>
+
               <h3 className="text-xl font-bold text-slate-900">{product.name}</h3>
               <p className="mt-3 text-sm leading-7 text-slate-600">
                 {product.description}
