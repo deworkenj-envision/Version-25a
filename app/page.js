@@ -1,318 +1,46 @@
 import Image from "next/image";
-import Link from "next/link";
 
-const featuredProducts = [
-  {
-    name: "Business Cards",
-    description:
-      "Professional cards with premium stocks, sharp detail, and fast turnaround.",
-    href: "/order",
-  },
-  {
-    name: "Flyers",
-    description:
-      "High-impact marketing pieces for promotions, events, menus, and handouts.",
-    href: "/order",
-  },
-  {
-    name: "Postcards",
-    description:
-      "Perfect for direct mail, announcements, promotions, and premium marketing.",
-    href: "/order",
-  },
-  {
-    name: "Banners",
-    description: "Durable full-color banners for indoor and outdoor display.",
-    href: "/order",
-  },
-];
-
-const benefits = [
-  {
-    title: "Top Quality Printing",
-    text: "Clean color, sharp detail, and premium print presentation for every order.",
-  },
-  {
-    title: "Fast Turnaround",
-    text: "Simple ordering and artwork upload so your job moves quickly.",
-  },
-  {
-    title: "Easy Online Ordering",
-    text: "Choose your options, upload your file, and check out in minutes.",
-  },
-  {
-    title: "Order Tracking",
-    text: "Customers can track order progress and shipment updates online.",
-  },
-];
-
-const steps = [
-  {
-    number: "01",
-    title: "Choose Your Product",
-    text: "Select from business cards, flyers, postcards, banners, and more.",
-  },
-  {
-    number: "02",
-    title: "Upload Artwork",
-    text: "Send your print-ready design file directly with your order.",
-  },
-  {
-    number: "03",
-    title: "Checkout Securely",
-    text: "Review your live pricing and complete payment with confidence.",
-  },
-  {
-    number: "04",
-    title: "Track Your Order",
-    text: "Follow your order status from production through delivery.",
-  },
-];
-
-export default function HomePage() {
+export default function Home() {
   return (
-    <main className="min-h-screen bg-white text-slate-900">
-      <section className="px-5 pt-5 lg:px-8 lg:pt-8">
-        <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white shadow-2xl">
-          <div className="mx-auto grid max-w-7xl gap-10 px-8 py-10 lg:grid-cols-[0.92fr_1.08fr] lg:px-10 lg:py-12">
-            <div className="flex flex-col justify-center">
-              <div className="mb-8">
-                <Image
-                  src="/images/logo-hero.png"
-                  alt="EnVision Direct"
-                  width={360}
-                  height={120}
-                  className="h-auto w-auto max-w-[280px] sm:max-w-[340px]"
-                  priority
-                />
-              </div>
+    <main>
+      {/* HERO SECTION */}
+      <section className="w-full bg-blue-600 text-white py-20 px-6">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 items-center gap-20">
+          
+          {/* LEFT SIDE TEXT */}
+          <div className="space-y-6">
+            <h1 className="text-5xl md:text-6xl font-bold leading-tight">
+              <span className="block">Top Quality Printing.</span>
+              <span className="block">Fast Turnaround.</span>
+              <span className="block">The Best Prices.</span>
+            </h1>
 
-              <h1 className="max-w-3xl text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl lg:text-[4.15rem]">
-                <span className="block">Top Quality</span>
-                <span className="block">Printing.</span>
-                <span className="block">Fast Turnaround.</span>
-                <span className="block">The Best Prices.</span>
-              </h1>
-
-              <p className="mt-10 max-w-xl text-lg leading-8 text-blue-50">
-                Professional online printing with live pricing, easy artwork
-                upload, secure checkout, and order tracking built in.
+            {/* ORDER TRACK */}
+            <div className="pt-10 text-center md:text-left">
+              <p className="text-xl font-semibold mb-4">
+                Already placed an order?
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-4">
-                <Link
-                  href="/order"
-                  className="rounded-2xl bg-white px-6 py-4 text-base font-bold text-blue-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-50"
-                >
-                  Start Your Order
-                </Link>
-
-                <Link
-                  href="/track"
-                  className="rounded-2xl border border-white/30 bg-white/10 px-6 py-4 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
-                >
-                  Track Your Order
-                </Link>
-              </div>
-
-              <div className="mt-10 flex flex-wrap gap-3 text-sm font-medium">
-                <span className="rounded-full bg-white/15 px-4 py-2">
-                  Business Cards
-                </span>
-                <span className="rounded-full bg-white/15 px-4 py-2">Flyers</span>
-                <span className="rounded-full bg-white/15 px-4 py-2">
-                  Postcards
-                </span>
-                <span className="rounded-full bg-white/15 px-4 py-2">
-                  Banners
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <div className="w-full rounded-[2rem] bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
-                <div className="overflow-hidden rounded-[1.6rem] bg-white">
-                  <div className="relative aspect-[15/10] w-full bg-white">
-                    <Image
-                      src="/images/hero_desktop.webp"
-                      alt="Print product collage"
-                      fill
-                      priority
-                      sizes="(min-width: 1024px) 52vw, 100vw"
-                      className="object-contain"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-        <div className="mb-10 flex items-end justify-between gap-6">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-700">
-              Featured Products
-            </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              Print products built for real business needs
-            </h2>
-          </div>
-
-          <Link
-            href="/order"
-            className="hidden rounded-2xl bg-blue-700 px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-blue-800 md:inline-flex"
-          >
-            View Pricing
-          </Link>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          {featuredProducts.map((product) => (
-            <Link
-              key={product.name}
-              href={product.href}
-              className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
-            >
-              <div className="mb-5 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-                <div className="flex aspect-[4/3] items-center justify-center rounded-2xl border border-dashed border-blue-200 bg-white">
-                  <span className="text-center text-sm font-bold text-blue-700">
-                    {product.name}
-                  </span>
-                </div>
-              </div>
-
-              <h3 className="text-xl font-bold text-slate-900">{product.name}</h3>
-              <p className="mt-3 text-sm leading-7 text-slate-600">
-                {product.description}
-              </p>
-              <div className="mt-5 text-sm font-bold text-blue-700">
-                Start order →
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-slate-50">
-        <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-700">
-              Why Choose Us
-            </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              A better online print ordering experience
-            </h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
-              EnVision Direct combines clean ordering, live pricing, artwork
-              upload, and tracking into one simple customer experience.
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-            {benefits.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
-              >
-                <div className="mb-4 h-12 w-12 rounded-2xl bg-blue-100" />
-                <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  {item.text}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-700">
-              Simple Process
-            </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              Order in a few easy steps
-            </h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
-              Built for customers who want a smooth online print experience
-              without confusion.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                href="/order"
-                className="rounded-2xl bg-blue-700 px-6 py-4 text-base font-bold text-white shadow-lg transition hover:bg-blue-800"
-              >
-                Place an Order
-              </Link>
-              <Link
-                href="/track"
-                className="rounded-2xl border border-slate-300 px-6 py-4 text-base font-bold text-slate-900 transition hover:bg-slate-50"
-              >
-                Already Placed an Order?
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            {steps.map((step) => (
-              <div
-                key={step.number}
-                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-700 text-lg font-extrabold text-white">
-                    {step.number}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900">
-                      {step.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-7 text-slate-600">
-                      {step.text}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-6 pb-16 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 px-8 py-12 text-white shadow-2xl">
-          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-100">
-                Ready to Order?
-              </p>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-                Start your print order today
-              </h2>
-              <p className="mt-4 max-w-2xl text-lg leading-8 text-blue-50">
-                Get live pricing, upload your artwork, and complete checkout in a
-                clean, professional ordering flow.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href="/order"
-                className="rounded-2xl bg-white px-6 py-4 text-base font-bold text-blue-700 shadow-lg transition hover:bg-blue-50"
-              >
-                Start Your Order
-              </Link>
-              <Link
-                href="/track"
-                className="rounded-2xl border border-white/30 bg-white/10 px-6 py-4 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
-              >
+              <button className="bg-white text-blue-600 font-semibold px-8 py-4 rounded-xl shadow hover:bg-gray-100 transition text-lg">
                 Track Your Order
-              </Link>
+              </button>
             </div>
           </div>
+
+          {/* RIGHT SIDE COLLAGE */}
+          <div className="flex justify-center md:justify-end">
+            <div className="w-full max-w-xl">
+              <Image
+                src="/images/collage.webp"
+                alt="Print Products"
+                width={700}
+                height={700}
+                className="rounded-2xl shadow-2xl object-cover w-full h-auto"
+                priority
+              />
+            </div>
+          </div>
+
         </div>
       </section>
     </main>
