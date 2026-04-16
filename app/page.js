@@ -22,8 +22,7 @@ const featuredProducts = [
   },
   {
     name: "Banners",
-    description:
-      "Durable full-color banners for indoor and outdoor display.",
+    description: "Durable full-color banners for indoor and outdoor display.",
     href: "/order",
   },
 ];
@@ -75,53 +74,71 @@ export default function HomePage() {
     <main className="min-h-screen bg-white text-slate-900">
       <section className="px-5 pt-5 lg:px-8 lg:pt-8">
         <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white shadow-2xl">
-          <div className="mx-auto grid max-w-7xl gap-10 px-10 py-10 lg:grid-cols-[1fr_1.08fr] lg:px-10 lg:py-10">
+          <div className="mx-auto grid max-w-7xl gap-10 px-8 py-10 lg:grid-cols-[0.92fr_1.08fr] lg:px-10 lg:py-12">
             <div className="flex flex-col justify-center">
-              <h1 className="max-w-3xl text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl lg:text-[4.2rem]">
-                Top Quality Printing.
-                <br />
-                Fast Turnaround.
-                <br />
-                The Best Prices.
+              <div className="mb-8">
+                <Image
+                  src="/images/logo-hero.png"
+                  alt="EnVision Direct"
+                  width={360}
+                  height={120}
+                  className="h-auto w-auto max-w-[280px] sm:max-w-[340px]"
+                  priority
+                />
+              </div>
+
+              <h1 className="max-w-3xl text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl lg:text-[4.15rem]">
+                <span className="block">Top Quality</span>
+                <span className="block">Printing.</span>
+                <span className="block">Fast Turnaround.</span>
+                <span className="block">The Best Prices.</span>
               </h1>
 
-              <p className="mt-12 text-[1.05rem] font-semibold text-white">
-                Already placed an order? Track it here:
+              <p className="mt-10 max-w-xl text-lg leading-8 text-blue-50">
+                Professional online printing with live pricing, easy artwork
+                upload, secure checkout, and order tracking built in.
               </p>
 
-              <div className="mt-5">
+              <div className="mt-8 flex flex-wrap gap-4">
+                <Link
+                  href="/order"
+                  className="rounded-2xl bg-white px-6 py-4 text-base font-bold text-blue-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-50"
+                >
+                  Start Your Order
+                </Link>
+
                 <Link
                   href="/track"
-                  className="inline-flex rounded-full bg-black px-9 py-4 text-lg font-bold text-white shadow-lg transition hover:scale-[1.02]"
+                  className="rounded-2xl border border-white/30 bg-white/10 px-6 py-4 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
                 >
                   Track Your Order
                 </Link>
               </div>
+
+              <div className="mt-10 flex flex-wrap gap-3 text-sm font-medium">
+                <span className="rounded-full bg-white/15 px-4 py-2">
+                  Business Cards
+                </span>
+                <span className="rounded-full bg-white/15 px-4 py-2">Flyers</span>
+                <span className="rounded-full bg-white/15 px-4 py-2">
+                  Postcards
+                </span>
+                <span className="rounded-full bg-white/15 px-4 py-2">
+                  Banners
+                </span>
+              </div>
             </div>
 
-            <div className="flex flex-col justify-center gap-8">
-              <div className="rounded-[2rem] bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
-                <div className="overflow-hidden rounded-[1.6rem]">
-                  <Image
-                    src="/images/logo-hero.png"
-                    alt="EnVision Direct"
-                    width={1200}
-                    height={420}
-                    className="h-auto w-full"
-                    priority
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-[2rem] bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
+            <div className="flex items-center">
+              <div className="w-full rounded-[2rem] bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
                 <div className="overflow-hidden rounded-[1.6rem] bg-white">
-                  <div className="relative aspect-[16/10] w-full bg-white">
+                  <div className="relative aspect-[15/10] w-full bg-white">
                     <Image
                       src="/images/hero_desktop.webp"
                       alt="Print product collage"
                       fill
                       priority
-                      sizes="(min-width: 1024px) 50vw, 100vw"
+                      sizes="(min-width: 1024px) 52vw, 100vw"
                       className="object-contain"
                     />
                   </div>
