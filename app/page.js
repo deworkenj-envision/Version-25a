@@ -73,70 +73,59 @@ const steps = [
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <section className="relative overflow-hidden bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.12),transparent_24%)]" />
+      <section className="px-5 pt-5 lg:px-8 lg:pt-8">
+        <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white shadow-2xl">
+          <div className="mx-auto grid max-w-7xl gap-10 px-10 py-10 lg:grid-cols-[1fr_1.08fr] lg:px-10 lg:py-10">
+            <div className="flex flex-col justify-center">
+              <h1 className="max-w-3xl text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl lg:text-[4.2rem]">
+                Top Quality Printing.
+                <br />
+                Fast Turnaround.
+                <br />
+                The Best Prices.
+              </h1>
 
-        <div className="relative mx-auto grid max-w-7xl gap-10 px-6 py-16 lg:grid-cols-2 lg:px-8 lg:py-24">
-          <div className="flex flex-col justify-center">
-            <div className="mb-6">
-              <Image
-                src="/images/logo-hero.png"
-                alt="EnVision Direct"
-                width={320}
-                height={110}
-                className="h-auto w-auto max-w-[260px] sm:max-w-[320px]"
-                priority
-              />
+              <p className="mt-12 text-[1.05rem] font-semibold text-white">
+                Already placed an order? Track it here:
+              </p>
+
+              <div className="mt-5">
+                <Link
+                  href="/track"
+                  className="inline-flex rounded-full bg-black px-9 py-4 text-lg font-bold text-white shadow-lg transition hover:scale-[1.02]"
+                >
+                  Track Your Order
+                </Link>
+              </div>
             </div>
 
-            <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-              Top Quality Printing.
-              <br />
-              Fast Turnaround.
-              <br />
-              The Best Prices.
-            </h1>
+            <div className="flex flex-col justify-center gap-8">
+              <div className="rounded-[2rem] bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
+                <div className="overflow-hidden rounded-[1.6rem]">
+                  <Image
+                    src="/images/logo-hero.png"
+                    alt="EnVision Direct"
+                    width={1200}
+                    height={420}
+                    className="h-auto w-full"
+                    priority
+                  />
+                </div>
+              </div>
 
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-blue-50">
-              Professional online printing with live pricing, easy artwork upload,
-              secure checkout, and order tracking built in.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                href="/order"
-                className="rounded-2xl bg-white px-6 py-4 text-base font-bold text-blue-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-50"
-              >
-                Start Your Order
-              </Link>
-
-              <Link
-                href="/track"
-                className="rounded-2xl border border-white/30 bg-white/10 px-6 py-4 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
-              >
-                Track Your Order
-              </Link>
-            </div>
-
-            <div className="mt-10 flex flex-wrap gap-3 text-sm font-medium">
-              <span className="rounded-full bg-white/15 px-4 py-2">Business Cards</span>
-              <span className="rounded-full bg-white/15 px-4 py-2">Flyers</span>
-              <span className="rounded-full bg-white/15 px-4 py-2">Postcards</span>
-              <span className="rounded-full bg-white/15 px-4 py-2">Banners</span>
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <div className="w-full rounded-[2rem] bg-white/10 p-3 shadow-2xl backdrop-blur-sm">
-              <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-2xl">
-                <Image
-                  src="/images/logo-hero.png"
-                  alt="Featured print products"
-                  width={1200}
-                  height={900}
-                  className="h-auto w-full object-cover"
-                  priority
-                />
+              <div className="rounded-[2rem] bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
+                <div className="overflow-hidden rounded-[1.6rem] bg-white">
+                  <div className="relative aspect-[16/10] w-full bg-white">
+                    <Image
+                      src="/images/hero_desktop.webp"
+                      alt="Print product collage"
+                      fill
+                      priority
+                      sizes="(min-width: 1024px) 50vw, 100vw"
+                      className="object-contain"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
