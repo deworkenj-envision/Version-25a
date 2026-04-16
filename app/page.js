@@ -69,43 +69,32 @@ const steps = [
   },
 ];
 
-const collagePanels = [
-  { title: "Postcards", position: "left top" },
-  { title: "Business Cards", position: "right top" },
-  { title: "Flyers", position: "left bottom" },
-  { title: "Banners", position: "right bottom" },
-];
-
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
       <section className="px-5 pt-5 lg:px-8 lg:pt-8">
         <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white shadow-2xl">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-8 py-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-24 lg:px-10 lg:py-12">
-            <div className="flex flex-col justify-center">
-              <div className="mb-8">
-                <div className="inline-block overflow-hidden">
-                  <Image
-                    src="/images/logo-hero.png"
-                    alt="EnVision Direct"
-                    width={360}
-                    height={120}
-                    className="h-auto w-auto max-w-[280px] scale-[1.06] sm:max-w-[340px]"
-                    priority
-                  />
-                </div>
+          <div className="mx-auto grid max-w-7xl items-center gap-12 px-8 py-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-20 lg:px-10 lg:py-12 xl:gap-24">
+            {/* LEFT SIDE IMAGE */}
+            <div className="flex items-center justify-center lg:justify-start">
+              <div className="w-full max-w-[760px]">
+                <Image
+                  src="/images/hero-collage-logo.png"
+                  alt="EnVision Direct print products collage"
+                  width={1024}
+                  height={1536}
+                  priority
+                  className="h-auto w-full object-contain"
+                />
               </div>
+            </div>
 
-              <h1 className="text-[4.25rem] font-extrabold leading-[0.95] tracking-tight">
-                <span className="mt-0 block whitespace-nowrap">
-                  Top Quality Printing.
-                </span>
-                <span className="mt-4 block whitespace-nowrap">
-                  Fast Turnaround.
-                </span>
-                <span className="mt-4 block whitespace-nowrap">
-                  The Best Prices.
-                </span>
+            {/* RIGHT SIDE TEXT */}
+            <div className="flex flex-col justify-center">
+              <h1 className="text-[4rem] font-extrabold leading-[0.95] tracking-tight xl:text-[4.35rem]">
+                <span className="block whitespace-nowrap">Top Quality Printing.</span>
+                <span className="mt-4 block whitespace-nowrap">Fast Turnaround.</span>
+                <span className="mt-4 block whitespace-nowrap">The Best Prices.</span>
               </h1>
 
               <p className="mt-10 max-w-xl text-lg leading-8 text-blue-50">
@@ -140,29 +129,6 @@ export default function HomePage() {
                 <span className="rounded-full bg-white/15 px-4 py-2">
                   Banners
                 </span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center lg:justify-end">
-              <div className="w-full max-w-[520px] space-y-4">
-                {collagePanels.map((panel) => (
-                  <div
-                    key={panel.title}
-                    className="relative overflow-hidden rounded-[1.6rem] shadow-2xl"
-                  >
-                    <div
-                      className="relative aspect-[16/7] w-full bg-cover bg-no-repeat"
-                      style={{
-                        backgroundImage: "url('/images/hero_desktop.webp')",
-                        backgroundSize: "200% 200%",
-                        backgroundPosition: panel.position,
-                      }}
-                    />
-                    <div className="pointer-events-none absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-sm font-bold text-slate-900 shadow">
-                      {panel.title}
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
