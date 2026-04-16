@@ -75,10 +75,10 @@ export default function HomePage() {
       <section className="px-5 pt-5 lg:px-8 lg:pt-8">
         <div className="mx-auto max-w-[1680px]">
           <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white shadow-2xl">
-            <div className="mx-auto grid max-w-7xl items-center gap-12 px-8 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:px-12 lg:py-14 xl:gap-20">
+            <div className="mx-auto grid max-w-7xl items-center gap-12 px-8 py-10 lg:grid-cols-[1.25fr_0.75fr] lg:gap-16 lg:px-12 lg:py-14 xl:gap-20">
               {/* LEFT SIDE IMAGE */}
               <div className="flex items-center justify-center lg:justify-start">
-                <div className="w-full max-w-[860px]">
+                <div className="w-full max-w-[1000px]">
                   <Image
                     src="/images/hero-collage-logo.png"
                     alt="EnVision Direct print products collage"
