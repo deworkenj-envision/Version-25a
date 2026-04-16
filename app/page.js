@@ -73,62 +73,64 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
       <section className="px-5 pt-5 lg:px-8 lg:pt-8">
-        <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white shadow-2xl">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-8 py-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-20 lg:px-10 lg:py-12 xl:gap-24">
-            {/* LEFT SIDE IMAGE */}
-            <div className="flex items-center justify-center lg:justify-start">
-              <div className="w-full max-w-[760px]">
-                <Image
-                  src="/images/hero-collage-logo.png"
-                  alt="EnVision Direct print products collage"
-                  width={1024}
-                  height={1536}
-                  priority
-                  className="h-auto w-full object-contain"
-                />
-              </div>
-            </div>
-
-            {/* RIGHT SIDE TEXT */}
-            <div className="flex flex-col justify-center">
-              <h1 className="text-[4rem] font-extrabold leading-[0.95] tracking-tight xl:text-[4.35rem]">
-                <span className="block whitespace-nowrap">Top Quality Printing.</span>
-                <span className="mt-4 block whitespace-nowrap">Fast Turnaround.</span>
-                <span className="mt-4 block whitespace-nowrap">The Best Prices.</span>
-              </h1>
-
-              <p className="mt-10 max-w-xl text-lg leading-8 text-blue-50">
-                Professional online printing with live pricing, easy artwork
-                upload, secure checkout, and order tracking built in.
-              </p>
-
-              <div className="mt-8 flex flex-wrap gap-4">
-                <Link
-                  href="/order"
-                  className="rounded-2xl bg-white px-6 py-4 text-base font-bold text-blue-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-50"
-                >
-                  Start Your Order
-                </Link>
-
-                <Link
-                  href="/track"
-                  className="rounded-2xl border border-white/30 bg-white/10 px-6 py-4 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
-                >
-                  Track Your Order
-                </Link>
+        <div className="mx-auto max-w-[1680px]">
+          <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white shadow-2xl">
+            <div className="mx-auto grid max-w-7xl items-center gap-12 px-8 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:px-12 lg:py-14 xl:gap-20">
+              {/* LEFT SIDE IMAGE */}
+              <div className="flex items-center justify-center lg:justify-start">
+                <div className="w-full max-w-[860px]">
+                  <Image
+                    src="/images/hero-collage-logo.png"
+                    alt="EnVision Direct print products collage"
+                    width={1024}
+                    height={1536}
+                    priority
+                    className="h-auto w-full object-contain"
+                  />
+                </div>
               </div>
 
-              <div className="mt-10 flex flex-wrap gap-3 text-sm font-medium">
-                <span className="rounded-full bg-white/15 px-4 py-2">
-                  Business Cards
-                </span>
-                <span className="rounded-full bg-white/15 px-4 py-2">Flyers</span>
-                <span className="rounded-full bg-white/15 px-4 py-2">
-                  Postcards
-                </span>
-                <span className="rounded-full bg-white/15 px-4 py-2">
-                  Banners
-                </span>
+              {/* RIGHT SIDE TEXT */}
+              <div className="flex flex-col justify-center">
+                <h1 className="text-[3.75rem] font-extrabold leading-[0.95] tracking-tight xl:text-[4.2rem]">
+                  <span className="block whitespace-nowrap">Top Quality Printing.</span>
+                  <span className="mt-4 block whitespace-nowrap">Fast Turnaround.</span>
+                  <span className="mt-4 block whitespace-nowrap">The Best Prices.</span>
+                </h1>
+
+                <p className="mt-10 max-w-xl text-lg leading-8 text-blue-50">
+                  Professional online printing with live pricing, easy artwork
+                  upload, secure checkout, and order tracking built in.
+                </p>
+
+                <div className="mt-8 flex flex-wrap gap-4">
+                  <Link
+                    href="/order"
+                    className="rounded-2xl bg-white px-6 py-4 text-base font-bold text-blue-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-50"
+                  >
+                    Start Your Order
+                  </Link>
+
+                  <Link
+                    href="/track"
+                    className="rounded-2xl border border-white/30 bg-white/10 px-6 py-4 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
+                  >
+                    Track Your Order
+                  </Link>
+                </div>
+
+                <div className="mt-10 flex flex-wrap gap-3 text-sm font-medium">
+                  <span className="rounded-full bg-white/15 px-4 py-2">
+                    Business Cards
+                  </span>
+                  <span className="rounded-full bg-white/15 px-4 py-2">Flyers</span>
+                  <span className="rounded-full bg-white/15 px-4 py-2">
+                    Postcards
+                  </span>
+                  <span className="rounded-full bg-white/15 px-4 py-2">
+                    Banners
+                  </span>
+                </div>
               </div>
             </div>
           </div>
