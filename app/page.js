@@ -1,373 +1,311 @@
-"use client";
-
 import Link from "next/link";
-import { useMemo, useState } from "react";
 
-const PRODUCT_OPTIONS = {
-  "Business Cards": {
-    sizes: ["2 x 3.5"],
-    papers: ["Standard", "Premium", "Linen"],
-    finishes: ["Matte", "Gloss", "Soft Touch"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [100, 250, 500, 1000],
+const featuredProducts = [
+  {
+    name: "Business Cards",
+    description:
+      "Professional cards with premium stocks, sharp detail, and fast turnaround.",
+    href: "/order",
   },
-  Postcards: {
-    sizes: ["4 x 6", "5 x 7", "6 x 9"],
-    papers: ["Standard", "Premium"],
-    finishes: ["Matte", "Gloss", "UV"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [100, 250, 500, 1000],
+  {
+    name: "Flyers",
+    description:
+      "High-impact marketing pieces for promotions, events, menus, and handouts.",
+    href: "/order",
   },
-  Flyers: {
-    sizes: ["4 x 6", "5.5 x 8.5", "8.5 x 11"],
-    papers: ["Standard", "Premium"],
-    finishes: ["Matte", "Gloss"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [100, 250, 500, 1000, 2500],
+  {
+    name: "Postcards",
+    description:
+      "Perfect for direct mail, announcements, promotions, and premium marketing.",
+    href: "/order",
   },
-  Brochures: {
-    sizes: ["8.5 x 11", "8.5 x 14", "11 x 17"],
-    papers: ["Standard", "Premium"],
-    finishes: ["Matte", "Gloss"],
-    sides: ["Front and Back"],
-    quantities: [100, 250, 500, 1000],
+  {
+    name: "Banners",
+    description:
+      "Durable full-color banners for indoor and outdoor display.",
+    href: "/order",
   },
-  Banners: {
-    sizes: ["2 x 4 ft", "3 x 6 ft", "4 x 8 ft"],
-    papers: ["13 oz Vinyl", "15 oz Vinyl", "Mesh"],
-    finishes: ["Standard"],
-    sides: ["Front Only"],
-    quantities: [1, 2, 5, 10],
-  },
-  "Yard Signs": {
-    sizes: ['18" x 24"', '24" x 36"'],
-    papers: ["4mm Coroplast", "6mm Coroplast"],
-    finishes: ["Standard"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [1, 5, 10, 25, 50],
-  },
-  Menus: {
-    sizes: ["8.5 x 11", "8.5 x 14", "11 x 17"],
-    papers: ["Standard", "Premium", "Laminated"],
-    finishes: ["Matte", "Gloss"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [50, 100, 250, 500],
-  },
-  "Rack Cards": {
-    sizes: ["4 x 9"],
-    papers: ["Standard", "Premium"],
-    finishes: ["Matte", "Gloss", "UV"],
-    sides: ["Front Only", "Front and Back"],
-    quantities: [100, 250, 500, 1000],
-  },
-};
+];
 
-function estimatePrice(product, quantity) {
-  const qty = Number(quantity || 0);
+const benefits = [
+  {
+    title: "Top Quality Printing",
+    text: "Clean color, sharp detail, and premium print presentation for every order.",
+  },
+  {
+    title: "Fast Turnaround",
+    text: "Simple ordering and artwork upload so your job moves quickly.",
+  },
+  {
+    title: "Easy Online Ordering",
+    text: "Choose your options, upload your file, and check out in minutes.",
+  },
+  {
+    title: "Order Tracking",
+    text: "Customers can track order progress and shipment updates online.",
+  },
+];
 
-  const baseMap = {
-    "Business Cards": 24.99,
-    Postcards: 34.99,
-    Flyers: 39.99,
-    Brochures: 79.99,
-    Banners: 49.99,
-    "Yard Signs": 19.99,
-    Menus: 44.99,
-    "Rack Cards": 32.99,
-  };
-
-  const unitMap = {
-    "Business Cards": 0.08,
-    Postcards: 0.12,
-    Flyers: 0.1,
-    Brochures: 0.22,
-    Banners: 12,
-    "Yard Signs": 8,
-    Menus: 0.14,
-    "Rack Cards": 0.11,
-  };
-
-  const base = baseMap[product] ?? 25;
-  const unit = unitMap[product] ?? 0.1;
-
-  if (!qty) return base;
-  return base + qty * unit;
-}
+const steps = [
+  {
+    number: "01",
+    title: "Choose Your Product",
+    text: "Select from business cards, flyers, postcards, banners, and more.",
+  },
+  {
+    number: "02",
+    title: "Upload Artwork",
+    text: "Send your print-ready design file directly with your order.",
+  },
+  {
+    number: "03",
+    title: "Checkout Securely",
+    text: "Review your live pricing and complete payment with confidence.",
+  },
+  {
+    number: "04",
+    title: "Track Your Order",
+    text: "Follow your order status from production through delivery.",
+  },
+];
 
 export default function HomePage() {
-  const productNames = Object.keys(PRODUCT_OPTIONS);
-  const [product, setProduct] = useState("Business Cards");
-
-  const current = useMemo(() => PRODUCT_OPTIONS[product], [product]);
-
-  const [size, setSize] = useState(PRODUCT_OPTIONS["Business Cards"].sizes[0]);
-  const [paper, setPaper] = useState(PRODUCT_OPTIONS["Business Cards"].papers[0]);
-  const [finish, setFinish] = useState(PRODUCT_OPTIONS["Business Cards"].finishes[0]);
-  const [sides, setSides] = useState(PRODUCT_OPTIONS["Business Cards"].sides[0]);
-  const [quantity, setQuantity] = useState(PRODUCT_OPTIONS["Business Cards"].quantities[0]);
-
-  function handleProductChange(nextProduct) {
-    const next = PRODUCT_OPTIONS[nextProduct];
-    setProduct(nextProduct);
-    setSize(next.sizes[0]);
-    setPaper(next.papers[0]);
-    setFinish(next.finishes[0]);
-    setSides(next.sides[0]);
-    setQuantity(next.quantities[0]);
-  }
-
-  const estimatedTotal = estimatePrice(product, quantity);
-
-  const orderHref = `/order?product=${encodeURIComponent(product)}&size=${encodeURIComponent(
-    size
-  )}&paper=${encodeURIComponent(paper)}&finish=${encodeURIComponent(
-    finish
-  )}&sides=${encodeURIComponent(sides)}&quantity=${encodeURIComponent(quantity)}`;
-
   return (
-    <main className="min-h-screen bg-slate-50">
-      <section className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:px-8">
-        <div className="rounded-[30px] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 p-6 text-white shadow-2xl md:p-10">
-          <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_.95fr]">
-            <div className="max-w-2xl text-center lg:text-left">
-              <h1 className="text-4xl font-bold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
-                <span className="block">Top Quality Printing.</span>
-                <span className="mt-2 block">Fast Turnaround.</span>
-                <span className="mt-2 block">The Best Prices.</span>
-              </h1>
-
-              <div className="mt-12 flex flex-col items-center lg:items-start">
-                <p className="text-center text-lg font-semibold text-white md:text-xl lg:text-left">
-                  Already placed an order? Track it here:
-                </p>
-
-                <Link
-                  href="/track"
-                  className="mt-4 inline-flex items-center justify-center rounded-full bg-black px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-neutral-900"
-                >
-                  Track Your Order
-                </Link>
-              </div>
+    <main className="min-h-screen bg-white text-slate-900">
+      <section className="relative overflow-hidden bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.12),transparent_24%)]" />
+        <div className="relative mx-auto grid max-w-7xl gap-10 px-6 py-16 lg:grid-cols-2 lg:px-8 lg:py-24">
+          <div className="flex flex-col justify-center">
+            <div className="mb-4 inline-flex w-fit rounded-full border border-white/20 bg-white/10 px-4 py-1 text-sm font-semibold backdrop-blur">
+              EnVision Direct
             </div>
 
-            <div className="flex justify-center lg:justify-end">
-              <div className="w-full max-w-[560px] space-y-8">
-                <div className="overflow-hidden rounded-[36px] bg-white/10 p-2 shadow-2xl backdrop-blur-md">
-                  <div className="overflow-hidden rounded-[28px]">
-                    <img
-                      src="/images/logo-hero.png"
-                      alt="EnVision Direct logo"
-                      className="h-[180px] w-full scale-115 object-cover"
-                    />
-                  </div>
-                </div>
+            <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+              Top Quality Printing.
+              <br />
+              Fast Turnaround.
+              <br />
+              The Best Prices.
+            </h1>
 
-                <div className="overflow-hidden rounded-[36px] bg-white/10 p-2 shadow-2xl backdrop-blur-md">
-                  <div className="overflow-hidden rounded-[28px]">
-                    <img
-                      src="/images/hero_desktop.webp"
-                      alt="Printed products collage"
-                      className="h-[340px] w-full object-cover"
-                    />
-                  </div>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-blue-50">
+              Professional online printing with live pricing, easy artwork upload,
+              secure checkout, and order tracking built in.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link
+                href="/order"
+                className="rounded-2xl bg-white px-6 py-4 text-base font-bold text-blue-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-50"
+              >
+                Start Your Order
+              </Link>
+
+              <Link
+                href="/track"
+                className="rounded-2xl border border-white/30 bg-white/10 px-6 py-4 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
+              >
+                Track Your Order
+              </Link>
+            </div>
+
+            <div className="mt-10 flex flex-wrap gap-3 text-sm font-medium">
+              <span className="rounded-full bg-white/15 px-4 py-2">Business Cards</span>
+              <span className="rounded-full bg-white/15 px-4 py-2">Flyers</span>
+              <span className="rounded-full bg-white/15 px-4 py-2">Postcards</span>
+              <span className="rounded-full bg-white/15 px-4 py-2">Banners</span>
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <div className="grid w-full grid-cols-2 gap-4">
+              <div className="rounded-3xl bg-white p-4 shadow-2xl">
+                <div className="mb-3 rounded-2xl bg-blue-50 p-3 text-xs font-bold uppercase tracking-wide text-blue-700">
+                  Postcards
                 </div>
+                <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-sky-100 to-blue-200" />
+              </div>
+
+              <div className="rounded-3xl bg-white p-4 shadow-2xl">
+                <div className="mb-3 rounded-2xl bg-blue-50 p-3 text-xs font-bold uppercase tracking-wide text-blue-700">
+                  Business Cards
+                </div>
+                <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-200" />
+              </div>
+
+              <div className="rounded-3xl bg-white p-4 shadow-2xl">
+                <div className="mb-3 rounded-2xl bg-blue-50 p-3 text-xs font-bold uppercase tracking-wide text-blue-700">
+                  Flyers
+                </div>
+                <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-cyan-100 to-sky-200" />
+              </div>
+
+              <div className="rounded-3xl bg-white p-4 shadow-2xl">
+                <div className="mb-3 rounded-2xl bg-blue-50 p-3 text-xs font-bold uppercase tracking-wide text-blue-700">
+                  Banners
+                </div>
+                <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-slate-100 to-blue-100" />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-12 md:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[1.05fr_.95fr]">
-          <div className="rounded-[28px] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
-            <div className="mb-6">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-                Start Your Order
+      <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+        <div className="mb-10 flex items-end justify-between gap-6">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-700">
+              Featured Products
+            </p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+              Print products built for real business needs
+            </h2>
+          </div>
+
+          <Link
+            href="/order"
+            className="hidden rounded-2xl bg-blue-700 px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-blue-800 md:inline-flex"
+          >
+            View Pricing
+          </Link>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {featuredProducts.map((product) => (
+            <Link
+              key={product.name}
+              href={product.href}
+              className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+            >
+              <div className="mb-5 h-40 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50" />
+              <h3 className="text-xl font-bold text-slate-900">{product.name}</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                {product.description}
               </p>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-                Build your print order
-              </h2>
-              <p className="mt-3 max-w-2xl text-slate-600">
-                Choose your product, select the options you want, and continue to the full order page.
-              </p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Product
-                </label>
-                <select
-                  value={product}
-                  onChange={(e) => handleProductChange(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {productNames.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+              <div className="mt-5 text-sm font-bold text-blue-700">
+                Start order →
               </div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Size
-                </label>
-                <select
-                  value={size}
-                  onChange={(e) => setSize(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.sizes.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      <section className="bg-slate-50">
+        <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-700">
+              Why Choose Us
+            </p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+              A better online print ordering experience
+            </h2>
+            <p className="mt-4 text-lg leading-8 text-slate-600">
+              EnVision Direct combines clean ordering, live pricing, artwork
+              upload, and tracking into one simple customer experience.
+            </p>
+          </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Paper / Material
-                </label>
-                <select
-                  value={paper}
-                  onChange={(e) => setPaper(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.papers.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Finish
-                </label>
-                <select
-                  value={finish}
-                  onChange={(e) => setFinish(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.finishes.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Sides
-                </label>
-                <select
-                  value={sides}
-                  onChange={(e) => setSides(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.sides.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Quantity
-                </label>
-                <select
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
-                >
-                  {current.quantities.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                href={orderHref}
-                className="inline-flex items-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700"
+          <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            {benefits.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
               >
-                Continue to Full Order Page
+                <div className="mb-4 h-12 w-12 rounded-2xl bg-blue-100" />
+                <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-700">
+              Simple Process
+            </p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+              Order in a few easy steps
+            </h2>
+            <p className="mt-4 text-lg leading-8 text-slate-600">
+              Built for customers who want a smooth online print experience
+              without confusion.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link
+                href="/order"
+                className="rounded-2xl bg-blue-700 px-6 py-4 text-base font-bold text-white shadow-lg transition hover:bg-blue-800"
+              >
+                Place an Order
               </Link>
-
               <Link
-                href="/pricing"
-                className="inline-flex items-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+                href="/track"
+                className="rounded-2xl border border-slate-300 px-6 py-4 text-base font-bold text-slate-900 transition hover:bg-slate-50"
               >
-                View Pricing
+                Already Placed an Order?
               </Link>
             </div>
           </div>
 
-          <div className="rounded-[28px] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
-              Quick Estimate
-            </p>
-            <h3 className="mt-2 text-2xl font-bold text-slate-900">{product}</h3>
-
-            <div className="mt-6 space-y-4 rounded-[24px] bg-slate-50 p-5 ring-1 ring-slate-200">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Size</span>
-                <span className="text-right font-semibold text-slate-900">{size}</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Paper / Material</span>
-                <span className="text-right font-semibold text-slate-900">{paper}</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Finish</span>
-                <span className="text-right font-semibold text-slate-900">{finish}</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Sides</span>
-                <span className="text-right font-semibold text-slate-900">{sides}</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500">Quantity</span>
-                <span className="text-right font-semibold text-slate-900">{quantity}</span>
-              </div>
-
-              <div className="border-t border-slate-200 pt-4">
-                <div className="flex items-end justify-between gap-4">
-                  <span className="text-slate-600">Estimated starting price</span>
-                  <span className="text-3xl font-bold tracking-tight text-slate-900">
-                    ${estimatedTotal.toFixed(2)}
-                  </span>
+          <div className="grid gap-4">
+            {steps.map((step) => (
+              <div
+                key={step.number}
+                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-700 text-lg font-extrabold text-white">
+                    {step.number}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">
+                      {step.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">
+                      {step.text}
+                    </p>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 pb-16 lg:px-8">
+        <div className="mx-auto max-w-7xl rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 px-8 py-12 text-white shadow-2xl">
+          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-100">
+                Ready to Order?
+              </p>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+                Start your print order today
+              </h2>
+              <p className="mt-4 max-w-2xl text-lg leading-8 text-blue-50">
+                Get live pricing, upload your artwork, and complete checkout in a
+                clean, professional ordering flow.
+              </p>
             </div>
 
-            <div className="mt-6 rounded-[24px] bg-blue-50 p-5 ring-1 ring-blue-100">
-              <h4 className="text-lg font-semibold text-slate-900">Why order with us</h4>
-              <div className="mt-4 grid gap-3 text-sm text-slate-700">
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200">
-                  Easy online ordering
-                </div>
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200">
-                  Upload print-ready artwork
-                </div>
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200">
-                  Fast turnaround and tracking
-                </div>
-              </div>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                href="/order"
+                className="rounded-2xl bg-white px-6 py-4 text-base font-bold text-blue-700 shadow-lg transition hover:bg-blue-50"
+              >
+                Start Your Order
+              </Link>
+              <Link
+                href="/track"
+                className="rounded-2xl border border-white/30 bg-white/10 px-6 py-4 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
+              >
+                Track Your Order
+              </Link>
             </div>
           </div>
         </div>
