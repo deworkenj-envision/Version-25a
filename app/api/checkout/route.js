@@ -1,195 +1,161 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { calculatePrice } from "../../../lib/pricing";
-import { calculateShipping } from "../../../lib/shipping";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-const ARTWORK_BUCKET = "order-artwork";
-
-function toSafeString(value) {
-  if (value === null || value === undefined) return "";
-  return String(value).trim();
-}
-
-function toSafeNumber(value, fallback = 0) {
-  const num = Number(value);
-  return Number.isFinite(num) ? num : fallback;
-}
-
-function buildArtworkUrl(value) {
-  if (!value || typeof value !== "string") return "";
-
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    return trimmed;
-  }
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!supabaseUrl) return "";
-
-  return `${supabaseUrl}/storage/v1/object/public/${ARTWORK_BUCKET}/${trimmed}`;
-}
-
-function getFileNameFromPath(value) {
-  if (!value || typeof value !== "string") return "";
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-
-  const clean = trimmed.split("?")[0];
-  const parts = clean.split("/");
-  return parts[parts.length - 1] || "";
+function toCents(value) {
+  return Math.round(Number(value || 0) * 100);
 }
 
 export async function POST(req) {
   try {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return NextResponse.json(
-        { error: "Missing STRIPE_SECRET_KEY" },
-        { status: 500 }
-      );
-    }
-
-    if (!process.env.NEXT_PUBLIC_SITE_URL) {
-      return NextResponse.json(
-        { error: "Missing NEXT_PUBLIC_SITE_URL" },
-        { status: 500 }
-      );
-    }
-
     const body = await req.json();
 
-    const productName = toSafeString(body.productName);
-    const quantity = toSafeNumber(body.quantity, 0);
+    const {
+      customerName,
+      customerEmail,
+      productName,
+      size,
+      paper,
+      finish,
+      sides,
+      quantity,
+      subtotal,
+      shipping,
+      total,
+      notes,
+      fileName,
+      artworkUrl,
+    } = body || {};
 
-    const customerName = toSafeString(body.customerName);
-    const customerEmail = toSafeString(body.customerEmail);
-
-    const paper = toSafeString(body.paper);
-    const finish = toSafeString(body.finish);
-    const size = toSafeString(body.size);
-    const sides = toSafeString(body.sides);
-    const notes = toSafeString(body.notes);
-
-    const rawArtworkPath =
-      toSafeString(body.filePath) ||
-      toSafeString(body.file_path) ||
-      toSafeString(body.artwork_path) ||
-      toSafeString(body.artwork);
-
-    const rawArtworkUrl =
-      toSafeString(body.artworkUrl) ||
-      toSafeString(body.publicUrl) ||
-      rawArtworkPath;
-
-    const finalArtworkUrl = buildArtworkUrl(rawArtworkUrl);
-
-    const fileName =
-      toSafeString(body.fileName) ||
-      getFileNameFromPath(rawArtworkPath) ||
-      getFileNameFromPath(finalArtworkUrl);
-
-    if (!finalArtworkUrl) {
+    if (!customerName || !customerEmail) {
       return NextResponse.json(
-        { error: "Artwork upload is required before checkout." },
+        { error: "Missing customer name or email." },
         { status: 400 }
       );
     }
 
     if (!productName) {
       return NextResponse.json(
-        { error: "Missing product name" },
+        { error: "Missing product name." },
         { status: 400 }
       );
     }
 
-    if (!quantity || quantity < 1) {
+    if (!artworkUrl) {
       return NextResponse.json(
-        { error: "Invalid quantity" },
+        { error: "Artwork upload is required before checkout." },
         { status: 400 }
       );
     }
 
-    const priceData = calculatePrice({
-      productName,
-      quantity,
-      paper,
-      finish,
-      sides,
-    });
+    const parsedQuantity = Number(quantity || 0);
+    const parsedSubtotal = Number(subtotal || 0);
+    const parsedShipping = Number(shipping || 0);
+    const parsedTotal = Number(total || 0);
 
-    const subtotal = Number(priceData.subtotal || 0);
-    const shipping = Number(calculateShipping(productName, quantity) || 0);
-    const total = Number((subtotal + shipping).toFixed(2));
-
-    if (!total || total <= 0) {
+    if (!parsedQuantity || parsedQuantity < 1) {
       return NextResponse.json(
-        { error: "Invalid total" },
+        { error: "Invalid quantity." },
         { status: 400 }
       );
+    }
+
+    if (parsedSubtotal < 0 || parsedShipping < 0 || parsedTotal <= 0) {
+      return NextResponse.json(
+        { error: "Invalid pricing values." },
+        { status: 400 }
+      );
+    }
+
+    const expectedTotal = Number((parsedSubtotal + parsedShipping).toFixed(2));
+    const submittedTotal = Number(parsedTotal.toFixed(2));
+
+    if (expectedTotal !== submittedTotal) {
+      return NextResponse.json(
+        {
+          error: `Price mismatch. Expected total ${expectedTotal.toFixed(
+            2
+          )} but received ${submittedTotal.toFixed(2)}.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://www.envisiondirect.net";
+
+    const lineItems = [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: productName,
+            description: [
+              size ? `Size: ${size}` : null,
+              paper ? `Paper: ${paper}` : null,
+              finish ? `Finish: ${finish}` : null,
+              sides ? `Sides: ${sides}` : null,
+              parsedQuantity ? `Quantity: ${parsedQuantity}` : null,
+            ]
+              .filter(Boolean)
+              .join(" • "),
+        },
+        unit_amount: toCents(parsedSubtotal),
+      },
+      quantity: 1,
+    },
+    ];
+
+    if (parsedShipping > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Shipping",
+            description: "Standard shipping",
+          },
+          unit_amount: toCents(parsedShipping),
+        },
+        quantity: 1,
+      });
     }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      customer_email: customerEmail,
       payment_method_types: ["card"],
-      customer_email: customerEmail || undefined,
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: `${productName} Order`,
-              description: [
-                `Quantity: ${quantity}`,
-                paper ? `Paper: ${paper}` : null,
-                finish ? `Finish: ${finish}` : null,
-                size ? `Size: ${size}` : null,
-                sides ? `Sides: ${sides}` : null,
-              ]
-                .filter(Boolean)
-                .join(" • "),
-            },
-            unit_amount: Math.round(total * 100),
-          },
-        },
-      ],
+      line_items: lineItems,
+      success_url: `${siteUrl}/order-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/order`,
       metadata: {
-        productName: toSafeString(productName),
-        quantity: toSafeString(quantity),
-        total: toSafeString(total),
-        subtotal: toSafeString(subtotal),
-        shipping: toSafeString(shipping),
-
-        customerName: toSafeString(customerName),
-        customerEmail: toSafeString(customerEmail),
-
-        paper: toSafeString(paper),
-        finish: toSafeString(finish),
-        size: toSafeString(size),
-        sides: toSafeString(sides),
-        notes: toSafeString(notes),
-
-        artworkUrl: toSafeString(finalArtworkUrl),
-        fileName: toSafeString(fileName),
+        customerName: String(customerName || ""),
+        customerEmail: String(customerEmail || ""),
+        productName: String(productName || ""),
+        size: String(size || ""),
+        paper: String(paper || ""),
+        finish: String(finish || ""),
+        sides: String(sides || ""),
+        quantity: String(parsedQuantity || ""),
+        subtotal: String(parsedSubtotal.toFixed(2)),
+        shipping: String(parsedShipping.toFixed(2)),
+        total: String(parsedTotal.toFixed(2)),
+        notes: String(notes || ""),
+        fileName: String(fileName || ""),
+        artworkUrl: String(artworkUrl || ""),
       },
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order`,
     });
 
     return NextResponse.json({
+      success: true,
       url: session.url,
       sessionId: session.id,
     });
   } catch (error) {
-    console.error("Checkout session creation error:", error);
+    console.error("Checkout error:", error);
+
     return NextResponse.json(
-      {
-        error: "Failed to create checkout session",
-        details: error?.message || null,
-      },
+      { error: error.message || "Failed to create checkout session." },
       { status: 500 }
     );
   }
