@@ -73,12 +73,12 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
       <section className="px-5 pt-5 lg:px-8 lg:pt-8">
-        <div className="mx-auto max-w-[1600px]">
+        <div className="mx-auto max-w-[1660px]">
           <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white shadow-2xl">
-            <div className="mx-auto grid max-w-[1500px] items-center gap-10 px-8 py-10 lg:grid-cols-[1.55fr_0.85fr] lg:gap-10 lg:px-10 lg:py-14 xl:grid-cols-[1.6fr_0.8fr]">
+            <div className="mx-auto grid max-w-[1420px] items-center gap-12 px-8 py-10 lg:grid-cols-[1.22fr_0.78fr] lg:gap-14 lg:px-12 lg:py-14 xl:gap-16">
               {/* LEFT SIDE IMAGE */}
               <div className="flex items-center justify-center lg:justify-start">
-                <div className="w-full max-w-[1220px]">
+                <div className="w-full max-w-[980px]">
                   <Image
                     src="/images/hero-collage-logo.png"
                     alt="EnVision Direct print products collage"
@@ -92,7 +92,7 @@ export default function HomePage() {
 
               {/* RIGHT SIDE TEXT */}
               <div className="flex flex-col justify-center">
-                <h1 className="text-[3.4rem] font-extrabold leading-[0.95] tracking-tight xl:text-[3.9rem]">
+                <h1 className="text-[3.5rem] font-extrabold leading-[0.95] tracking-tight xl:text-[3.95rem]">
                   <span className="block whitespace-nowrap">Top Quality Printing.</span>
                   <span className="mt-4 block whitespace-nowrap">Fast Turnaround.</span>
                   <span className="mt-4 block whitespace-nowrap">The Best Prices.</span>
