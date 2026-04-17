@@ -33,92 +33,83 @@ export default function HomePage() {
     <main className="min-h-screen bg-white text-slate-900">
       {/* HERO */}
       <section className="bg-gradient-to-r from-blue-700 to-blue-500 text-white">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-10 px-6 py-14 md:px-10 lg:flex-row lg:justify-between lg:py-20">
-          <div className="max-w-2xl text-center lg:text-left">
-            <div className="mb-6 flex justify-center lg:justify-start">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-16 md:px-10">
+          
+          {/* LEFT SIDE */}
+          <div className="max-w-xl">
+            {/* LOGO */}
+            <div className="mb-6">
               <Image
                 src="/logo.png"
                 alt="EnVision Direct"
-                width={260}
-                height={90}
-                className="h-auto w-auto max-w-[260px]"
+                width={240}
+                height={80}
+                className="h-auto w-auto"
                 priority
               />
             </div>
 
+            {/* HEADLINE */}
             <h1 className="text-4xl font-extrabold leading-tight md:text-5xl">
               <span className="block">Top Quality Printing.</span>
               <span className="block">Fast Turnaround.</span>
               <span className="block">The Best Prices.</span>
             </h1>
 
-            <p className="mx-auto mt-5 max-w-xl text-lg text-blue-50 lg:mx-0">
+            {/* SUBTEXT */}
+            <p className="mt-5 text-lg text-blue-100">
               Postcards, flyers, business cards and banners — professionally
               printed and delivered with speed and care.
             </p>
 
-            <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
+            {/* BUTTONS */}
+            <div className="mt-8 flex gap-4">
               <Link
                 href="/order"
-                className="rounded-full bg-white px-7 py-3 text-base font-semibold text-blue-700 shadow-md transition hover:scale-[1.02] hover:bg-slate-100"
+                className="rounded-full bg-white px-7 py-3 font-semibold text-blue-700 shadow hover:bg-gray-100"
               >
                 Start Your Order
               </Link>
 
               <Link
                 href="/track"
-                className="rounded-full border border-white/70 px-7 py-3 text-base font-semibold text-white transition hover:bg-white/10"
+                className="rounded-full border border-white px-7 py-3 font-semibold text-white hover:bg-white/10"
               >
                 Track Your Order
               </Link>
             </div>
           </div>
 
-          <div className="w-full max-w-xl">
-            <div className="overflow-hidden rounded-3xl bg-white/10 p-3 shadow-2xl backdrop-blur-sm">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="overflow-hidden rounded-2xl bg-white">
-                  <Image
-                    src="/products/postcards.jpg"
-                    alt="Postcards"
-                    width={600}
-                    height={450}
-                    className="h-44 w-full object-cover md:h-52"
-                    priority
-                  />
-                </div>
-                <div className="overflow-hidden rounded-2xl bg-white">
-                  <Image
-                    src="/products/business-cards.jpg"
-                    alt="Business Cards"
-                    width={600}
-                    height={450}
-                    className="h-44 w-full object-cover md:h-52"
-                    priority
-                  />
-                </div>
-                <div className="overflow-hidden rounded-2xl bg-white">
-                  <Image
-                    src="/products/flyers.jpg"
-                    alt="Flyers"
-                    width={600}
-                    height={450}
-                    className="h-44 w-full object-cover md:h-52"
-                    priority
-                  />
-                </div>
-                <div className="overflow-hidden rounded-2xl bg-white">
-                  <Image
-                    src="/products/banners.jpg"
-                    alt="Banners"
-                    width={600}
-                    height={450}
-                    className="h-44 w-full object-cover md:h-52"
-                    priority
-                  />
-                </div>
-              </div>
-            </div>
+          {/* RIGHT SIDE COLLAGE */}
+          <div className="grid grid-cols-2 gap-4 max-w-md">
+            <Image
+              src="/products/postcards.jpg"
+              alt="Postcards"
+              width={300}
+              height={220}
+              className="rounded-xl object-cover"
+            />
+            <Image
+              src="/products/business-cards.jpg"
+              alt="Business Cards"
+              width={300}
+              height={220}
+              className="rounded-xl object-cover"
+            />
+            <Image
+              src="/products/flyers.jpg"
+              alt="Flyers"
+              width={300}
+              height={220}
+              className="rounded-xl object-cover"
+            />
+            <Image
+              src="/products/banners.jpg"
+              alt="Banners"
+              width={300}
+              height={220}
+              className="rounded-xl object-cover"
+            />
           </div>
         </div>
       </section>
@@ -126,11 +117,11 @@ export default function HomePage() {
       {/* ORDER SECTION */}
       <section className="mx-auto max-w-7xl px-6 py-16 md:px-10">
         <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+          <h2 className="text-3xl font-bold md:text-4xl">
             Choose Your Product
           </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600 md:text-lg">
-            Select a product below to begin your order and upload your print-ready artwork.
+          <p className="mt-3 text-slate-600">
+            Select a product to begin your order.
           </p>
         </div>
 
@@ -139,28 +130,24 @@ export default function HomePage() {
             <Link
               key={product.name}
               href={product.href}
-              className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl"
+              className="group rounded-2xl border bg-white shadow hover:shadow-lg transition"
             >
-              <div className="relative overflow-hidden">
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  width={800}
-                  height={600}
-                  className="h-64 w-full object-cover transition duration-300 group-hover:scale-105"
-                />
-              </div>
+              <Image
+                src={product.image}
+                alt={product.name}
+                width={800}
+                height={600}
+                className="h-60 w-full object-cover rounded-t-2xl"
+              />
 
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-slate-900">
-                  {product.name}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
+              <div className="p-5">
+                <h3 className="text-lg font-bold">{product.name}</h3>
+                <p className="mt-2 text-sm text-gray-600">
                   {product.description}
                 </p>
 
-                <div className="mt-5 inline-flex items-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition group-hover:bg-blue-700">
-                  Order {product.name}
+                <div className="mt-4 text-blue-600 font-semibold">
+                  Order Now →
                 </div>
               </div>
             </Link>
