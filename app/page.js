@@ -28,39 +28,25 @@ const products = [
   },
 ];
 
-function LogoWithFallback() {
-  return (
-    <img
-      src="/logo.png"
-      alt="EnVision Direct"
-      className="h-auto w-full max-w-[380px] object-contain"
-      onError={(e) => {
-        if (e.currentTarget.src.includes("/logo.png")) {
-          e.currentTarget.src = "/logo.webp";
-        } else if (e.currentTarget.src.includes("/logo.webp")) {
-          e.currentTarget.src = "/logo.jpg";
-        }
-      }}
-    />
-  );
-}
-
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      {/* HERO */}
       <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
         <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-12">
           <div className="grid items-center gap-10 lg:grid-cols-[620px_1fr]">
-            {/* LEFT COLLAGE */}
             <div className="mx-auto w-full max-w-[620px]">
               <div className="overflow-hidden bg-[#2347d8]/40 shadow-2xl">
-                {/* LOGO PANEL */}
                 <div className="flex min-h-[170px] items-center justify-center bg-gradient-to-r from-[#2848db] via-[#2d57eb] to-[#3567f3] px-8 py-10">
-                  <LogoWithFallback />
+                  <Image
+                    src="/logo.png"
+                    alt="EnVision Direct"
+                    width={430}
+                    height={140}
+                    className="h-auto w-auto max-w-full object-contain"
+                    priority
+                  />
                 </div>
 
-                {/* IMAGE GRID */}
                 <div className="grid grid-cols-2 gap-[4px] bg-white/20 p-[4px]">
                   <div className="relative overflow-hidden bg-white">
                     <Image
@@ -121,7 +107,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* RIGHT TEXT */}
             <div className="max-w-2xl">
               <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight md:text-5xl xl:text-[4.1rem]">
                 <span className="block">Top Quality Printing.</span>
@@ -181,7 +166,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ORDER SECTION */}
       <section className="mx-auto max-w-7xl px-6 py-16 md:px-10">
         <div className="mb-10 text-center">
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
