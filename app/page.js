@@ -28,30 +28,39 @@ const products = [
   },
 ];
 
+function LogoWithFallback() {
+  return (
+    <img
+      src="/logo.png"
+      alt="EnVision Direct"
+      className="h-auto w-full max-w-[380px] object-contain"
+      onError={(e) => {
+        if (e.currentTarget.src.includes("/logo.png")) {
+          e.currentTarget.src = "/logo.webp";
+        } else if (e.currentTarget.src.includes("/logo.webp")) {
+          e.currentTarget.src = "/logo.jpg";
+        }
+      }}
+    />
+  );
+}
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
+      {/* HERO */}
       <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
         <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-12">
           <div className="grid items-center gap-10 lg:grid-cols-[620px_1fr]">
-            {/* LEFT: COLLAGE WITH LOGO ON TOP */}
+            {/* LEFT COLLAGE */}
             <div className="mx-auto w-full max-w-[620px]">
               <div className="overflow-hidden bg-[#2347d8]/40 shadow-2xl">
-                {/* TOP LOGO PANEL */}
-                <div className="bg-gradient-to-r from-[#2347d8] via-[#2957eb] to-[#2f67f2] px-8 py-14">
-                  <div className="flex justify-center">
-                    <Image
-                      src="/logo.png"
-                      alt="EnVision Direct"
-                      width={430}
-                      height={140}
-                      className="h-auto w-auto max-w-full"
-                      priority
-                    />
-                  </div>
+                {/* LOGO PANEL */}
+                <div className="flex min-h-[170px] items-center justify-center bg-gradient-to-r from-[#2848db] via-[#2d57eb] to-[#3567f3] px-8 py-10">
+                  <LogoWithFallback />
                 </div>
 
-                {/* 4 IMAGE COLLAGE */}
+                {/* IMAGE GRID */}
                 <div className="grid grid-cols-2 gap-[4px] bg-white/20 p-[4px]">
                   <div className="relative overflow-hidden bg-white">
                     <Image
@@ -112,20 +121,20 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* RIGHT: HERO TEXT */}
+            {/* RIGHT TEXT */}
             <div className="max-w-2xl">
-              <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight md:text-6xl xl:text-[4.4rem]">
+              <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight md:text-5xl xl:text-[4.1rem]">
                 <span className="block">Top Quality Printing.</span>
                 <span className="mt-2 block">Fast Turnaround.</span>
                 <span className="mt-2 block">The Best Prices.</span>
               </h1>
 
-              <p className="mt-10 max-w-xl text-lg leading-8 text-blue-100 md:text-[1.35rem] md:leading-10">
+              <p className="mt-8 max-w-xl text-lg leading-8 text-blue-100 md:text-[1.15rem]">
                 Professional online printing with live pricing, easy artwork
                 upload, secure checkout, and order tracking built in.
               </p>
 
-              <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                 <Link
                   href="/order"
                   className="inline-flex items-center justify-center rounded-2xl bg-white px-8 py-4 text-lg font-bold text-blue-700 shadow-lg transition hover:scale-[1.02] hover:bg-slate-100"
@@ -141,7 +150,7 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <div className="mt-10 flex flex-wrap gap-4">
+              <div className="mt-8 flex flex-wrap gap-4">
                 <Link
                   href="/order?product=Business%20Cards"
                   className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/18"
@@ -172,6 +181,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ORDER SECTION */}
       <section className="mx-auto max-w-7xl px-6 py-16 md:px-10">
         <div className="mb-10 text-center">
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
