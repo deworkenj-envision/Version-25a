@@ -5,25 +5,29 @@ const featuredProducts = [
   {
     name: "Business Cards",
     description:
-      "Professional cards with premium stocks, sharp detail, and fast turnaround.",
-    href: "/order",
+      "Premium stocks, sharp detail, and fast turnaround for a polished first impression.",
+    href: "/order?product=Business%20Cards",
+    meta: "Premium stocks • Matte / Gloss • Fast turnaround",
   },
   {
     name: "Flyers",
     description:
       "High-impact marketing pieces for promotions, events, menus, and handouts.",
-    href: "/order",
+    href: "/order?product=Flyers",
+    meta: "Event promos • Menus • Handouts",
   },
   {
     name: "Postcards",
     description:
       "Perfect for direct mail, announcements, promotions, and premium marketing.",
-    href: "/order",
+    href: "/order?product=Postcards",
+    meta: "Direct mail • Promotions • Announcements",
   },
   {
     name: "Banners",
     description: "Durable full-color banners for indoor and outdoor display.",
-    href: "/order",
+    href: "/order?product=Banners",
+    meta: "Indoor / outdoor • Large format • Bold color",
   },
 ];
 
@@ -76,7 +80,6 @@ export default function HomePage() {
         <div className="mx-auto max-w-[1660px]">
           <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white shadow-2xl">
             <div className="mx-auto grid max-w-[1420px] items-center gap-12 px-8 py-10 lg:grid-cols-[1.22fr_0.78fr] lg:gap-14 lg:px-12 lg:py-14 xl:gap-16">
-              {/* LEFT SIDE IMAGE */}
               <div className="flex items-center justify-center lg:justify-start">
                 <div className="w-full max-w-[980px]">
                   <Image
@@ -90,7 +93,6 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* RIGHT SIDE TEXT */}
               <div className="flex flex-col justify-center">
                 <h1 className="text-[3.5rem] font-extrabold leading-[0.95] tracking-tight xl:text-[3.95rem]">
                   <span className="block whitespace-nowrap">Top Quality Printing.</span>
@@ -161,7 +163,7 @@ export default function HomePage() {
             <Link
               key={product.name}
               href={product.href}
-              className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+              className="group flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl"
             >
               <div className="mb-5 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50 p-6">
                 <div className="flex aspect-[4/3] items-center justify-center rounded-2xl border border-dashed border-blue-200 bg-white">
@@ -171,12 +173,24 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <h3 className="text-xl font-bold text-slate-900">{product.name}</h3>
-              <p className="mt-3 text-sm leading-7 text-slate-600">
-                {product.description}
-              </p>
-              <div className="mt-5 text-sm font-bold text-blue-700">
-                Start order →
+              <div className="flex flex-1 flex-col">
+                <h3 className="text-xl font-bold text-slate-900 transition group-hover:text-blue-700">
+                  {product.name}
+                </h3>
+
+                <p className="mt-2 text-sm font-semibold text-blue-700">
+                  {product.meta}
+                </p>
+
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  {product.description}
+                </p>
+
+                <div className="mt-6">
+                  <span className="inline-flex items-center rounded-2xl bg-blue-700 px-4 py-3 text-sm font-bold text-white transition group-hover:bg-blue-800">
+                    Start Order
+                  </span>
+                </div>
               </div>
             </Link>
           ))}
