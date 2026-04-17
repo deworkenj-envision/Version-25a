@@ -31,20 +31,19 @@ const products = [
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      {/* HERO */}
       <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
-        <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-14">
-          <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
-            {/* LEFT COLLAGE PANEL */}
+        <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-12">
+          <div className="grid items-center gap-10 lg:grid-cols-[620px_1fr]">
+            {/* LEFT: COLLAGE WITH LOGO ON TOP */}
             <div className="mx-auto w-full max-w-[620px]">
-              <div className="overflow-hidden rounded-none bg-[#2347d8]/70 shadow-2xl ring-1 ring-white/10">
-                {/* Logo area */}
-                <div className="bg-gradient-to-r from-[#2848db] via-[#2b58ee] to-[#3462f5] px-8 py-12">
+              <div className="overflow-hidden bg-[#2347d8]/40 shadow-2xl">
+                {/* TOP LOGO PANEL */}
+                <div className="bg-gradient-to-r from-[#2347d8] via-[#2957eb] to-[#2f67f2] px-8 py-14">
                   <div className="flex justify-center">
                     <Image
                       src="/logo.png"
                       alt="EnVision Direct"
-                      width={420}
+                      width={430}
                       height={140}
                       className="h-auto w-auto max-w-full"
                       priority
@@ -52,7 +51,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Product image grid */}
+                {/* 4 IMAGE COLLAGE */}
                 <div className="grid grid-cols-2 gap-[4px] bg-white/20 p-[4px]">
                   <div className="relative overflow-hidden bg-white">
                     <Image
@@ -60,10 +59,10 @@ export default function HomePage() {
                       alt="Postcards"
                       width={700}
                       height={520}
-                      className="h-[270px] w-full object-cover"
+                      className="h-[265px] w-full object-cover"
                       priority
                     />
-                    <div className="absolute left-3 top-3 rounded-md bg-white/95 px-3 py-1 text-sm font-bold text-slate-800 shadow">
+                    <div className="absolute left-3 top-3 rounded-md bg-white px-3 py-1 text-sm font-bold text-slate-800 shadow">
                       Postcards
                     </div>
                   </div>
@@ -74,10 +73,10 @@ export default function HomePage() {
                       alt="Business Cards"
                       width={700}
                       height={520}
-                      className="h-[270px] w-full object-cover"
+                      className="h-[265px] w-full object-cover"
                       priority
                     />
-                    <div className="absolute left-3 top-3 rounded-md bg-white/95 px-3 py-1 text-sm font-bold text-slate-800 shadow">
+                    <div className="absolute left-3 top-3 rounded-md bg-white px-3 py-1 text-sm font-bold text-slate-800 shadow">
                       Business Cards
                     </div>
                   </div>
@@ -88,10 +87,10 @@ export default function HomePage() {
                       alt="Flyers"
                       width={700}
                       height={520}
-                      className="h-[270px] w-full object-cover"
+                      className="h-[265px] w-full object-cover"
                       priority
                     />
-                    <div className="absolute left-3 top-3 rounded-md bg-white/95 px-3 py-1 text-sm font-bold text-slate-800 shadow">
+                    <div className="absolute left-3 top-3 rounded-md bg-white px-3 py-1 text-sm font-bold text-slate-800 shadow">
                       Flyers
                     </div>
                   </div>
@@ -102,10 +101,10 @@ export default function HomePage() {
                       alt="Banners"
                       width={700}
                       height={520}
-                      className="h-[270px] w-full object-cover"
+                      className="h-[265px] w-full object-cover"
                       priority
                     />
-                    <div className="absolute left-3 top-3 rounded-md bg-white/95 px-3 py-1 text-sm font-bold text-slate-800 shadow">
+                    <div className="absolute left-3 top-3 rounded-md bg-white px-3 py-1 text-sm font-bold text-slate-800 shadow">
                       Banners
                     </div>
                   </div>
@@ -113,15 +112,15 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* RIGHT CONTENT */}
+            {/* RIGHT: HERO TEXT */}
             <div className="max-w-2xl">
-              <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight md:text-6xl xl:text-[4.6rem]">
+              <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight md:text-6xl xl:text-[4.4rem]">
                 <span className="block">Top Quality Printing.</span>
-                <span className="block mt-2">Fast Turnaround.</span>
-                <span className="block mt-2">The Best Prices.</span>
+                <span className="mt-2 block">Fast Turnaround.</span>
+                <span className="mt-2 block">The Best Prices.</span>
               </h1>
 
-              <p className="mt-10 max-w-xl text-lg leading-8 text-blue-100 md:text-[1.45rem] md:leading-10">
+              <p className="mt-10 max-w-xl text-lg leading-8 text-blue-100 md:text-[1.35rem] md:leading-10">
                 Professional online printing with live pricing, easy artwork
                 upload, secure checkout, and order tracking built in.
               </p>
@@ -173,7 +172,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ORDER SECTION */}
       <section className="mx-auto max-w-7xl px-6 py-16 md:px-10">
         <div className="mb-10 text-center">
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
