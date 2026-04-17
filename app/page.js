@@ -1,343 +1,170 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const featuredProducts = [
+const products = [
   {
     name: "Business Cards",
-    description:
-      "Premium stocks, sharp detail, and fast turnaround for a polished first impression.",
+    description: "Premium cards for a polished first impression.",
+    image: "/products/business-cards.jpg",
     href: "/order?product=Business%20Cards",
-    meta: "Premium stocks • Matte / Gloss • Fast turnaround",
-    imageSrc: "/images/hero_desktop.webp",
-    imageAlt: "Business cards",
-    imagePosition: "75% 25%",
-  },
-  {
-    name: "Flyers",
-    description:
-      "High-impact marketing pieces for promotions, events, menus, and handouts.",
-    href: "/order?product=Flyers",
-    meta: "Event promos • Menus • Handouts",
-    imageSrc: "/images/hero_desktop.webp",
-    imageAlt: "Flyers",
-    imagePosition: "25% 75%",
   },
   {
     name: "Postcards",
-    description:
-      "Perfect for direct mail, announcements, promotions, and premium marketing.",
+    description: "High-quality postcards for promotions and direct mail.",
+    image: "/products/postcards.jpg",
     href: "/order?product=Postcards",
-    meta: "Direct mail • Promotions • Announcements",
-    imageSrc: "/images/hero_desktop.webp",
-    imageAlt: "Postcards",
-    imagePosition: "25% 25%",
+  },
+  {
+    name: "Flyers",
+    description: "Bold, vibrant flyers for events, menus, and advertising.",
+    image: "/products/flyers.jpg",
+    href: "/order?product=Flyers",
   },
   {
     name: "Banners",
-    description: "Durable full-color banners for indoor and outdoor display.",
+    description: "Large-format banners for indoor and outdoor visibility.",
+    image: "/products/banners.jpg",
     href: "/order?product=Banners",
-    meta: "Indoor / outdoor • Large format • Bold color",
-    imageSrc: "/images/hero_desktop.webp",
-    imageAlt: "Banners",
-    imagePosition: "75% 75%",
-  },
-];
-
-const benefits = [
-  {
-    title: "Top Quality Printing",
-    text: "Clean color, sharp detail, and premium print presentation for every order.",
-  },
-  {
-    title: "Fast Turnaround",
-    text: "Simple ordering and artwork upload so your job moves quickly.",
-  },
-  {
-    title: "Easy Online Ordering",
-    text: "Choose your options, upload your file, and check out in minutes.",
-  },
-  {
-    title: "Order Tracking",
-    text: "Customers can track order progress and shipment updates online.",
-  },
-];
-
-const steps = [
-  {
-    number: "01",
-    title: "Choose Your Product",
-    text: "Select from business cards, flyers, postcards, banners, and more.",
-  },
-  {
-    number: "02",
-    title: "Upload Artwork",
-    text: "Send your print-ready design file directly with your order.",
-  },
-  {
-    number: "03",
-    title: "Checkout Securely",
-    text: "Review your live pricing and complete payment with confidence.",
-  },
-  {
-    number: "04",
-    title: "Track Your Order",
-    text: "Follow your order status from production through delivery.",
   },
 ];
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <section className="px-5 pt-5 lg:px-8 lg:pt-8">
-        <div className="mx-auto max-w-[1660px]">
-          <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white shadow-2xl">
-            <div className="mx-auto grid max-w-[1420px] items-center gap-12 px-8 py-10 lg:grid-cols-[1.22fr_0.78fr] lg:gap-14 lg:px-12 lg:py-14 xl:gap-16">
-              <div className="flex items-center justify-center lg:justify-start">
-                <div className="w-full max-w-[980px]">
-                  <Image
-                    src="/images/hero-collage-logo.png"
-                    alt="EnVision Direct print products collage"
-                    width={1024}
-                    height={1536}
-                    priority
-                    className="h-auto w-full object-contain"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col justify-center">
-                <h1 className="text-[3.5rem] font-extrabold leading-[0.95] tracking-tight xl:text-[3.95rem]">
-                  <span className="block whitespace-nowrap">Top Quality Printing.</span>
-                  <span className="mt-4 block whitespace-nowrap">Fast Turnaround.</span>
-                  <span className="mt-4 block whitespace-nowrap">The Best Prices.</span>
-                </h1>
-
-                <p className="mt-10 max-w-xl text-lg leading-8 text-blue-50">
-                  Professional online printing with live pricing, easy artwork
-                  upload, secure checkout, and order tracking built in.
-                </p>
-
-                <div className="mt-8 flex flex-wrap gap-4">
-                  <Link
-                    href="/order"
-                    className="rounded-2xl bg-white px-6 py-4 text-base font-bold text-blue-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-50"
-                  >
-                    Start Your Order
-                  </Link>
-
-                  <Link
-                    href="/track"
-                    className="rounded-2xl border border-white/30 bg-white/10 px-6 py-4 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
-                  >
-                    Track Your Order
-                  </Link>
-                </div>
-
-                <div className="mt-10 flex flex-wrap gap-3 text-sm font-medium">
-                  <span className="rounded-full bg-white/15 px-4 py-2">
-                    Business Cards
-                  </span>
-                  <span className="rounded-full bg-white/15 px-4 py-2">Flyers</span>
-                  <span className="rounded-full bg-white/15 px-4 py-2">
-                    Postcards
-                  </span>
-                  <span className="rounded-full bg-white/15 px-4 py-2">
-                    Banners
-                  </span>
-                </div>
-              </div>
+      {/* HERO */}
+      <section className="bg-gradient-to-r from-blue-700 to-blue-500 text-white">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-10 px-6 py-14 md:px-10 lg:flex-row lg:justify-between lg:py-20">
+          <div className="max-w-2xl text-center lg:text-left">
+            <div className="mb-6 flex justify-center lg:justify-start">
+              <Image
+                src="/logo.png"
+                alt="EnVision Direct"
+                width={260}
+                height={90}
+                className="h-auto w-auto max-w-[260px]"
+                priority
+              />
             </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-        <div className="mb-10 flex items-end justify-between gap-6">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-700">
-              Featured Products
-            </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              Print products built for real business needs
-            </h2>
-          </div>
+            <h1 className="text-4xl font-extrabold leading-tight md:text-5xl">
+              <span className="block">Top Quality Printing.</span>
+              <span className="block">Fast Turnaround.</span>
+              <span className="block">The Best Prices.</span>
+            </h1>
 
-          <Link
-            href="/order"
-            className="hidden rounded-2xl bg-blue-700 px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-blue-800 md:inline-flex"
-          >
-            View Pricing
-          </Link>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          {featuredProducts.map((product) => (
-            <Link
-              key={product.name}
-              href={product.href}
-              className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl"
-            >
-              <div className="p-6 pb-0">
-                <div className="relative overflow-hidden rounded-2xl bg-slate-100">
-                  <div className="relative aspect-[4/3] w-full">
-                    <Image
-                      src={product.imageSrc}
-                      alt={product.imageAlt}
-                      fill
-                      sizes="(min-width: 1280px) 23vw, (min-width: 768px) 45vw, 100vw"
-                      className="object-cover transition duration-300 group-hover:scale-[1.03]"
-                      style={{ objectPosition: product.imagePosition }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 via-transparent to-transparent" />
-                    <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-slate-900 shadow-sm">
-                      {product.name}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-1 flex-col p-6">
-                <h3 className="text-xl font-bold text-slate-900 transition group-hover:text-blue-700">
-                  {product.name}
-                </h3>
-
-                <p className="mt-2 text-sm font-semibold text-blue-700">
-                  {product.meta}
-                </p>
-
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  {product.description}
-                </p>
-
-                <div className="mt-6">
-                  <span className="inline-flex items-center rounded-2xl bg-blue-700 px-4 py-3 text-sm font-bold text-white transition group-hover:bg-blue-800">
-                    Start Order
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-slate-50">
-        <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-700">
-              Why Choose Us
-            </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              A better online print ordering experience
-            </h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
-              EnVision Direct combines clean ordering, live pricing, artwork
-              upload, and tracking into one simple customer experience.
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-            {benefits.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
-              >
-                <div className="mb-4 h-12 w-12 rounded-2xl bg-blue-100" />
-                <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  {item.text}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-700">
-              Simple Process
-            </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              Order in a few easy steps
-            </h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
-              Built for customers who want a smooth online print experience
-              without confusion.
+            <p className="mx-auto mt-5 max-w-xl text-lg text-blue-50 lg:mx-0">
+              Postcards, flyers, business cards and banners — professionally
+              printed and delivered with speed and care.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
               <Link
                 href="/order"
-                className="rounded-2xl bg-blue-700 px-6 py-4 text-base font-bold text-white shadow-lg transition hover:bg-blue-800"
-              >
-                Place an Order
-              </Link>
-              <Link
-                href="/track"
-                className="rounded-2xl border border-slate-300 px-6 py-4 text-base font-bold text-slate-900 transition hover:bg-slate-50"
-              >
-                Already Placed an Order?
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            {steps.map((step) => (
-              <div
-                key={step.number}
-                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-700 text-lg font-extrabold text-white">
-                    {step.number}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900">
-                      {step.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-7 text-slate-600">
-                      {step.text}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-6 pb-16 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-[2rem] bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 px-8 py-12 text-white shadow-2xl">
-          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-100">
-                Ready to Order?
-              </p>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-                Start your print order today
-              </h2>
-              <p className="mt-4 max-w-2xl text-lg leading-8 text-blue-50">
-                Get live pricing, upload your artwork, and complete checkout in a
-                clean, professional ordering flow.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href="/order"
-                className="rounded-2xl bg-white px-6 py-4 text-base font-bold text-blue-700 shadow-lg transition hover:bg-blue-50"
+                className="rounded-full bg-white px-7 py-3 text-base font-semibold text-blue-700 shadow-md transition hover:scale-[1.02] hover:bg-slate-100"
               >
                 Start Your Order
               </Link>
+
               <Link
                 href="/track"
-                className="rounded-2xl border border-white/30 bg-white/10 px-6 py-4 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
+                className="rounded-full border border-white/70 px-7 py-3 text-base font-semibold text-white transition hover:bg-white/10"
               >
                 Track Your Order
               </Link>
             </div>
           </div>
+
+          <div className="w-full max-w-xl">
+            <div className="overflow-hidden rounded-3xl bg-white/10 p-3 shadow-2xl backdrop-blur-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="overflow-hidden rounded-2xl bg-white">
+                  <Image
+                    src="/products/postcards.jpg"
+                    alt="Postcards"
+                    width={600}
+                    height={450}
+                    className="h-44 w-full object-cover md:h-52"
+                    priority
+                  />
+                </div>
+                <div className="overflow-hidden rounded-2xl bg-white">
+                  <Image
+                    src="/products/business-cards.jpg"
+                    alt="Business Cards"
+                    width={600}
+                    height={450}
+                    className="h-44 w-full object-cover md:h-52"
+                    priority
+                  />
+                </div>
+                <div className="overflow-hidden rounded-2xl bg-white">
+                  <Image
+                    src="/products/flyers.jpg"
+                    alt="Flyers"
+                    width={600}
+                    height={450}
+                    className="h-44 w-full object-cover md:h-52"
+                    priority
+                  />
+                </div>
+                <div className="overflow-hidden rounded-2xl bg-white">
+                  <Image
+                    src="/products/banners.jpg"
+                    alt="Banners"
+                    width={600}
+                    height={450}
+                    className="h-44 w-full object-cover md:h-52"
+                    priority
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ORDER SECTION */}
+      <section className="mx-auto max-w-7xl px-6 py-16 md:px-10">
+        <div className="mb-10 text-center">
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            Choose Your Product
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600 md:text-lg">
+            Select a product below to begin your order and upload your print-ready artwork.
+          </p>
+        </div>
+
+        <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
+          {products.map((product) => (
+            <Link
+              key={product.name}
+              href={product.href}
+              className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl"
+            >
+              <div className="relative overflow-hidden">
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  width={800}
+                  height={600}
+                  className="h-64 w-full object-cover transition duration-300 group-hover:scale-105"
+                />
+              </div>
+
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-slate-900">
+                  {product.name}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {product.description}
+                </p>
+
+                <div className="mt-5 inline-flex items-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition group-hover:bg-blue-700">
+                  Order {product.name}
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
       </section>
     </main>
