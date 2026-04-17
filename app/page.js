@@ -8,6 +8,9 @@ const featuredProducts = [
       "Premium stocks, sharp detail, and fast turnaround for a polished first impression.",
     href: "/order?product=Business%20Cards",
     meta: "Premium stocks • Matte / Gloss • Fast turnaround",
+    imageSrc: "/images/hero_desktop.webp",
+    imageAlt: "Business cards",
+    imagePosition: "75% 25%",
   },
   {
     name: "Flyers",
@@ -15,6 +18,9 @@ const featuredProducts = [
       "High-impact marketing pieces for promotions, events, menus, and handouts.",
     href: "/order?product=Flyers",
     meta: "Event promos • Menus • Handouts",
+    imageSrc: "/images/hero_desktop.webp",
+    imageAlt: "Flyers",
+    imagePosition: "25% 75%",
   },
   {
     name: "Postcards",
@@ -22,12 +28,18 @@ const featuredProducts = [
       "Perfect for direct mail, announcements, promotions, and premium marketing.",
     href: "/order?product=Postcards",
     meta: "Direct mail • Promotions • Announcements",
+    imageSrc: "/images/hero_desktop.webp",
+    imageAlt: "Postcards",
+    imagePosition: "25% 25%",
   },
   {
     name: "Banners",
     description: "Durable full-color banners for indoor and outdoor display.",
     href: "/order?product=Banners",
     meta: "Indoor / outdoor • Large format • Bold color",
+    imageSrc: "/images/hero_desktop.webp",
+    imageAlt: "Banners",
+    imagePosition: "75% 75%",
   },
 ];
 
@@ -163,17 +175,28 @@ export default function HomePage() {
             <Link
               key={product.name}
               href={product.href}
-              className="group flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl"
+              className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl"
             >
-              <div className="mb-5 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-                <div className="flex aspect-[4/3] items-center justify-center rounded-2xl border border-dashed border-blue-200 bg-white">
-                  <span className="text-center text-sm font-bold text-blue-700">
-                    {product.name}
-                  </span>
+              <div className="p-6 pb-0">
+                <div className="relative overflow-hidden rounded-2xl bg-slate-100">
+                  <div className="relative aspect-[4/3] w-full">
+                    <Image
+                      src={product.imageSrc}
+                      alt={product.imageAlt}
+                      fill
+                      sizes="(min-width: 1280px) 23vw, (min-width: 768px) 45vw, 100vw"
+                      className="object-cover transition duration-300 group-hover:scale-[1.03]"
+                      style={{ objectPosition: product.imagePosition }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 via-transparent to-transparent" />
+                    <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-slate-900 shadow-sm">
+                      {product.name}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-1 flex-col">
+              <div className="flex flex-1 flex-col p-6">
                 <h3 className="text-xl font-bold text-slate-900 transition group-hover:text-blue-700">
                   {product.name}
                 </h3>
