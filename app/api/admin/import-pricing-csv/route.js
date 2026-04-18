@@ -51,6 +51,7 @@ export async function POST(req) {
 
     const body = await req.json();
     const csvText = String(body?.csvText || "").trim();
+    const replaceExisting = Boolean(body?.replaceExisting);
 
     if (!csvText) {
       return NextResponse.json(
@@ -66,7 +67,10 @@ export async function POST(req) {
 
     if (lines.length < 2) {
       return NextResponse.json(
-        { success: false, error: "CSV must include a header row and at least one data row." },
+        {
+          success: false,
+          error: "CSV must include a header row and at least one data row.",
+        },
         { status: 400 }
       );
     }
@@ -148,6 +152,23 @@ export async function POST(req) {
       rowsToInsert.push(insertRow);
     }
 
+    if (replaceExisting) {
+      const { error: deleteError } = await supabaseAdmin
+        .from("pricing")
+        .delete()
+        .neq("id", 0);
+
+      if (deleteError) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: deleteError.message || "Failed to clear existing pricing.",
+          },
+          { status: 500 }
+        );
+      }
+    }
+
     const { error } = await supabaseAdmin.from("pricing").insert(rowsToInsert);
 
     if (error) {
@@ -160,6 +181,7 @@ export async function POST(req) {
     return NextResponse.json({
       success: true,
       insertedCount: rowsToInsert.length,
+      replacedExisting: replaceExisting,
     });
   } catch (err) {
     return NextResponse.json(
