@@ -29,6 +29,7 @@ export default function AdminPricingPage() {
 
   const [form, setForm] = useState(emptyForm);
   const [csvFile, setCsvFile] = useState(null);
+  const [replaceExisting, setReplaceExisting] = useState(false);
 
   const createFormRef = useRef(null);
 
@@ -172,12 +173,26 @@ export default function AdminPricingPage() {
 
       const text = await csvFile.text();
 
+      if (replaceExisting) {
+        const confirmed = window.confirm(
+          "Replace all existing pricing rows with this CSV?\n\nThis will delete all current pricing rows first."
+        );
+
+        if (!confirmed) {
+          setImporting(false);
+          return;
+        }
+      }
+
       const res = await fetch("/api/admin/import-pricing-csv", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ csvText: text }),
+        body: JSON.stringify({
+          csvText: text,
+          replaceExisting,
+        }),
       });
 
       const data = await res.json();
@@ -187,7 +202,11 @@ export default function AdminPricingPage() {
       }
 
       setCsvFile(null);
-      setMessage(`CSV import complete. Imported ${data.insertedCount} row(s).`);
+      setMessage(
+        replaceExisting
+          ? `CSV replace import complete. Replaced pricing with ${data.insertedCount} row(s).`
+          : `CSV import complete. Imported ${data.insertedCount} row(s).`
+      );
       await loadPricing();
     } catch (err) {
       console.error(err);
@@ -212,9 +231,7 @@ export default function AdminPricingPage() {
         try {
           const data = await res.json();
           errorMessage = data?.error || errorMessage;
-        } catch {
-          // ignore json parse failure
-        }
+        } catch {}
         throw new Error(errorMessage);
       }
 
@@ -434,6 +451,18 @@ export default function AdminPricingPage() {
               {importing ? "Importing..." : "Import CSV"}
             </button>
           </div>
+
+          <label className="mt-4 inline-flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <input
+              type="checkbox"
+              checked={replaceExisting}
+              onChange={(e) => setReplaceExisting(e.target.checked)}
+              className="h-4 w-4"
+            />
+            <span className="text-sm font-medium text-amber-900">
+              Replace all existing pricing rows with this CSV
+            </span>
+          </label>
         </div>
 
         <div
