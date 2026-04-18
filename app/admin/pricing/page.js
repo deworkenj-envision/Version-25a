@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const emptyForm = {
   product_name: "",
@@ -25,6 +25,7 @@ export default function AdminPricingPage() {
   const [search, setSearch] = useState("");
 
   const [form, setForm] = useState(emptyForm);
+  const createFormRef = useRef(null);
 
   useEffect(() => {
     loadPricing();
@@ -112,8 +113,7 @@ export default function AdminPricingPage() {
         sides: form.sides.trim(),
         quantity: Number(form.quantity),
         price: Number(form.price),
-        sort_order:
-          form.sort_order === "" ? 0 : Number(form.sort_order),
+        sort_order: form.sort_order === "" ? 0 : Number(form.sort_order),
         active: Boolean(form.active),
       };
 
@@ -152,6 +152,35 @@ export default function AdminPricingPage() {
       setMessage(err.message || "Failed to create pricing row.");
     } finally {
       setCreating(false);
+    }
+  }
+
+  function handleCopyRow(row) {
+    setForm({
+      product_name: row.product_name || "",
+      size: row.size || "",
+      paper: row.paper || "",
+      finish: row.finish || "",
+      sides: row.sides || "",
+      quantity: row.quantity ? String(row.quantity) : "",
+      price:
+        row.price !== null && row.price !== undefined ? String(row.price) : "",
+      sort_order:
+        row.sort_order !== null && row.sort_order !== undefined
+          ? String(row.sort_order)
+          : "",
+      active: Boolean(row.active),
+    });
+
+    setMessage(
+      `Copied row for ${row.product_name}. Update quantity or price, then click Add New Pricing Row.`
+    );
+
+    if (createFormRef.current) {
+      createFormRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }
   }
 
@@ -239,7 +268,10 @@ export default function AdminPricingPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8">
+        <div
+          ref={createFormRef}
+          className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8"
+        >
           <h2 className="text-2xl font-bold text-slate-900">
             Add New Pricing Row
           </h2>
@@ -341,9 +373,7 @@ export default function AdminPricingPage() {
                 }
                 className="h-4 w-4"
               />
-              <span className="text-sm font-medium text-slate-700">
-                Active
-              </span>
+              <span className="text-sm font-medium text-slate-700">Active</span>
             </label>
 
             <div className="xl:col-span-2">
@@ -410,7 +440,7 @@ export default function AdminPricingPage() {
 
         <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
           <div className="overflow-x-auto">
-            <table className="min-w-[1100px] w-full text-sm">
+            <table className="min-w-[1220px] w-full text-sm">
               <thead className="bg-slate-100 text-left text-slate-700">
                 <tr>
                   <th className="p-4 font-semibold">Product</th>
@@ -422,6 +452,7 @@ export default function AdminPricingPage() {
                   <th className="p-4 font-semibold">Sort</th>
                   <th className="p-4 font-semibold">Price</th>
                   <th className="p-4 font-semibold">Active</th>
+                  <th className="p-4 font-semibold">Copy</th>
                   <th className="p-4 font-semibold">Status</th>
                 </tr>
               </thead>
@@ -429,7 +460,7 @@ export default function AdminPricingPage() {
               <tbody>
                 {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan="10" className="p-8 text-center text-slate-500">
+                    <td colSpan="11" className="p-8 text-center text-slate-500">
                       No pricing rows found.
                     </td>
                   </tr>
@@ -482,6 +513,16 @@ export default function AdminPricingPage() {
                             {row.active ? "On" : "Off"}
                           </span>
                         </label>
+                      </td>
+
+                      <td className="p-4">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyRow(row)}
+                          className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                        >
+                          Copy Row
+                        </button>
                       </td>
 
                       <td className="p-4">
