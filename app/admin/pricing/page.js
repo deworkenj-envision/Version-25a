@@ -21,6 +21,7 @@ export default function AdminPricingPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [message, setMessage] = useState("");
 
   const [productFilter, setProductFilter] = useState("All");
@@ -186,15 +187,54 @@ export default function AdminPricingPage() {
       }
 
       setCsvFile(null);
-      setMessage(
-        `CSV import complete. Imported ${data.insertedCount} row(s).`
-      );
+      setMessage(`CSV import complete. Imported ${data.insertedCount} row(s).`);
       await loadPricing();
     } catch (err) {
       console.error(err);
       setMessage(err.message || "CSV import failed.");
     } finally {
       setImporting(false);
+    }
+  }
+
+  async function handleExportCsv() {
+    try {
+      setExporting(true);
+      setMessage("");
+
+      const res = await fetch("/api/admin/export-pricing-csv", {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        let errorMessage = "CSV export failed.";
+        try {
+          const data = await res.json();
+          errorMessage = data?.error || errorMessage;
+        } catch {
+          // ignore json parse failure
+        }
+        throw new Error(errorMessage);
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "pricing-export.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+      setMessage("Pricing CSV exported successfully.");
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message || "CSV export failed.");
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -348,19 +388,27 @@ export default function AdminPricingPage() {
               </p>
             </div>
 
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center justify-center rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
-            >
-              Logout
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleExportCsv}
+                disabled={exporting}
+                className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+              >
+                {exporting ? "Exporting..." : "Export CSV"}
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center justify-center rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8">
-          <h2 className="text-2xl font-bold text-slate-900">
-            Bulk CSV Import
-          </h2>
+          <h2 className="text-2xl font-bold text-slate-900">Bulk CSV Import</h2>
           <p className="mt-2 text-slate-600">
             Upload a CSV to import many pricing rows at once.
           </p>
@@ -381,7 +429,7 @@ export default function AdminPricingPage() {
               type="button"
               onClick={handleImportCsv}
               disabled={importing || !csvFile}
-              className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+              className="rounded-2xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:opacity-60"
             >
               {importing ? "Importing..." : "Import CSV"}
             </button>
@@ -412,7 +460,6 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
-
             <input
               type="text"
               placeholder="Size"
@@ -422,7 +469,6 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
-
             <input
               type="text"
               placeholder="Paper"
@@ -432,7 +478,6 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
-
             <input
               type="text"
               placeholder="Finish"
@@ -442,7 +487,6 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
-
             <input
               type="text"
               placeholder="Sides"
@@ -452,7 +496,6 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
-
             <input
               type="number"
               placeholder="Quantity"
@@ -462,7 +505,6 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
-
             <input
               type="number"
               step="0.01"
@@ -473,7 +515,6 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
-
             <input
               type="number"
               placeholder="Sort Order"
