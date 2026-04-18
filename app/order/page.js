@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 
 function formatMoney(value) {
   const number = Number(value || 0);
@@ -20,6 +22,25 @@ function getProductFromUrl() {
   const params = new URLSearchParams(window.location.search);
   return params.get("product") || "";
 }
+
+const PRODUCT_META = {
+  "Business Cards": {
+    image: "/products/business-cards.jpg",
+    blurb: "Professional business cards with clean finishes and sharp print quality.",
+  },
+  Flyers: {
+    image: "/products/flyers.jpg",
+    blurb: "High-impact flyers for promotions, events, menus, and handouts.",
+  },
+  Postcards: {
+    image: "/products/postcards.jpg",
+    blurb: "Premium postcards perfect for marketing, direct mail, and announcements.",
+  },
+  Banners: {
+    image: "/products/banners.jpg",
+    blurb: "Durable indoor and outdoor banners with vibrant full-color printing.",
+  },
+};
 
 export default function OrderPage() {
   const [pricingRows, setPricingRows] = useState([]);
@@ -204,21 +225,14 @@ export default function OrderPage() {
   }, [quantityRows, livePrice, quantity]);
 
   const productDescription = useMemo(() => {
-    const descriptions = {
-      "Business Cards":
-        "Professional business cards with clean finishes and sharp print quality.",
-      Flyers:
-        "High-impact flyers for promotions, events, menus, and handouts.",
-      Postcards:
-        "Premium postcards perfect for marketing, direct mail, and announcements.",
-      Banners:
-        "Durable indoor and outdoor banners with vibrant full-color printing.",
-    };
-
     return (
-      descriptions[productName] ||
+      PRODUCT_META[productName]?.blurb ||
       "Choose your print options and get a live price instantly."
     );
+  }, [productName]);
+
+  const currentProductImage = useMemo(() => {
+    return PRODUCT_META[productName]?.image || "/products/business-cards.jpg";
   }, [productName]);
 
   const subtotal = Number(livePrice || 0);
@@ -515,26 +529,26 @@ export default function OrderPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-[#f5f7fb] text-slate-900">
       <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
-        <div className="mx-auto max-w-7xl px-6 py-14 lg:px-8">
-          <div className="grid items-center gap-10 lg:grid-cols-2">
+        <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-14">
+          <div className="grid items-center gap-8 lg:grid-cols-[1.15fr_0.85fr]">
             <div>
-              <div className="mb-4 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1 text-sm font-medium backdrop-blur">
-                EnVision Direct
+              <div className="mb-4 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-medium backdrop-blur">
+                EnVision Direct Premium Estimator
               </div>
 
-              <h1 className="max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl">
-                Top Quality Printing.
+              <h1 className="max-w-3xl text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl xl:text-[4rem]">
+                Build Your Order.
                 <br />
-                Fast Turnaround.
+                Upload Artwork.
                 <br />
-                The Best Prices.
+                Checkout Securely.
               </h1>
 
-              <p className="mt-5 max-w-2xl text-lg text-blue-50">
-                Choose your product, select your exact options, upload print-ready
-                artwork, and get a live price instantly.
+              <p className="mt-5 max-w-2xl text-lg leading-8 text-blue-50">
+                Choose your product, select exact print options, see live pricing,
+                and place your order with confidence.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3 text-sm">
@@ -542,7 +556,7 @@ export default function OrderPage() {
                   allProducts.map((product) => (
                     <span
                       key={product}
-                      className="rounded-full bg-white/15 px-4 py-2"
+                      className="rounded-full bg-white/15 px-4 py-2 font-medium"
                     >
                       {product}
                     </span>
@@ -558,68 +572,76 @@ export default function OrderPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl bg-white p-6 text-slate-900 shadow-2xl">
-              <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-blue-700">
-                Premium Live Estimate
+            <div className="overflow-hidden rounded-[30px] bg-white shadow-2xl ring-1 ring-white/20">
+              <div className="relative">
+                <Image
+                  src={currentProductImage}
+                  alt={productName || "Selected product"}
+                  width={1200}
+                  height={800}
+                  className="h-64 w-full object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-slate-900/10 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  <div className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-100">
+                    Live Estimate
+                  </div>
+                  <div className="mt-1 text-3xl font-bold">
+                    {productName || "Loading..."}
+                  </div>
+                  <p className="mt-2 max-w-md text-sm leading-6 text-white/90">
+                    {productDescription}
+                  </p>
+                </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="text-sm text-slate-500">Selected Product</div>
-                    <div className="mt-1 text-2xl font-bold">
-                      {productName || "Loading..."}
-                    </div>
-                    <p className="mt-2 text-sm text-slate-600">
-                      {productDescription}
-                    </p>
+              <div className="grid gap-3 p-5 sm:grid-cols-2">
+                <MetricCard
+                  label="Print Price"
+                  value={pricingLoading ? "Loading..." : formatMoney(subtotal)}
+                />
+                <MetricCard
+                  label="Per Piece"
+                  value={
+                    pricingLoading
+                      ? "Loading..."
+                      : currentUnitPrice > 0
+                      ? formatMoney(currentUnitPrice)
+                      : "-"
+                  }
+                />
+                <MetricCard
+                  label="Shipping"
+                  value={shippingLoading ? "Loading..." : formatMoney(shipping)}
+                />
+                <MetricCard
+                  label="Selected Qty"
+                  value={quantity ? String(quantity) : "-"}
+                />
+              </div>
+
+              <div className="px-5 pb-5">
+                <div className="rounded-[24px] bg-blue-700 p-5 text-white shadow-lg">
+                  <div className="text-sm font-medium text-blue-100">Estimated Total</div>
+                  <div className="mt-1 text-3xl font-extrabold">
+                    {pricingLoading || pricingTableLoading || shippingLoading
+                      ? "Loading..."
+                      : formatMoney(total)}
                   </div>
 
                   {bestValueRow ? (
-                    <div className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-                      Best value: {bestValueRow.quantity}
+                    <div className="mt-2 text-sm text-blue-100">
+                      Best value quantity: {bestValueRow.quantity}
                     </div>
                   ) : null}
-                </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                  <MetricCard
-                    label="Print Price"
-                    value={pricingLoading ? "Loading..." : formatMoney(subtotal)}
-                  />
-                  <MetricCard
-                    label="Per Piece"
-                    value={
-                      pricingLoading
-                        ? "Loading..."
-                        : currentUnitPrice > 0
-                        ? formatMoney(currentUnitPrice)
-                        : "-"
-                    }
-                  />
-                  <MetricCard
-                    label="Shipping"
-                    value={shippingLoading ? "Loading..." : formatMoney(shipping)}
-                  />
-                  <MetricCard
-                    label="Selected Qty"
-                    value={quantity ? String(quantity) : "-"}
-                  />
-                  <div className="col-span-2 rounded-2xl bg-blue-700 p-5 text-white shadow-lg">
-                    <div className="text-blue-100">Estimated Total</div>
-                    <div className="mt-1 text-3xl font-bold">
-                      {pricingLoading || pricingTableLoading || shippingLoading
-                        ? "Loading..."
-                        : formatMoney(total)}
+                  {savingsVsSmallestQty ? (
+                    <div className="mt-1 text-sm text-blue-100">
+                      Better unit price than the smallest quantity by{" "}
+                      {formatMoney(savingsVsSmallestQty)} each.
                     </div>
-
-                    {savingsVsSmallestQty ? (
-                      <div className="mt-2 text-sm text-blue-100">
-                        Better unit price than the smallest quantity by{" "}
-                        {formatMoney(savingsVsSmallestQty)} each.
-                      </div>
-                    ) : null}
-                  </div>
+                  ) : null}
                 </div>
 
                 {livePrice === null && !pricingLoading && !pricingTableLoading ? (
@@ -635,31 +657,64 @@ export default function OrderPage() {
 
       <section className="-mt-6 pb-16">
         <div className="mx-auto grid max-w-7xl gap-8 px-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8">
-          <div className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-slate-900">Build Your Order</h2>
-              <p className="mt-2 text-slate-600">
-                Live pricing and shipping now update automatically based on your
-                selected product and quantity.
-              </p>
+          <div className="rounded-[30px] bg-white p-6 shadow-xl ring-1 ring-slate-200 md:p-8">
+            <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">
+                  Customize Your Order
+                </h2>
+                <p className="mt-2 max-w-2xl text-slate-600">
+                  Pick your product options below. Pricing and shipping update live
+                  as you build your order.
+                </p>
+              </div>
+
+              <Link
+                href="/track"
+                className="inline-flex items-center rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-500 hover:text-blue-700"
+              >
+                Track an Existing Order
+              </Link>
+            </div>
+
+            <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {allProducts.map((product) => {
+                const isActive = product === productName;
+                const image =
+                  PRODUCT_META[product]?.image || "/products/business-cards.jpg";
+
+                return (
+                  <button
+                    key={product}
+                    type="button"
+                    onClick={() => setProductName(product)}
+                    className={`overflow-hidden rounded-[24px] border text-left transition ${
+                      isActive
+                        ? "border-blue-700 ring-2 ring-blue-100"
+                        : "border-slate-200 hover:border-blue-300"
+                    }`}
+                  >
+                    <div className="relative">
+                      <Image
+                        src={image}
+                        alt={product}
+                        width={800}
+                        height={600}
+                        className="h-32 w-full object-cover"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <div className="text-base font-bold text-slate-900">{product}</div>
+                      <div className="mt-1 text-xs text-slate-500">
+                        {isActive ? "Currently selected" : "Select product"}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
-              <Field label="Product">
-                <select
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  className="input"
-                  disabled={pricingTableLoading || allProducts.length === 0}
-                >
-                  {allProducts.map((product) => (
-                    <option key={product} value={product}>
-                      {product}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
               <Field label="Size">
                 <select
                   value={size}
@@ -719,9 +774,11 @@ export default function OrderPage() {
                   ))}
                 </select>
               </Field>
+            </div>
 
+            <div className="mt-6">
               <Field label="Quantity">
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <select
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
@@ -736,7 +793,7 @@ export default function OrderPage() {
                   </select>
 
                   {availableQuantities.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                       {availableQuantities.slice(0, 6).map((option) => {
                         const optionRow = quantityRows.find(
                           (row) => Number(row.quantity) === Number(option)
@@ -751,14 +808,14 @@ export default function OrderPage() {
                             key={option}
                             type="button"
                             onClick={() => setQuantity(String(option))}
-                            className={`rounded-2xl border px-3 py-3 text-left transition ${
+                            className={`rounded-[22px] border px-4 py-4 text-left transition ${
                               isSelected
                                 ? "border-blue-700 bg-blue-50 shadow-sm"
                                 : "border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50"
                             }`}
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-sm font-semibold text-slate-900">
+                              <span className="text-base font-bold text-slate-900">
                                 {option}
                               </span>
                               {isBestValue ? (
@@ -768,11 +825,11 @@ export default function OrderPage() {
                               ) : null}
                             </div>
 
-                            <div className="mt-1 text-xs text-slate-500">
+                            <div className="mt-2 text-sm font-semibold text-slate-700">
                               {optionRow ? formatMoney(optionRow.price) : "-"}
                             </div>
 
-                            <div className="mt-1 text-xs text-slate-400">
+                            <div className="mt-1 text-xs text-slate-500">
                               {optionRow?.quantity && optionRow?.price
                                 ? `${formatMoney(
                                     Number(optionRow.price) / Number(optionRow.quantity)
@@ -788,7 +845,7 @@ export default function OrderPage() {
               </Field>
             </div>
 
-            <div className="mt-8 grid gap-5 md:grid-cols-2">
+            <div className="mt-10 grid gap-5 md:grid-cols-2">
               <Field label="Your Name">
                 <input
                   type="text"
@@ -821,13 +878,23 @@ export default function OrderPage() {
               </Field>
             </div>
 
-            <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
-              <div className="text-base font-semibold text-slate-900">Upload Artwork</div>
-              <p className="mt-1 text-sm text-slate-600">
-                Upload your print-ready file before checkout.
-              </p>
+            <div className="mt-8 rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-5 md:p-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <div className="text-lg font-bold text-slate-900">Upload Artwork</div>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Upload your print-ready file before checkout.
+                  </p>
+                </div>
 
-              <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center">
+                {uploadedArtwork?.publicUrl ? (
+                  <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    Artwork Uploaded
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
                 <input
                   type="file"
                   accept=".pdf,.png,.jpg,.jpeg,.webp"
@@ -837,7 +904,7 @@ export default function OrderPage() {
                     setUploadedArtwork(null);
                     setMessage("");
                   }}
-                  className="block w-full text-sm text-slate-700 file:mr-4 file:rounded-full file:border-0 file:bg-blue-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-800"
+                  className="block w-full text-sm text-slate-700 file:mr-4 file:rounded-full file:border-0 file:bg-blue-700 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-800"
                 />
 
                 <button
@@ -851,14 +918,14 @@ export default function OrderPage() {
               </div>
 
               {uploadedArtwork?.publicUrl ? (
-                <div className="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-700">
+                <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700">
                   Uploaded: <span className="font-semibold">{uploadedArtwork.fileName}</span>
                 </div>
               ) : null}
             </div>
           </div>
 
-          <aside className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200">
+          <aside className="rounded-[30px] bg-white p-6 shadow-xl ring-1 ring-slate-200 md:p-8">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-2xl font-bold text-slate-900">Order Summary</h3>
               {selectedRow?.id ? (
@@ -870,6 +937,16 @@ export default function OrderPage() {
                   No Match
                 </span>
               )}
+            </div>
+
+            <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200">
+              <Image
+                src={currentProductImage}
+                alt={productName || "Selected product"}
+                width={1200}
+                height={800}
+                className="h-44 w-full object-cover"
+              />
             </div>
 
             <div className="mt-6 space-y-4">
@@ -886,7 +963,7 @@ export default function OrderPage() {
             </div>
 
             {bestValueRow ? (
-              <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <div className="mt-6 rounded-[24px] border border-amber-200 bg-amber-50 p-4">
                 <div className="text-sm font-semibold text-amber-800">
                   Best Value Quantity
                 </div>
@@ -900,7 +977,7 @@ export default function OrderPage() {
               </div>
             ) : null}
 
-            <div className="mt-6 border-t border-slate-200 pt-6">
+            <div className="mt-6 rounded-[24px] bg-slate-50 p-5">
               <div className="flex items-center justify-between text-sm text-slate-600">
                 <span>Print Price</span>
                 <span>{pricingLoading ? "Loading..." : formatMoney(subtotal)}</span>
@@ -931,7 +1008,7 @@ export default function OrderPage() {
                 livePrice === null ||
                 !uploadedArtwork?.publicUrl
               }
-              className="mt-8 w-full rounded-2xl bg-blue-700 px-6 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-8 w-full rounded-[22px] bg-blue-700 px-6 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {checkoutLoading ? "Starting Checkout..." : "Proceed to Checkout"}
             </button>
@@ -941,7 +1018,7 @@ export default function OrderPage() {
             </p>
 
             {message ? (
-              <div className="mt-5 rounded-2xl bg-slate-100 p-4 text-sm text-slate-700">
+              <div className="mt-5 rounded-[22px] bg-slate-100 p-4 text-sm text-slate-700">
                 {message}
               </div>
             ) : null}
@@ -955,16 +1032,20 @@ export default function OrderPage() {
           border-radius: 1rem;
           border: 1px solid #cbd5e1;
           background: white;
-          padding: 0.9rem 1rem;
+          padding: 0.95rem 1rem;
           font-size: 0.95rem;
           color: #0f172a;
           outline: none;
-          transition: box-shadow 0.2s ease, border-color 0.2s ease;
+          transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
         }
 
         .input:focus {
           border-color: #2563eb;
           box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        .input:hover {
+          background: #f8fafc;
         }
       `}</style>
     </main>
@@ -991,9 +1072,9 @@ function SummaryRow({ label, value }) {
 
 function MetricCard({ label, value }) {
   return (
-    <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
-      <div className="text-slate-500">{label}</div>
-      <div className="mt-1 font-semibold text-slate-900">{value}</div>
+    <div className="rounded-[20px] bg-slate-50 p-4 ring-1 ring-slate-200">
+      <div className="text-sm text-slate-500">{label}</div>
+      <div className="mt-1 text-lg font-bold text-slate-900">{value}</div>
     </div>
   );
 }
