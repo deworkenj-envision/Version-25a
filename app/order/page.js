@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 function formatMoney(value) {
   const num = Number(value || 0);
@@ -84,10 +84,12 @@ function findMatchingProduct(products, requestedValue) {
 
 function bestValueRow(rows) {
   if (!rows.length) return null;
+
   return rows.reduce((best, row) => {
     const qty = Number(row.quantity || 0);
     const price = Number(row.price || 0);
     const unit = qty > 0 ? price / qty : Infinity;
+
     if (!best) return { ...row, unitPrice: unit };
     return unit < best.unitPrice ? { ...row, unitPrice: unit } : best;
   }, null);
@@ -95,7 +97,6 @@ function bestValueRow(rows) {
 
 export default function OrderPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [pricingRows, setPricingRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -115,24 +116,29 @@ export default function OrderPage() {
   const [uploadedArtworkUrl, setUploadedArtworkUrl] = useState("");
   const [uploadedArtworkFileName, setUploadedArtworkFileName] = useState("");
 
-  const requestedProduct = useMemo(() => {
-    return (
-      searchParams.get("product") ||
-      searchParams.get("productName") ||
-      searchParams.get("name") ||
-      ""
-    );
-  }, [searchParams]);
+  const [requestedProduct, setRequestedProduct] = useState("");
+  const [requestedImage, setRequestedImage] = useState("");
 
-  const requestedImage = useMemo(() => {
-    return (
-      searchParams.get("image") ||
-      searchParams.get("thumbnail") ||
-      searchParams.get("thumb") ||
-      searchParams.get("productImage") ||
-      ""
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+
+    setRequestedProduct(
+      params.get("product") ||
+        params.get("productName") ||
+        params.get("name") ||
+        ""
     );
-  }, [searchParams]);
+
+    setRequestedImage(
+      params.get("image") ||
+        params.get("thumbnail") ||
+        params.get("thumb") ||
+        params.get("productImage") ||
+        ""
+    );
+  }, []);
 
   useEffect(() => {
     let active = true;
