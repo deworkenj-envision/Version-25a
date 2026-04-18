@@ -22,6 +22,7 @@ export default function AdminPricingPage() {
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const [message, setMessage] = useState("");
 
   const [productFilter, setProductFilter] = useState("All");
@@ -255,6 +256,45 @@ export default function AdminPricingPage() {
     }
   }
 
+  async function handleDownloadTemplate() {
+    try {
+      setDownloadingTemplate(true);
+      setMessage("");
+
+      const res = await fetch("/api/admin/pricing-template-csv", {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        let errorMessage = "Template download failed.";
+        try {
+          const data = await res.json();
+          errorMessage = data?.error || errorMessage;
+        } catch {}
+        throw new Error(errorMessage);
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "pricing-template.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+      setMessage("Pricing CSV template downloaded.");
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message || "Template download failed.");
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  }
+
   function handleCopyRow(row) {
     setForm({
       product_name: row.product_name || "",
@@ -406,6 +446,14 @@ export default function AdminPricingPage() {
             </div>
 
             <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleDownloadTemplate}
+                disabled={downloadingTemplate}
+                className="inline-flex items-center justify-center rounded-2xl bg-slate-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
+              >
+                {downloadingTemplate ? "Downloading..." : "Download Template"}
+              </button>
+
               <button
                 onClick={handleExportCsv}
                 disabled={exporting}
