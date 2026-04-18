@@ -487,55 +487,64 @@ export default function AdminPricingPage() {
 
         <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
           <div className="overflow-x-auto">
-            <table className="min-w-[1340px] w-full text-sm">
+            <table className="w-full min-w-[1120px] text-sm">
               <thead className="bg-slate-100 text-left text-slate-700">
                 <tr>
-                  <th className="p-4 font-semibold">Product</th>
-                  <th className="p-4 font-semibold">Size</th>
-                  <th className="p-4 font-semibold">Paper</th>
-                  <th className="p-4 font-semibold">Finish</th>
-                  <th className="p-4 font-semibold">Sides</th>
-                  <th className="p-4 font-semibold">Qty</th>
-                  <th className="p-4 font-semibold">Sort</th>
-                  <th className="p-4 font-semibold">Price</th>
-                  <th className="p-4 font-semibold">Active</th>
-                  <th className="p-4 font-semibold">Copy</th>
-                  <th className="p-4 font-semibold">Delete</th>
-                  <th className="p-4 font-semibold">Status</th>
+                  <th className="px-3 py-4 font-semibold">Product</th>
+                  <th className="px-3 py-4 font-semibold">Size</th>
+                  <th className="px-3 py-4 font-semibold">Paper</th>
+                  <th className="px-3 py-4 font-semibold">Finish</th>
+                  <th className="px-3 py-4 font-semibold">Sides</th>
+                  <th className="px-3 py-4 font-semibold">Qty</th>
+                  <th className="px-3 py-4 font-semibold">Sort</th>
+                  <th className="px-3 py-4 font-semibold">Price</th>
+                  <th className="px-3 py-4 font-semibold">Active</th>
+                  <th className="px-3 py-4 font-semibold">Actions</th>
+                  <th className="px-3 py-4 font-semibold">Status</th>
                 </tr>
               </thead>
 
               <tbody>
                 {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan="12" className="p-8 text-center text-slate-500">
+                    <td colSpan="11" className="p-8 text-center text-slate-500">
                       No pricing rows found.
                     </td>
                   </tr>
                 ) : (
                   filteredRows.map((row) => (
-                    <tr key={row.id} className="border-t border-slate-200">
-                      <td className="p-4 font-medium text-slate-900">
+                    <tr key={row.id} className="border-t border-slate-200 align-top">
+                      <td className="px-3 py-4 font-medium text-slate-900 whitespace-nowrap">
                         {row.product_name}
                       </td>
-                      <td className="p-4 text-slate-700">{row.size}</td>
-                      <td className="p-4 text-slate-700">{row.paper}</td>
-                      <td className="p-4 text-slate-700">{row.finish}</td>
-                      <td className="p-4 text-slate-700">{row.sides}</td>
-                      <td className="p-4 text-slate-700">{row.quantity}</td>
+                      <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
+                        {row.size}
+                      </td>
+                      <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
+                        {row.paper}
+                      </td>
+                      <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
+                        {row.finish}
+                      </td>
+                      <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
+                        {row.sides}
+                      </td>
+                      <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
+                        {row.quantity}
+                      </td>
 
-                      <td className="p-4">
+                      <td className="px-3 py-4">
                         <input
                           type="number"
                           value={row.sort_order ?? 0}
                           onChange={(e) =>
                             updateRow(row.id, "sort_order", e.target.value)
                           }
-                          className="w-24 rounded-xl border border-slate-300 px-3 py-2 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                          className="w-20 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
                       </td>
 
-                      <td className="p-4">
+                      <td className="px-3 py-4">
                         <input
                           type="number"
                           step="0.01"
@@ -543,12 +552,12 @@ export default function AdminPricingPage() {
                           onChange={(e) =>
                             updateRow(row.id, "price", e.target.value)
                           }
-                          className="w-28 rounded-xl border border-slate-300 px-3 py-2 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                          className="w-24 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
                       </td>
 
-                      <td className="p-4">
-                        <label className="inline-flex cursor-pointer items-center gap-3">
+                      <td className="px-3 py-4 whitespace-nowrap">
+                        <label className="inline-flex cursor-pointer items-center gap-2">
                           <input
                             type="checkbox"
                             checked={Boolean(row.active)}
@@ -557,34 +566,34 @@ export default function AdminPricingPage() {
                             }
                             className="h-4 w-4 rounded border-slate-300"
                           />
-                          <span className="text-slate-700">
+                          <span className="text-slate-700 text-xs">
                             {row.active ? "On" : "Off"}
                           </span>
                         </label>
                       </td>
 
-                      <td className="p-4">
-                        <button
-                          type="button"
-                          onClick={() => handleCopyRow(row)}
-                          className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
-                        >
-                          Copy Row
-                        </button>
+                      <td className="px-3 py-4">
+                        <div className="flex flex-col gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyRow(row)}
+                            className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                          >
+                            Copy
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRow(row)}
+                            disabled={deletingId === row.id}
+                            className="rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
+                          >
+                            {deletingId === row.id ? "Deleting..." : "Delete"}
+                          </button>
+                        </div>
                       </td>
 
-                      <td className="p-4">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteRow(row)}
-                          disabled={deletingId === row.id}
-                          className="rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
-                        >
-                          {deletingId === row.id ? "Deleting..." : "Delete Row"}
-                        </button>
-                      </td>
-
-                      <td className="p-4">
+                      <td className="px-3 py-4 whitespace-nowrap">
                         {savingId === row.id ? (
                           <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
                             Saving...
