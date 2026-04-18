@@ -12,6 +12,21 @@ function normalize(value) {
   return String(value ?? "").trim();
 }
 
+function slugify(value) {
+  return normalize(value)
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+const PRODUCT_IMAGES = {
+  "business-cards": "/images/business-cards.jpg",
+  postcards: "/images/postcards.jpg",
+  flyers: "/images/flyers.jpg",
+  banners: "/images/banners.jpg",
+};
+
 export default function OrderPage() {
   const router = useRouter();
 
@@ -28,6 +43,32 @@ export default function OrderPage() {
 
   const [notes, setNotes] = useState("");
   const [artworkFile, setArtworkFile] = useState(null);
+  const [uploadingArtwork, setUploadingArtwork] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadedArtworkUrl, setUploadedArtworkUrl] = useState("");
+  const [uploadedArtworkFileName, setUploadedArtworkFileName] = useState("");
+
+  const [requestedProduct, setRequestedProduct] = useState("");
+  const [requestedImage, setRequestedImage] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    const qpProduct =
+      params.get("product") ||
+      params.get("productName") ||
+      params.get("name") ||
+      "";
+
+    const qpImage =
+      params.get("image") ||
+      params.get("thumbnail") ||
+      params.get("thumb") ||
+      "";
+
+    setRequestedProduct(normalize(qpProduct));
+    setRequestedImage(normalize(qpImage));
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -37,16 +78,17 @@ export default function OrderPage() {
         setLoading(true);
         setLoadError("");
 
-        const res = await fetch("/api/pricing", {
-          cache: "no-store",
-        });
-
+        const res = await fetch("/api/pricing", { cache: "no-store" });
         if (!res.ok) {
-          throw new Error("Unable to load pricing");
+          throw new Error("Unable to load pricing.");
         }
 
         const data = await res.json();
-        const rows = Array.isArray(data) ? data : Array.isArray(data?.rows) ? data.rows : [];
+        const rows = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.rows)
+            ? data.rows
+            : [];
 
         if (!active) return;
 
@@ -66,7 +108,7 @@ export default function OrderPage() {
 
         setPricingRows(cleanedRows);
       } catch (err) {
-        setLoadError(err.message || "Failed to load pricing");
+        setLoadError(err.message || "Failed to load pricing.");
       } finally {
         if (active) setLoading(false);
       }
@@ -84,10 +126,37 @@ export default function OrderPage() {
   }, [pricingRows]);
 
   useEffect(() => {
-    if (!productName && products.length > 0) {
+    if (!products.length) return;
+
+    if (requestedProduct) {
+      const exactMatch = products.find(
+        (p) => normalize(p).toLowerCase() === requestedProduct.toLowerCase()
+      );
+
+      if (exactMatch) {
+        setProductName(exactMatch);
+        return;
+      }
+
+      const slugMatch = products.find(
+        (p) => slugify(p) === slugify(requestedProduct)
+      );
+
+      if (slugMatch) {
+        setProductName(slugMatch);
+        return;
+      }
+    }
+
+    if (!productName) {
       setProductName(products[0]);
     }
-  }, [products, productName]);
+  }, [products, requestedProduct, productName]);
+
+  const productImage = useMemo(() => {
+    if (requestedImage) return requestedImage;
+    return PRODUCT_IMAGES[slugify(productName)] || "";
+  }, [productName, requestedImage]);
 
   const rowsForProduct = useMemo(() => {
     return pricingRows.filter((row) => row.product_name === productName);
@@ -200,49 +269,115 @@ export default function OrderPage() {
       paper &&
       finish &&
       sides &&
-      quantity
+      quantity &&
+      artworkFile &&
+      !uploadingArtwork
   );
 
-  function handleContinue() {
-    if (!canContinue) return;
+  async function uploadArtworkToServer(file) {
+    const formData = new FormData();
+    formData.append("file", file);
 
-    const payload = {
-      productName,
-      size,
-      paper,
-      finish,
-      sides,
-      quantity: Number(quantity),
-      price: subtotal,
-      notes,
-      artworkFileName: artworkFile?.name || "",
-    };
-
-    try {
-      localStorage.setItem("envision_order_config", JSON.stringify(payload));
-    } catch (err) {
-      console.error("Failed to save order config", err);
-    }
-
-    const params = new URLSearchParams({
-      product: productName,
-      size,
-      paper,
-      finish,
-      sides,
-      quantity: String(quantity),
-      subtotal: String(subtotal),
-      notes,
+    const res = await fetch("/api/upload-artwork", {
+      method: "POST",
+      body: formData,
     });
 
-    router.push(`/checkout?${params.toString()}`);
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data?.error || data?.message || "Artwork upload failed.");
+    }
+
+    const artworkUrl =
+      data?.artworkUrl ||
+      data?.url ||
+      data?.publicUrl ||
+      data?.fileUrl ||
+      "";
+
+    const fileName =
+      data?.fileName ||
+      data?.filename ||
+      file?.name ||
+      "";
+
+    if (!artworkUrl) {
+      throw new Error("Upload succeeded but no artwork URL was returned.");
+    }
+
+    return { artworkUrl, fileName };
+  }
+
+  async function handleContinue() {
+    if (!selectedRow) return;
+
+    if (!artworkFile) {
+      setUploadError("Please upload your artwork before continuing.");
+      return;
+    }
+
+    try {
+      setUploadingArtwork(true);
+      setUploadError("");
+
+      const uploadResult = await uploadArtworkToServer(artworkFile);
+
+      setUploadedArtworkUrl(uploadResult.artworkUrl);
+      setUploadedArtworkFileName(uploadResult.fileName);
+
+      const payload = {
+        productName,
+        size,
+        paper,
+        finish,
+        sides,
+        quantity: Number(quantity),
+        price: subtotal,
+        notes,
+        artworkUrl: uploadResult.artworkUrl,
+        artworkFileName: uploadResult.fileName,
+        productImage,
+      };
+
+      localStorage.setItem("envision_order_config", JSON.stringify(payload));
+
+      const params = new URLSearchParams({
+        product: productName,
+        size,
+        paper,
+        finish,
+        sides,
+        quantity: String(quantity),
+        subtotal: String(subtotal),
+        notes,
+        artworkUrl: uploadResult.artworkUrl,
+        artworkFileName: uploadResult.fileName,
+        productImage: productImage || "",
+      });
+
+      router.push(`/checkout?${params.toString()}`);
+    } catch (err) {
+      console.error(err);
+      setUploadError(err.message || "Artwork upload failed.");
+    } finally {
+      setUploadingArtwork(false);
+    }
+  }
+
+  function handleArtworkChange(e) {
+    const file = e.target.files?.[0] || null;
+    setArtworkFile(file);
+    setUploadError("");
+    setUploadedArtworkUrl("");
+    setUploadedArtworkFileName("");
   }
 
   return (
     <main className="min-h-screen bg-slate-50">
       <section className="bg-gradient-to-r from-blue-900 via-blue-800 to-sky-700 text-white">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
+          <div className="max-w-4xl">
             <p className="mb-3 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1 text-sm font-medium">
               Custom Print Ordering
             </p>
@@ -250,8 +385,7 @@ export default function OrderPage() {
               Build your order with live pricing
             </h1>
             <p className="mt-3 max-w-2xl text-base text-blue-100 sm:text-lg">
-              Choose your product options and see your price update instantly.
-              Built for a fast, professional ordering experience.
+              Choose your options, upload your artwork, and continue to checkout with everything ready.
             </p>
           </div>
         </div>
@@ -262,7 +396,7 @@ export default function OrderPage() {
           <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
             <div className="text-lg font-semibold text-slate-800">Loading pricing...</div>
             <p className="mt-2 text-sm text-slate-500">
-              Please wait while we load your available print options.
+              Please wait while we load your print options.
             </p>
           </div>
         ) : loadError ? (
@@ -273,11 +407,53 @@ export default function OrderPage() {
         ) : (
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
             <div className="space-y-6">
+              <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                <div className="grid gap-0 md:grid-cols-[280px_minmax(0,1fr)]">
+                  <div className="bg-slate-100">
+                    {productImage ? (
+                      <img
+                        src={productImage}
+                        alt={productName || "Selected product"}
+                        className="h-full min-h-[240px] w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full min-h-[240px] items-center justify-center p-6 text-center text-sm text-slate-500">
+                        Product image preview
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-6">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+                      Selected Product
+                    </p>
+                    <h2 className="mt-2 text-3xl font-bold text-slate-900">
+                      {productName || "Choose your product"}
+                    </h2>
+                    <p className="mt-3 max-w-2xl text-sm text-slate-600">
+                      Your product selection from the homepage should appear here, along with its preview image.
+                    </p>
+
+                    <div className="mt-5 flex flex-wrap gap-3">
+                      <div className="rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
+                        Live pricing
+                      </div>
+                      <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">
+                        Smart options
+                      </div>
+                      <div className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
+                        Artwork required
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-slate-900">Configure your product</h2>
+                  <h3 className="text-2xl font-bold text-slate-900">Configure your product</h3>
                   <p className="mt-2 text-sm text-slate-500">
-                    Select your options below. Available choices automatically update based on your selections.
+                    Available selections automatically update based on the options you choose.
                   </p>
                 </div>
 
@@ -288,35 +464,30 @@ export default function OrderPage() {
                     onChange={setProductName}
                     options={products}
                   />
-
                   <OptionField
                     label="Size"
                     value={size}
                     onChange={setSize}
                     options={sizeOptions}
                   />
-
                   <OptionField
                     label="Paper"
                     value={paper}
                     onChange={setPaper}
                     options={paperOptions}
                   />
-
                   <OptionField
                     label="Finish"
                     value={finish}
                     onChange={setFinish}
                     options={finishOptions}
                   />
-
                   <OptionField
                     label="Sides"
                     value={sides}
                     onChange={setSides}
                     options={sidesOptions}
                   />
-
                   <OptionField
                     label="Quantity"
                     value={quantity}
@@ -329,7 +500,7 @@ export default function OrderPage() {
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="text-xl font-bold text-slate-900">Artwork & instructions</h3>
                 <p className="mt-2 text-sm text-slate-500">
-                  Add your file and any production notes before checkout.
+                  Artwork upload is required before checkout.
                 </p>
 
                 <div className="mt-5 grid gap-5">
@@ -337,6 +508,7 @@ export default function OrderPage() {
                     <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Upload Artwork
                     </label>
+
                     <label className="flex cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center transition hover:border-blue-500 hover:bg-blue-50">
                       <div>
                         <div className="text-sm font-semibold text-slate-800">
@@ -349,9 +521,30 @@ export default function OrderPage() {
                       <input
                         type="file"
                         className="hidden"
-                        onChange={(e) => setArtworkFile(e.target.files?.[0] || null)}
+                        onChange={handleArtworkChange}
                       />
                     </label>
+
+                    {artworkFile && (
+                      <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                        Selected file: <span className="font-semibold">{artworkFile.name}</span>
+                      </div>
+                    )}
+
+                    {uploadedArtworkUrl && (
+                      <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                        Uploaded successfully:{" "}
+                        <span className="font-semibold">
+                          {uploadedArtworkFileName || artworkFile?.name || "Artwork file"}
+                        </span>
+                      </div>
+                    )}
+
+                    {uploadError && (
+                      <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {uploadError}
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -366,24 +559,6 @@ export default function OrderPage() {
                       className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                     />
                   </div>
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="text-xl font-bold text-slate-900">Why customers like this flow</h3>
-                <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                  <FeatureCard
-                    title="Live Pricing"
-                    text="Pricing updates instantly as options change."
-                  />
-                  <FeatureCard
-                    title="Smart Filtering"
-                    text="Only valid product combinations are shown."
-                  />
-                  <FeatureCard
-                    title="Fast Checkout"
-                    text="Clean summary panel keeps everything clear."
-                  />
                 </div>
               </div>
             </div>
@@ -404,6 +579,10 @@ export default function OrderPage() {
                   <SummaryRow label="Finish" value={finish || "—"} />
                   <SummaryRow label="Sides" value={sides || "—"} />
                   <SummaryRow label="Quantity" value={quantity || "—"} />
+                  <SummaryRow
+                    label="Artwork"
+                    value={artworkFile ? artworkFile.name : "Required before checkout"}
+                  />
 
                   <div className="rounded-2xl bg-slate-50 p-4">
                     <div className="flex items-center justify-between text-sm text-slate-600">
@@ -426,23 +605,20 @@ export default function OrderPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-slate-700">
-                    <div className="font-semibold text-slate-900">Included in this flow</div>
-                    <ul className="mt-2 space-y-1 text-sm text-slate-600">
-                      <li>• Real pricing from your pricing table</li>
-                      <li>• Dynamic option filtering</li>
-                      <li>• Sticky summary while browsing</li>
-                    </ul>
-                  </div>
-
                   <button
                     type="button"
                     onClick={handleContinue}
                     disabled={!canContinue}
                     className="w-full rounded-2xl bg-blue-700 px-5 py-4 text-base font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
-                    Continue to Checkout
+                    {uploadingArtwork ? "Uploading Artwork..." : "Upload & Continue to Checkout"}
                   </button>
+
+                  {!artworkFile && (
+                    <p className="text-center text-xs text-red-500">
+                      Please upload artwork before continuing.
+                    </p>
+                  )}
 
                   <p className="text-center text-xs text-slate-500">
                     Final shipping and payment details will be completed on the next step.
@@ -487,15 +663,6 @@ function SummaryRow({ label, value }) {
     <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3">
       <span className="text-sm font-medium text-slate-500">{label}</span>
       <span className="text-right text-sm font-semibold text-slate-900">{value}</span>
-    </div>
-  );
-}
-
-function FeatureCard({ title, text }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <div className="text-sm font-bold text-slate-900">{title}</div>
-      <div className="mt-1 text-sm text-slate-600">{text}</div>
     </div>
   );
 }
