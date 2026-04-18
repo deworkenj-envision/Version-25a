@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
+import { isAdminAuthenticated } from "../../../../lib/adminAuth";
 
 export async function POST(req) {
   try {
-    const body = await req.json();
+    const authed = await isAdminAuthenticated();
 
+    if (!authed) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized." },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json();
     const { id, field, value } = body;
 
     if (!id || !field) {
@@ -14,7 +23,6 @@ export async function POST(req) {
       );
     }
 
-    // Only allow safe fields to be updated
     const allowedFields = ["price", "active", "sort_order"];
 
     if (!allowedFields.includes(field)) {
