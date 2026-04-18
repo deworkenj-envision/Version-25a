@@ -5,22 +5,30 @@ const products = [
   {
     name: "Business Cards",
     description: "Premium cards for a polished first impression.",
+    image: "/products/business-cards.jpg",
     href: "/order?product=Business%20Cards",
+    button: "Order Business Cards",
   },
   {
     name: "Flyers",
     description: "Bold, vibrant flyers for events, menus, and advertising.",
+    image: "/products/flyers.jpg",
     href: "/order?product=Flyers",
+    button: "Order Flyers",
   },
   {
     name: "Postcards",
     description: "High-quality postcards for promotions and direct mail.",
+    image: "/products/postcards.jpg",
     href: "/order?product=Postcards",
+    button: "Order Postcards",
   },
   {
     name: "Banners",
     description: "Large-format banners for indoor and outdoor visibility.",
+    image: "/products/banners.jpg",
     href: "/order?product=Banners",
+    button: "Order Banners",
   },
 ];
 
@@ -31,12 +39,12 @@ export default function HomePage() {
       <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
         <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-12">
           <div className="grid items-center gap-10 lg:grid-cols-[520px_1fr]">
-            {/* LEFT COLLAGE */}
+            {/* LEFT HERO COLLAGE - ONLY ONE */}
             <div className="mx-auto w-full max-w-[520px]">
-              <div className="overflow-hidden bg-[#2347d8]/40 p-6 shadow-2xl rounded-[28px]">
+              <div className="rounded-[28px] bg-[#2347d8]/40 p-4 shadow-2xl md:p-6">
                 <div className="overflow-hidden rounded-[22px] bg-gradient-to-r from-[#2848db] via-[#2d57eb] to-[#3567f3]">
-                  {/* LOGO AREA */}
-                  <div className="flex min-h-[180px] items-center justify-center px-8 py-10">
+                  {/* Logo area */}
+                  <div className="flex min-h-[170px] items-center justify-center px-6 py-8 md:min-h-[190px] md:px-8 md:py-10">
                     <Image
                       src="/logo.png"
                       alt="EnVision Direct"
@@ -47,7 +55,7 @@ export default function HomePage() {
                     />
                   </div>
 
-                  {/* COLLAGE GRID */}
+                  {/* Single collage grid */}
                   <div className="grid grid-cols-2 gap-[4px] bg-white/20 p-[4px]">
                     <div className="relative overflow-hidden bg-white">
                       <Image
@@ -55,10 +63,10 @@ export default function HomePage() {
                         alt="Postcards"
                         width={700}
                         height={520}
-                        className="h-[235px] w-full object-cover"
+                        className="h-[220px] w-full object-cover md:h-[235px]"
                         priority
                       />
-                      <div className="absolute left-3 top-3 rounded-md bg-white px-3 py-1 text-sm font-bold text-slate-800 shadow">
+                      <div className="absolute left-3 top-3 rounded-md bg-white px-3 py-1 text-xs font-bold text-slate-800 shadow md:text-sm">
                         Postcards
                       </div>
                     </div>
@@ -69,10 +77,10 @@ export default function HomePage() {
                         alt="Business Cards"
                         width={700}
                         height={520}
-                        className="h-[235px] w-full object-cover"
+                        className="h-[220px] w-full object-cover md:h-[235px]"
                         priority
                       />
-                      <div className="absolute left-3 top-3 rounded-md bg-white px-3 py-1 text-sm font-bold text-slate-800 shadow">
+                      <div className="absolute left-3 top-3 rounded-md bg-white px-3 py-1 text-xs font-bold text-slate-800 shadow md:text-sm">
                         Business Cards
                       </div>
                     </div>
@@ -83,10 +91,10 @@ export default function HomePage() {
                         alt="Flyers"
                         width={700}
                         height={520}
-                        className="h-[235px] w-full object-cover"
+                        className="h-[220px] w-full object-cover md:h-[235px]"
                         priority
                       />
-                      <div className="absolute left-3 top-3 rounded-md bg-white px-3 py-1 text-sm font-bold text-slate-800 shadow">
+                      <div className="absolute left-3 top-3 rounded-md bg-white px-3 py-1 text-xs font-bold text-slate-800 shadow md:text-sm">
                         Flyers
                       </div>
                     </div>
@@ -97,10 +105,10 @@ export default function HomePage() {
                         alt="Banners"
                         width={700}
                         height={520}
-                        className="h-[235px] w-full object-cover"
+                        className="h-[220px] w-full object-cover md:h-[235px]"
                         priority
                       />
-                      <div className="absolute left-3 top-3 rounded-md bg-white px-3 py-1 text-sm font-bold text-slate-800 shadow">
+                      <div className="absolute left-3 top-3 rounded-md bg-white px-3 py-1 text-xs font-bold text-slate-800 shadow md:text-sm">
                         Banners
                       </div>
                     </div>
@@ -109,7 +117,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* RIGHT TEXT */}
+            {/* RIGHT HERO CONTENT */}
             <div className="max-w-2xl">
               <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight md:text-5xl xl:text-[4rem]">
                 <span className="block">Top Quality Printing.</span>
@@ -154,7 +162,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ORDER AREA BELOW */}
+      {/* PRODUCT SECTION BELOW HERO */}
       <section className="bg-[#f5f5f7]">
         <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
           <div className="mb-10 text-center">
@@ -172,21 +180,29 @@ export default function HomePage() {
               <Link
                 key={product.name}
                 href={product.href}
-                className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl"
+                className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className="flex h-full flex-col">
+                <div className="relative overflow-hidden">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    width={800}
+                    height={600}
+                    className="h-64 w-full object-cover transition duration-300 group-hover:scale-105"
+                  />
+                </div>
+
+                <div className="p-6">
                   <h3 className="text-xl font-bold text-slate-900">
                     {product.name}
                   </h3>
 
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
                     {product.description}
                   </p>
 
-                  <div className="mt-6">
-                    <span className="inline-flex items-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition group-hover:bg-blue-700">
-                      Order {product.name}
-                    </span>
+                  <div className="mt-5 inline-flex items-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition group-hover:bg-blue-700">
+                    {product.button}
                   </div>
                 </div>
               </Link>
