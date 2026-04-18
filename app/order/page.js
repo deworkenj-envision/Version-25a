@@ -117,7 +117,6 @@ export default function OrderPage() {
   const [uploadedArtworkFileName, setUploadedArtworkFileName] = useState("");
 
   const [requestedProduct, setRequestedProduct] = useState("");
-  const [requestedImage, setRequestedImage] = useState("");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -128,14 +127,6 @@ export default function OrderPage() {
       params.get("product") ||
         params.get("productName") ||
         params.get("name") ||
-        ""
-    );
-
-    setRequestedImage(
-      params.get("image") ||
-        params.get("thumbnail") ||
-        params.get("thumb") ||
-        params.get("productImage") ||
         ""
     );
   }, []);
@@ -213,9 +204,8 @@ export default function OrderPage() {
   const selectedProductSlug = useMemo(() => canonicalProductSlug(productName), [productName]);
 
   const productImage = useMemo(() => {
-    if (requestedImage) return requestedImage;
     return PRODUCT_META[selectedProductSlug]?.image || "";
-  }, [requestedImage, selectedProductSlug]);
+  }, [selectedProductSlug]);
 
   const productDescription = useMemo(() => {
     return PRODUCT_META[selectedProductSlug]?.short || "Choose your print options below.";
@@ -636,25 +626,6 @@ export default function OrderPage() {
                   options={quantityOptions}
                 />
               </div>
-
-              {!!quantityOptions.length && (
-                <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                  {quantityOptions.slice(0, 3).map((qty) => (
-                    <button
-                      key={qty}
-                      type="button"
-                      onClick={() => setQuantity(qty)}
-                      className={`rounded-[18px] border px-4 py-4 text-left transition ${
-                        qty === quantity
-                          ? "border-[#2457f5] bg-[#2457f5]/5 text-[#2457f5]"
-                          : "border-slate-200 hover:border-slate-300"
-                      }`}
-                    >
-                      <div className="text-lg font-bold">{qty}</div>
-                    </button>
-                  ))}
-                </div>
-              )}
 
               <div className="mt-8 rounded-[24px] border border-slate-200 p-5">
                 <h3 className="text-xl font-bold text-slate-900">Artwork & Instructions</h3>
