@@ -20,12 +20,15 @@ export default function AdminPricingPage() {
   const [savingId, setSavingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState("");
 
   const [productFilter, setProductFilter] = useState("All");
   const [search, setSearch] = useState("");
 
   const [form, setForm] = useState(emptyForm);
+  const [csvFile, setCsvFile] = useState(null);
+
   const createFormRef = useRef(null);
 
   useEffect(() => {
@@ -153,6 +156,45 @@ export default function AdminPricingPage() {
       setMessage(err.message || "Failed to create pricing row.");
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function handleImportCsv() {
+    if (!csvFile) {
+      setMessage("Please choose a CSV file first.");
+      return;
+    }
+
+    try {
+      setImporting(true);
+      setMessage("");
+
+      const text = await csvFile.text();
+
+      const res = await fetch("/api/admin/import-pricing-csv", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ csvText: text }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || "CSV import failed.");
+      }
+
+      setCsvFile(null);
+      setMessage(
+        `CSV import complete. Imported ${data.insertedCount} row(s).`
+      );
+      await loadPricing();
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message || "CSV import failed.");
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -311,6 +353,37 @@ export default function AdminPricingPage() {
               className="inline-flex items-center justify-center rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
             >
               Logout
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8">
+          <h2 className="text-2xl font-bold text-slate-900">
+            Bulk CSV Import
+          </h2>
+          <p className="mt-2 text-slate-600">
+            Upload a CSV to import many pricing rows at once.
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            Required columns: product_name, size, paper, finish, sides, quantity,
+            price, sort_order, active
+          </p>
+
+          <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+              className="block w-full text-sm text-slate-700 file:mr-4 file:rounded-full file:border-0 file:bg-blue-700 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-800"
+            />
+
+            <button
+              type="button"
+              onClick={handleImportCsv}
+              disabled={importing || !csvFile}
+              className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+            >
+              {importing ? "Importing..." : "Import CSV"}
             </button>
           </div>
         </div>
