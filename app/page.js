@@ -1,33 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const products = [
-  {
-    name: "Business Cards",
-    description: "Premium cards for a polished first impression.",
-    image: "/products/business-cards.jpg",
-    href: "/order?product=Business%20Cards",
-  },
-  {
-    name: "Flyers",
-    description: "Bold, vibrant flyers for events, menus, and advertising.",
-    image: "/products/flyers.jpg",
-    href: "/order?product=Flyers",
-  },
-  {
-    name: "Postcards",
-    description: "High-quality postcards for promotions and direct mail.",
-    image: "/products/postcards.jpg",
-    href: "/order?product=Postcards",
-  },
-  {
-    name: "Banners",
-    description: "Large-format banners for indoor and outdoor visibility.",
-    image: "/products/banners.jpg",
-    href: "/order?product=Banners",
-  },
-];
-
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -35,10 +8,13 @@ export default function HomePage() {
       <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
         <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-12">
           <div className="grid items-center gap-10 lg:grid-cols-[520px_1fr]">
-            {/* LEFT COLLAGE - ONLY ONE */}
+            
+            {/* LEFT COLLAGE */}
             <div className="mx-auto w-full max-w-[520px]">
               <div className="overflow-hidden bg-[#2347d8]/40 p-6 shadow-2xl">
                 <div className="overflow-hidden bg-gradient-to-r from-[#2848db] via-[#2d57eb] to-[#3567f3]">
+                  
+                  {/* LOGO */}
                   <div className="flex min-h-[180px] items-center justify-center px-8 py-10">
                     <Image
                       src="/logo.png"
@@ -50,7 +26,9 @@ export default function HomePage() {
                     />
                   </div>
 
+                  {/* COLLAGE GRID */}
                   <div className="grid grid-cols-2 gap-[4px] bg-white/20 p-[4px]">
+                    
                     <div className="relative overflow-hidden bg-white">
                       <Image
                         src="/products/postcards.jpg"
@@ -106,6 +84,7 @@ export default function HomePage() {
                         Banners
                       </div>
                     </div>
+
                   </div>
                 </div>
               </div>
@@ -140,80 +119,24 @@ export default function HomePage() {
                 </Link>
               </div>
 
+              {/* PRODUCT QUICK LINKS */}
               <div className="mt-8 flex flex-wrap gap-4">
-                <Link
-                  href="/order?product=Business%20Cards"
-                  className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/18"
-                >
+                <Link href="/order?product=Business%20Cards" className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/18">
                   Business Cards
                 </Link>
-                <Link
-                  href="/order?product=Flyers"
-                  className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/18"
-                >
+                <Link href="/order?product=Flyers" className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/18">
                   Flyers
                 </Link>
-                <Link
-                  href="/order?product=Postcards"
-                  className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/18"
-                >
+                <Link href="/order?product=Postcards" className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/18">
                   Postcards
                 </Link>
-                <Link
-                  href="/order?product=Banners"
-                  className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/18"
-                >
+                <Link href="/order?product=Banners" className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/18">
                   Banners
                 </Link>
               </div>
             </div>
+
           </div>
-        </div>
-      </section>
-
-      {/* PRODUCT CARDS SECTION */}
-      <section className="mx-auto max-w-7xl px-6 py-16 md:px-10">
-        <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-            Choose Your Product
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600 md:text-lg">
-            Select a product below to begin your order and upload your
-            print-ready artwork.
-          </p>
-        </div>
-
-        <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
-          {products.map((product) => (
-            <Link
-              key={product.name}
-              href={product.href}
-              className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl"
-            >
-              <div className="relative overflow-hidden">
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  width={800}
-                  height={600}
-                  className="h-64 w-full object-cover transition duration-300 group-hover:scale-105"
-                />
-              </div>
-
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-slate-900">
-                  {product.name}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {product.description}
-                </p>
-
-                <div className="mt-5 inline-flex items-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition group-hover:bg-blue-700">
-                  Order {product.name}
-                </div>
-              </div>
-            </Link>
-          ))}
         </div>
       </section>
     </main>
