@@ -2,14 +2,29 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+const emptyForm = {
+  product_name: "",
+  size: "",
+  paper: "",
+  finish: "",
+  sides: "",
+  quantity: "",
+  price: "",
+  sort_order: "",
+  active: true,
+};
+
 export default function AdminPricingPage() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
+  const [creating, setCreating] = useState(false);
   const [message, setMessage] = useState("");
 
   const [productFilter, setProductFilter] = useState("All");
   const [search, setSearch] = useState("");
+
+  const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
     loadPricing();
@@ -79,6 +94,64 @@ export default function AdminPricingPage() {
       setMessage(err.message || "Update failed.");
     } finally {
       setSavingId(null);
+    }
+  }
+
+  async function handleCreateRow(e) {
+    e.preventDefault();
+
+    try {
+      setCreating(true);
+      setMessage("");
+
+      const payload = {
+        product_name: form.product_name.trim(),
+        size: form.size.trim(),
+        paper: form.paper.trim(),
+        finish: form.finish.trim(),
+        sides: form.sides.trim(),
+        quantity: Number(form.quantity),
+        price: Number(form.price),
+        sort_order:
+          form.sort_order === "" ? 0 : Number(form.sort_order),
+        active: Boolean(form.active),
+      };
+
+      if (
+        !payload.product_name ||
+        !payload.size ||
+        !payload.paper ||
+        !payload.finish ||
+        !payload.sides ||
+        !payload.quantity ||
+        Number.isNaN(payload.quantity) ||
+        Number.isNaN(payload.price)
+      ) {
+        throw new Error("Please complete all required pricing row fields.");
+      }
+
+      const res = await fetch("/api/admin/create-pricing", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || "Failed to create pricing row.");
+      }
+
+      setForm(emptyForm);
+      setMessage("New pricing row created successfully.");
+      await loadPricing();
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message || "Failed to create pricing row.");
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -167,6 +240,131 @@ export default function AdminPricingPage() {
         </div>
 
         <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8">
+          <h2 className="text-2xl font-bold text-slate-900">
+            Add New Pricing Row
+          </h2>
+          <p className="mt-2 text-slate-600">
+            Add a new product combination to your live estimator.
+          </p>
+
+          <form
+            onSubmit={handleCreateRow}
+            className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+          >
+            <input
+              type="text"
+              placeholder="Product Name"
+              value={form.product_name}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, product_name: e.target.value }))
+              }
+              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            />
+
+            <input
+              type="text"
+              placeholder="Size"
+              value={form.size}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, size: e.target.value }))
+              }
+              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            />
+
+            <input
+              type="text"
+              placeholder="Paper"
+              value={form.paper}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, paper: e.target.value }))
+              }
+              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            />
+
+            <input
+              type="text"
+              placeholder="Finish"
+              value={form.finish}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, finish: e.target.value }))
+              }
+              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            />
+
+            <input
+              type="text"
+              placeholder="Sides"
+              value={form.sides}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, sides: e.target.value }))
+              }
+              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            />
+
+            <input
+              type="number"
+              placeholder="Quantity"
+              value={form.quantity}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, quantity: e.target.value }))
+              }
+              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            />
+
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Price"
+              value={form.price}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, price: e.target.value }))
+              }
+              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            />
+
+            <input
+              type="number"
+              placeholder="Sort Order"
+              value={form.sort_order}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, sort_order: e.target.value }))
+              }
+              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            />
+
+            <label className="flex items-center gap-3 rounded-2xl border border-slate-300 px-4 py-3 xl:col-span-2">
+              <input
+                type="checkbox"
+                checked={form.active}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, active: e.target.checked }))
+                }
+                className="h-4 w-4"
+              />
+              <span className="text-sm font-medium text-slate-700">
+                Active
+              </span>
+            </label>
+
+            <div className="xl:col-span-2">
+              <button
+                type="submit"
+                disabled={creating}
+                className="w-full rounded-2xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:opacity-60"
+              >
+                {creating ? "Adding Row..." : "Add New Pricing Row"}
+              </button>
+            </div>
+          </form>
+
+          {message ? (
+            <div className="mt-5 rounded-2xl bg-slate-100 p-4 text-sm text-slate-700">
+              {message}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8">
           <div className="grid gap-4 md:grid-cols-[240px_1fr]">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -208,12 +406,6 @@ export default function AdminPricingPage() {
               <span className="font-semibold">{filteredRows.length}</span>
             </div>
           </div>
-
-          {message ? (
-            <div className="mt-5 rounded-2xl bg-slate-100 p-4 text-sm text-slate-700">
-              {message}
-            </div>
-          ) : null}
         </div>
 
         <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
