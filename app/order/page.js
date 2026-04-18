@@ -23,22 +23,22 @@ function slugify(value) {
 const PRODUCT_META = {
   "business-cards": {
     label: "Business Cards",
-    image: "/images/business-cards.jpg",
+    image: "/products/business-cards.png",
     short: "Premium cards for networking, branding, and first impressions.",
   },
   flyers: {
     label: "Flyers",
-    image: "/images/flyers.jpg",
+    image: "/products/flyers.jpg",
     short: "High-impact flyers for promotions, events, menus, and handouts.",
   },
   postcards: {
     label: "Postcards",
-    image: "/images/postcards.jpg",
+    image: "/products/postcards.jpg",
     short: "Direct-mail and handout postcards with bold visual impact.",
   },
   banners: {
     label: "Banners",
-    image: "/images/banners.jpg",
+    image: "/products/banners.jpg",
     short: "Durable large-format banners for indoor and outdoor display.",
   },
 };
@@ -154,11 +154,14 @@ export default function OrderPage() {
         }
 
         const data = await res.json();
+
         const rows = Array.isArray(data)
           ? data
-          : Array.isArray(data?.rows)
-            ? data.rows
-            : [];
+          : Array.isArray(data?.pricing)
+            ? data.pricing
+            : Array.isArray(data?.rows)
+              ? data.rows
+              : [];
 
         if (!active) return;
 
@@ -327,7 +330,9 @@ export default function OrderPage() {
   }, [quantity, subtotal]);
 
   const allProductRows = useMemo(() => {
-    return pricingRows.filter((row) => canonicalProductSlug(row.product_name) === selectedProductSlug);
+    return pricingRows.filter(
+      (row) => canonicalProductSlug(row.product_name) === selectedProductSlug
+    );
   }, [pricingRows, selectedProductSlug]);
 
   const bestValue = useMemo(() => bestValueRow(allProductRows), [allProductRows]);
