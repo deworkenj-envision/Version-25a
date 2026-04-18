@@ -144,6 +144,49 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* TRUST STRIP */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-6 md:px-10">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+              <div className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+                Premium Quality
+              </div>
+              <div className="mt-1 text-sm text-slate-600">
+                Clean, professional print results for business and marketing.
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+              <div className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+                Fast Turnaround
+              </div>
+              <div className="mt-1 text-sm text-slate-600">
+                Get your order moving quickly with a simple online workflow.
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+              <div className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+                Secure Checkout
+              </div>
+              <div className="mt-1 text-sm text-slate-600">
+                Upload artwork, review pricing, and place orders securely.
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+              <div className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+                Order Tracking
+              </div>
+              <div className="mt-1 text-sm text-slate-600">
+                Track progress and shipment updates from your order page.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* PRODUCT SECTION */}
       <section className="bg-[#f5f5f7]">
         <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
