@@ -18,6 +18,7 @@ export default function AdminPricingPage() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [creating, setCreating] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -181,6 +182,52 @@ export default function AdminPricingPage() {
         behavior: "smooth",
         block: "start",
       });
+    }
+  }
+
+  async function handleDeleteRow(row) {
+    const label = [
+      row.product_name,
+      row.size,
+      row.paper,
+      row.finish,
+      row.sides,
+      `Qty ${row.quantity}`,
+    ]
+      .filter(Boolean)
+      .join(" • ");
+
+    const confirmed = window.confirm(
+      `Delete this pricing row?\n\n${label}\n\nThis cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(row.id);
+      setMessage("");
+
+      const res = await fetch("/api/admin/delete-pricing", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: row.id }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || "Failed to delete pricing row.");
+      }
+
+      setRows((prev) => prev.filter((item) => item.id !== row.id));
+      setMessage("Pricing row deleted successfully.");
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message || "Failed to delete pricing row.");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -440,7 +487,7 @@ export default function AdminPricingPage() {
 
         <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
           <div className="overflow-x-auto">
-            <table className="min-w-[1220px] w-full text-sm">
+            <table className="min-w-[1340px] w-full text-sm">
               <thead className="bg-slate-100 text-left text-slate-700">
                 <tr>
                   <th className="p-4 font-semibold">Product</th>
@@ -453,6 +500,7 @@ export default function AdminPricingPage() {
                   <th className="p-4 font-semibold">Price</th>
                   <th className="p-4 font-semibold">Active</th>
                   <th className="p-4 font-semibold">Copy</th>
+                  <th className="p-4 font-semibold">Delete</th>
                   <th className="p-4 font-semibold">Status</th>
                 </tr>
               </thead>
@@ -460,7 +508,7 @@ export default function AdminPricingPage() {
               <tbody>
                 {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="p-8 text-center text-slate-500">
+                    <td colSpan="12" className="p-8 text-center text-slate-500">
                       No pricing rows found.
                     </td>
                   </tr>
@@ -526,9 +574,24 @@ export default function AdminPricingPage() {
                       </td>
 
                       <td className="p-4">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRow(row)}
+                          disabled={deletingId === row.id}
+                          className="rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
+                        >
+                          {deletingId === row.id ? "Deleting..." : "Delete Row"}
+                        </button>
+                      </td>
+
+                      <td className="p-4">
                         {savingId === row.id ? (
                           <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
                             Saving...
+                          </span>
+                        ) : deletingId === row.id ? (
+                          <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                            Deleting...
                           </span>
                         ) : (
                           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
