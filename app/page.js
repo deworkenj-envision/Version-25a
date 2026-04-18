@@ -1,6 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
 
+const products = [
+  {
+    name: "Business Cards",
+    href: "/order?product=Business%20Cards",
+  },
+  {
+    name: "Flyers",
+    href: "/order?product=Flyers",
+  },
+  {
+    name: "Postcards",
+    href: "/order?product=Postcards",
+  },
+  {
+    name: "Banners",
+    href: "/order?product=Banners",
+  },
+];
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -8,13 +27,10 @@ export default function HomePage() {
       <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
         <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-12">
           <div className="grid items-center gap-10 lg:grid-cols-[520px_1fr]">
-            
             {/* LEFT COLLAGE */}
             <div className="mx-auto w-full max-w-[520px]">
               <div className="overflow-hidden bg-[#2347d8]/40 p-6 shadow-2xl">
                 <div className="overflow-hidden bg-gradient-to-r from-[#2848db] via-[#2d57eb] to-[#3567f3]">
-                  
-                  {/* LOGO */}
                   <div className="flex min-h-[180px] items-center justify-center px-8 py-10">
                     <Image
                       src="/logo.png"
@@ -26,9 +42,7 @@ export default function HomePage() {
                     />
                   </div>
 
-                  {/* COLLAGE GRID */}
                   <div className="grid grid-cols-2 gap-[4px] bg-white/20 p-[4px]">
-                    
                     <div className="relative overflow-hidden bg-white">
                       <Image
                         src="/products/postcards.jpg"
@@ -84,7 +98,6 @@ export default function HomePage() {
                         Banners
                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
@@ -119,23 +132,64 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              {/* PRODUCT QUICK LINKS */}
               <div className="mt-8 flex flex-wrap gap-4">
-                <Link href="/order?product=Business%20Cards" className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/18">
-                  Business Cards
-                </Link>
-                <Link href="/order?product=Flyers" className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/18">
-                  Flyers
-                </Link>
-                <Link href="/order?product=Postcards" className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/18">
-                  Postcards
-                </Link>
-                <Link href="/order?product=Banners" className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/18">
-                  Banners
-                </Link>
+                {products.map((product) => (
+                  <Link
+                    key={product.name}
+                    href={product.href}
+                    className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/18"
+                  >
+                    {product.name}
+                  </Link>
+                ))}
               </div>
             </div>
+          </div>
+        </div>
+      </section>
 
+      {/* ORDER AREA BELOW HERO */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-14 md:px-10">
+          <div className="rounded-[28px] border border-slate-200 bg-slate-50 px-6 py-10 shadow-sm md:px-10">
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
+                Ready to place an order?
+              </h2>
+
+              <p className="mt-4 text-base leading-7 text-slate-600 md:text-lg">
+                Choose your product, upload your print-ready artwork, and check
+                out securely online.
+              </p>
+
+              <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <Link
+                  href="/order"
+                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-blue-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-blue-700"
+                >
+                  Start Your Order
+                </Link>
+
+                <Link
+                  href="/track"
+                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl border border-slate-300 bg-white px-8 py-4 text-lg font-bold text-slate-800 transition hover:bg-slate-100"
+                >
+                  Already Placed An Order?
+                </Link>
+              </div>
+
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                {products.map((product) => (
+                  <Link
+                    key={product.name}
+                    href={product.href}
+                    className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-500 hover:text-blue-700"
+                  >
+                    {product.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
