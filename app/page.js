@@ -1,284 +1,260 @@
+import Image from "next/image";
 import Link from "next/link";
+import { supabaseAdmin } from "../lib/supabaseAdmin";
 
 const products = [
   {
     name: "Business Cards",
-    description: "Professional cards with sharp print quality and premium finishes.",
+    description: "Premium cards for a polished first impression.",
     image: "/products/business-cards.jpg",
     href: "/order?product=Business%20Cards",
-  },
-  {
-    name: "Postcards",
-    description: "Great for promotions, mailers, announcements, and handouts.",
-    image: "/products/postcards.jpg",
-    href: "/order?product=Postcards",
+    button: "Order Business Cards",
   },
   {
     name: "Flyers",
-    description: "Bold marketing pieces for events, menus, sales, and promotions.",
+    description: "Bold, vibrant flyers for events, menus, and advertising.",
     image: "/products/flyers.jpg",
     href: "/order?product=Flyers",
+    button: "Order Flyers",
+  },
+  {
+    name: "Postcards",
+    description: "High-quality postcards for promotions and direct mail.",
+    image: "/products/postcards.jpg",
+    href: "/order?product=Postcards",
+    button: "Order Postcards",
   },
   {
     name: "Banners",
-    description: "Large-format prints for storefronts, events, trade shows, and displays.",
+    description: "Large-format banners for indoor and outdoor visibility.",
     image: "/products/banners.jpg",
     href: "/order?product=Banners",
+    button: "Order Banners",
   },
 ];
 
-const highlights = [
-  "Top Quality Printing",
-  "Fast Turnaround",
-  "Competitive Pricing",
-  "Easy Artwork Upload",
-];
+function money(value) {
+  const number = Number(value);
+  return `$${(Number.isFinite(number) ? number : 0).toFixed(2)}`;
+}
 
-export default function HomePage() {
+async function getStartingPrices() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("pricing")
+      .select("product_name, price")
+      .eq("active", true)
+      .order("price", { ascending: true });
+
+    if (error || !Array.isArray(data)) {
+      console.error("Failed to load homepage starting prices:", error);
+      return {};
+    }
+
+    const startingPrices = {};
+
+    for (const row of data) {
+      const productName = row.product_name;
+      const price = Number(row.price);
+
+      if (!productName || !Number.isFinite(price)) continue;
+
+      if (
+        startingPrices[productName] === undefined ||
+        price < startingPrices[productName]
+      ) {
+        startingPrices[productName] = price;
+      }
+    }
+
+    return startingPrices;
+  } catch (error) {
+    console.error("Homepage starting price error:", error);
+    return {};
+  }
+}
+
+export default async function HomePage() {
+  const startingPrices = await getStartingPrices();
+
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <section className="bg-gradient-to-r from-sky-900 via-blue-800 to-sky-700 text-white">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="mb-8 flex items-center justify-between gap-4">
-            <Link href="/" className="flex items-center gap-3">
-              <img
-                src="/images/logo-hero.png"
-                alt="EnVision Direct"
-                className="h-14 w-auto object-contain sm:h-16"
-              />
-              <span className="text-xl font-bold tracking-tight sm:text-2xl">
-                EnVision Direct
-              </span>
-            </Link>
-
-            <div className="flex items-center gap-3">
-              <Link
-                href="/track"
-                className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
-              >
-                Track Order
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
-            <div>
-              <div className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1 text-sm font-medium text-blue-100">
-                Premium Online Print Ordering
+      {/* HERO */}
+      <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
+        <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-12">
+          <div className="grid items-center gap-10 lg:grid-cols-[520px_1fr]">
+            {/* SINGLE HERO COLLAGE */}
+            <div className="mx-auto w-full max-w-[520px]">
+              <div className="rounded-[28px] bg-[#2347d8]/40 p-4 shadow-2xl md:p-6">
+                <div className="overflow-hidden rounded-[22px]">
+                  <Image
+                    src="/images/hero-collage-logo.png"
+                    alt="EnVision Direct Products"
+                    width={600}
+                    height={700}
+                    className="h-auto w-full object-contain"
+                    priority
+                  />
+                </div>
               </div>
+            </div>
 
-              <h1 className="mt-6 text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
-                Top Quality Printing.
-                <br />
-                Fast Turnaround.
-                <br />
-                The Best Prices.
+            {/* HERO CONTENT */}
+            <div className="max-w-2xl">
+              <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight md:text-5xl xl:text-[4rem]">
+                <span className="block">Top Quality Printing.</span>
+                <span className="mt-2 block">Fast Turnaround.</span>
+                <span className="mt-2 block">The Best Prices.</span>
               </h1>
 
-              <p className="mt-5 max-w-2xl text-base text-blue-100 sm:text-lg">
-                Order business cards, postcards, flyers, and banners online with a clean,
-                easy process for selecting options, uploading artwork, and checking out securely.
+              <p className="mt-8 max-w-xl text-base leading-8 text-blue-100 md:text-lg">
+                Professional online printing with easy artwork upload, secure
+                checkout, and order tracking built in.
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-4">
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                 <Link
                   href="/order"
-                  className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-4 text-base font-bold text-blue-700 transition hover:bg-blue-50"
+                  className="inline-flex items-center justify-center rounded-2xl bg-white px-8 py-4 text-lg font-bold text-blue-700 shadow-lg transition hover:bg-slate-100"
                 >
                   Start Your Order
                 </Link>
 
                 <Link
                   href="/track"
-                  className="inline-flex items-center justify-center rounded-2xl border border-white/25 bg-white/10 px-6 py-4 text-base font-bold text-white transition hover:bg-white/20"
+                  className="inline-flex items-center justify-center rounded-2xl border border-white/40 bg-white/5 px-8 py-4 text-lg font-bold text-white transition hover:bg-white/10"
                 >
                   Track Your Order
                 </Link>
               </div>
 
-              <div className="mt-8 flex flex-wrap gap-3">
-                {["Business Cards", "Postcards", "Flyers", "Banners"].map((item) => (
-                  <span
-                    key={item}
-                    className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-blue-100"
+              <div className="mt-8 flex flex-wrap gap-4">
+                {products.map((product) => (
+                  <Link
+                    key={product.name}
+                    href={product.href}
+                    className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/18"
                   >
-                    {item}
-                  </span>
+                    {product.name}
+                  </Link>
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <div className="overflow-hidden rounded-[28px] bg-white/95 p-4 shadow-2xl backdrop-blur">
-              <div className="grid grid-cols-2 gap-4">
-                <ProductCollageItem
-                  title="Postcards"
-                  image="/products/postcards.jpg"
-                />
-                <ProductCollageItem
-                  title="Business Cards"
-                  image="/products/business-cards.jpg"
-                />
-                <ProductCollageItem
-                  title="Flyers"
-                  image="/products/flyers.jpg"
-                />
-                <ProductCollageItem
-                  title="Banners"
-                  image="/products/banners.jpg"
-                />
+      {/* TRUST STRIP */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-6 md:px-10">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+              <div className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+                Premium Quality
+              </div>
+              <div className="mt-1 text-sm text-slate-600">
+                Clean, professional print results for business and marketing.
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+              <div className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+                Fast Turnaround
+              </div>
+              <div className="mt-1 text-sm text-slate-600">
+                Get your order moving quickly with a simple online workflow.
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+              <div className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+                Secure Checkout
+              </div>
+              <div className="mt-1 text-sm text-slate-600">
+                Upload artwork, review pricing, and place orders securely.
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+              <div className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+                Order Tracking
+              </div>
+              <div className="mt-1 text-sm text-slate-600">
+                Track progress and shipment updates from your order page.
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto grid max-w-7xl gap-4 px-4 py-6 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-          {highlights.map((item) => (
-            <div
-              key={item}
-              className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center text-sm font-semibold text-slate-800 shadow-sm"
-            >
-              {item}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">
-              Popular Products
-            </p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-              Order your most-used print products online
+      {/* PRODUCT SECTION */}
+      <section className="bg-[#f5f5f7]">
+        <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+              Choose Your Product
             </h2>
-            <p className="mt-3 max-w-2xl text-slate-600">
-              Choose your product, select your print options, upload artwork, and
-              place your order in a few simple steps.
+            <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600 md:text-lg">
+              Select a product below to begin your order and upload your
+              print-ready artwork.
             </p>
           </div>
 
-          <Link
-            href="/order"
-            className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-          >
-            View All Ordering Options
-          </Link>
-        </div>
+          <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
+            {products.map((product) => {
+              const startingPrice = startingPrices[product.name];
 
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          {products.map((product) => (
-            <Link
-              key={product.name}
-              href={product.href}
-              className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-            >
-              <div className="h-52 overflow-hidden bg-slate-100">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                />
-              </div>
+              return (
+                <Link
+                  key={product.name}
+                  href={product.href}
+                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <div className="relative overflow-hidden">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      width={800}
+                      height={600}
+                      className="h-64 w-full object-cover transition duration-300 group-hover:scale-105"
+                    />
 
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-slate-900">{product.name}</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
-                  {product.description}
-                </p>
+                    {startingPrice !== undefined ? (
+                      <div className="absolute left-4 top-4 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-900 shadow">
+                        Starting at {money(startingPrice)}
+                      </div>
+                    ) : null}
+                  </div>
 
-                <div className="mt-5 inline-flex items-center text-sm font-semibold text-blue-700">
-                  Start Order →
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-slate-900">
+                      {product.name}
+                    </h3>
 
-      <section className="bg-slate-900 text-white">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:px-8">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-300">
-              Why Customers Use EnVision Direct
-            </p>
-            <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
-              A simple, professional print ordering experience
-            </h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      {product.description}
+                    </p>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              <BenefitCard
-                title="Easy Artwork Upload"
-                text="Upload print-ready files directly with your order."
-              />
-              <BenefitCard
-                title="Live Product Selection"
-                text="Choose size, paper, finish, sides, and quantity easily."
-              />
-              <BenefitCard
-                title="Secure Checkout"
-                text="Review your order clearly and pay securely online."
-              />
-              <BenefitCard
-                title="Order Tracking"
-                text="Check your order status and shipment progress anytime."
-              />
-            </div>
-          </div>
+                    {startingPrice !== undefined ? (
+                      <div className="mt-4 text-sm font-semibold text-blue-700">
+                        Starting at {money(startingPrice)}
+                      </div>
+                    ) : (
+                      <div className="mt-4 text-sm font-semibold text-slate-500">
+                        Live pricing available in estimator
+                      </div>
+                    )}
 
-          <div className="rounded-[28px] bg-white p-8 text-slate-900 shadow-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">
-              Ready to Order?
-            </p>
-            <h3 className="mt-3 text-3xl font-extrabold leading-tight">
-              Start your next print order today
-            </h3>
-            <p className="mt-4 text-slate-600">
-              Build your order, upload your artwork, and check out in minutes.
-            </p>
-
-            <div className="mt-8 space-y-4">
-              <Link
-                href="/order"
-                className="block rounded-2xl bg-blue-600 px-6 py-4 text-center text-base font-bold text-white transition hover:bg-blue-700"
-              >
-                Start Your Order
-              </Link>
-
-              <Link
-                href="/track"
-                className="block rounded-2xl border border-slate-300 px-6 py-4 text-center text-base font-bold text-slate-800 transition hover:bg-slate-50"
-              >
-                Already Placed an Order? Track It Here
-              </Link>
-            </div>
+                    <div className="mt-5 inline-flex items-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition group-hover:bg-blue-700">
+                      {product.button}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
     </main>
-  );
-}
-
-function ProductCollageItem({ title, image }) {
-  return (
-    <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white">
-      <div className="h-40 bg-slate-100">
-        <img src={image} alt={title} className="h-full w-full object-cover" />
-      </div>
-      <div className="px-4 py-3 text-center text-sm font-bold text-slate-900">
-        {title}
-      </div>
-    </div>
-  );
-}
-
-function BenefitCard({ title, text }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-      <h3 className="text-lg font-bold text-white">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-300">{text}</p>
-    </div>
   );
 }
