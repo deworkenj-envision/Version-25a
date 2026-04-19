@@ -18,6 +18,7 @@ export async function POST(req) {
 
     const customerName = (body.customerName || "").trim();
     const customerEmail = (body.customerEmail || "").trim();
+    const customerPhone = (body.customerPhone || "").trim();
 
     const productName = (body.productName || "Print Order").trim();
     const size = (body.size || "").trim();
@@ -31,7 +32,7 @@ export async function POST(req) {
     const total = toNumber(body.total, subtotal + shipping);
 
     const artworkUrl = (body.artworkUrl || "").trim();
-    const fileName = (body.fileName || "").trim();
+    const fileName = (body.fileName || body.artworkFileName || "").trim();
     const notes = (body.notes || "").trim();
 
     if (!customerName) {
@@ -113,7 +114,6 @@ export async function POST(req) {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
-
       line_items: lineItems,
 
       success_url: `${siteUrl}/order-success?session_id={CHECKOUT_SESSION_ID}`,
@@ -133,6 +133,7 @@ export async function POST(req) {
       metadata: {
         customerName: customerName || "",
         customerEmail: customerEmail || "",
+        customerPhone: customerPhone || "",
         productName: productName || "",
         size: size || "",
         paper: paper || "",
@@ -157,8 +158,7 @@ export async function POST(req) {
 
     return NextResponse.json(
       {
-        error:
-          error?.message || "Unable to create Stripe checkout session.",
+        error: error?.message || "Unable to create Stripe checkout session.",
       },
       { status: 500 }
     );
