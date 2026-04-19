@@ -40,6 +40,7 @@ function CheckoutInner() {
 
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -74,6 +75,7 @@ function CheckoutInner() {
         body: JSON.stringify({
           customerName,
           customerEmail,
+          customerPhone,
           productName,
           size,
           paper,
@@ -176,6 +178,14 @@ function CheckoutInner() {
                 placeholder="Email Address"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 p-3"
+              />
+
+              <input
+                type="tel"
+                placeholder="Phone Number"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
                 className="w-full rounded-xl border border-slate-300 p-3"
               />
             </div>
