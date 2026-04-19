@@ -86,6 +86,7 @@ export async function GET(req, { params }) {
     });
   } catch (error) {
     console.error("Artwork download error:", error);
+
     return NextResponse.json(
       { error: error.message || "Download failed." },
       { status: 500 }

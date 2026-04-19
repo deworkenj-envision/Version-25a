@@ -603,9 +603,7 @@ export default function AdminOrdersPage() {
                         </p>
                         {order.artwork_url ? (
                           <a
-                            href={order.artwork_url}
-                            target="_blank"
-                            rel="noreferrer"
+                            href={`/api/orders/${order.id}/artwork-download`}
                             className="mt-2 inline-flex items-center justify-center rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
                           >
                             Download Artwork
