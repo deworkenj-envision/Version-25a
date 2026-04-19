@@ -82,7 +82,7 @@ export async function POST(req) {
       const metadata = session.metadata || {};
       const customerDetails = session.customer_details || {};
       const shippingDetails = session.shipping_details || {};
-      const shippingAddress = shippingDetails.address || {};
+      const shippingAddress = shippingDetails.address || customerDetails.address || {};
 
       const stripeSessionId = session.id;
 
