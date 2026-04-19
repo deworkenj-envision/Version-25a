@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 function toNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -7,8 +11,8 @@ function formatMoney(value) {
   return toNumber(value).toFixed(2);
 }
 
-export default async function CheckoutPage({ searchParams }) {
-  const params = await searchParams;
+export default function CheckoutPage({ searchParams }) {
+  const params = searchParams;
 
   const productName = params?.productName || "Business Cards";
   const quantity = params?.quantity || "100";
@@ -17,165 +21,157 @@ export default async function CheckoutPage({ searchParams }) {
   const finish = params?.finish || "Matte";
   const sides = params?.sides || "Front Only";
 
-  const customerName = params?.customerName || "";
-  const customerEmail = params?.customerEmail || "";
   const notes = params?.notes || "";
-
   const artworkUrl = params?.artworkUrl || "";
   const fileName = params?.fileName || "";
-
   const productImage = params?.productImage || "";
 
   const subtotal = toNumber(params?.subtotal);
-  const shipping = 12.95; // keep consistent with order page
+  const shipping = 12.95;
   const total = subtotal + shipping;
+
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleCheckout() {
+    if (!customerName || !customerEmail) {
+      setError("Please enter your name and email.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customerName,
+          customerEmail,
+          productName,
+          size,
+          paper,
+          finish,
+          sides,
+          quantity,
+          subtotal,
+          shipping,
+          total,
+          notes,
+          fileName,
+          artworkUrl,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Checkout failed.");
+      }
+
+      // 🔥 redirect to Stripe
+      window.location.href = data.url;
+
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-12">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold text-slate-900">Checkout</h1>
-          <p className="mt-3 text-slate-600">
-            Review your order details before payment.
-          </p>
-        </div>
+
+        <h1 className="mb-6 text-4xl font-bold">Checkout</h1>
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-          {/* LEFT */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold text-slate-900">
-              Order details
-            </h2>
 
-            {/* PRODUCT IMAGE */}
+          {/* LEFT */}
+          <div className="bg-white p-6 rounded-xl shadow">
+
             {productImage && (
-              <div className="mt-6 overflow-hidden rounded-xl">
-                <img
-                  src={productImage}
-                  alt={productName}
-                  className="h-40 w-full object-cover"
-                />
-              </div>
+              <img
+                src={productImage}
+                className="mb-6 h-40 w-full object-cover rounded"
+              />
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Product</p>
-                <p className="mt-1 font-semibold text-slate-900">{productName}</p>
-              </div>
+            <h2 className="text-xl font-semibold mb-4">Order Details</h2>
 
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Quantity</p>
-                <p className="mt-1 font-semibold text-slate-900">{quantity}</p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Size</p>
-                <p className="mt-1 font-semibold text-slate-900">{size}</p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Paper</p>
-                <p className="mt-1 font-semibold text-slate-900">{paper}</p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Finish</p>
-                <p className="mt-1 font-semibold text-slate-900">{finish}</p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
-                <p className="text-sm text-slate-500">Sides</p>
-                <p className="mt-1 font-semibold text-slate-900">{sides}</p>
-              </div>
+            <div className="space-y-2 text-sm">
+              <p><b>Product:</b> {productName}</p>
+              <p><b>Size:</b> {size}</p>
+              <p><b>Paper:</b> {paper}</p>
+              <p><b>Finish:</b> {finish}</p>
+              <p><b>Sides:</b> {sides}</p>
+              <p><b>Quantity:</b> {quantity}</p>
             </div>
 
-            <h3 className="mt-8 text-xl font-semibold text-slate-900">
-              Customer information
-            </h3>
+            {/* CUSTOMER FORM */}
+            <h2 className="mt-8 text-xl font-semibold">Your Info</h2>
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Name</p>
-                <p className="mt-1 font-semibold text-slate-900">
-                  {customerName || "—"}
-                </p>
-              </div>
+            <div className="mt-4 space-y-4">
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                className="w-full border p-3 rounded"
+              />
 
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Email</p>
-                <p className="mt-1 font-semibold text-slate-900">
-                  {customerEmail || "—"}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
-                <p className="text-sm text-slate-500">Notes</p>
-                <p className="mt-1 font-semibold text-slate-900">
-                  {notes || "—"}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
-                <p className="text-sm text-slate-500">Artwork</p>
-                {artworkUrl ? (
-                  <a
-                    href={artworkUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-1 inline-block font-semibold text-blue-600 hover:underline"
-                  >
-                    {fileName || "View uploaded artwork"}
-                  </a>
-                ) : (
-                  <p className="mt-1 font-semibold text-slate-900">
-                    No file uploaded
-                  </p>
-                )}
-              </div>
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                className="w-full border p-3 rounded"
+              />
             </div>
-          </section>
+
+            {error && (
+              <p className="mt-4 text-red-500 text-sm">{error}</p>
+            )}
+          </div>
 
           {/* RIGHT */}
-          <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold text-slate-900">
-              Pricing summary
-            </h2>
+          <div className="bg-white p-6 rounded-xl shadow">
 
-            <div className="mt-6 space-y-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Subtotal</span>
-                <span className="font-medium text-slate-900">
-                  ${formatMoney(subtotal)}
-                </span>
+            <h2 className="text-xl font-semibold mb-4">Summary</h2>
+
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>${formatMoney(subtotal)}</span>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Shipping</span>
-                <span className="font-medium text-slate-900">
-                  ${formatMoney(shipping)}
-                </span>
+              <div className="flex justify-between">
+                <span>Shipping</span>
+                <span>${formatMoney(shipping)}</span>
               </div>
 
-              <div className="border-t border-slate-200 pt-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-semibold text-slate-900">
-                    Total
-                  </span>
-                  <span className="text-2xl font-bold text-slate-900">
-                    ${formatMoney(total)}
-                  </span>
-                </div>
+              <div className="border-t pt-3 flex justify-between font-bold">
+                <span>Total</span>
+                <span>${formatMoney(total)}</span>
               </div>
             </div>
 
-            <a
-              href="/order"
-              className="mt-6 block w-full rounded-xl bg-blue-600 px-4 py-4 text-center text-base font-semibold text-white transition hover:bg-blue-700"
+            {/* 🔥 STRIPE BUTTON */}
+            <button
+              onClick={handleCheckout}
+              disabled={loading}
+              className="mt-6 w-full bg-blue-600 text-white py-4 rounded-lg font-bold hover:bg-blue-700 disabled:bg-gray-400"
             >
-              Back to Order
-            </a>
-          </aside>
+              {loading ? "Redirecting..." : "Pay Securely"}
+            </button>
+
+          </div>
+
         </div>
       </div>
     </main>
