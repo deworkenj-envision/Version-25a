@@ -43,8 +43,8 @@ function CheckoutInner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const isImage = fileName?.match(/\.(jpg|jpeg|png|webp|gif)$/i);
-  const isPdf = fileName?.match(/\.pdf$/i);
+  const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(fileName || "");
+  const isPdf = /\.pdf$/i.test(fileName || "");
 
   async function handleCheckout() {
     if (!customerName.trim() || !customerEmail.trim()) {
@@ -58,7 +58,7 @@ function CheckoutInner() {
     }
 
     if (subtotal <= 0) {
-      setError("Subtotal is missing or invalid.");
+      setError("Subtotal is missing or invalid. Please go back and rebuild the order.");
       return;
     }
 
@@ -91,8 +91,13 @@ function CheckoutInner() {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data?.error || "Checkout failed.");
-      if (!data?.url) throw new Error("Stripe URL missing.");
+      if (!res.ok) {
+        throw new Error(data?.error || "Checkout failed.");
+      }
+
+      if (!data?.url) {
+        throw new Error("Stripe checkout URL was not returned.");
+      }
 
       window.location.href = data.url;
     } catch (err) {
@@ -105,104 +110,128 @@ function CheckoutInner() {
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-12">
       <div className="mx-auto max-w-5xl">
-        <h1 className="mb-6 text-4xl font-bold text-slate-900">Checkout</h1>
+        <h1 className="mb-6 text-4xl font-bold text-slate-900">Checkout Page</h1>
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-          <section className="rounded-2xl border bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold">Order Details</h2>
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-2xl font-semibold text-slate-900">Order Details</h2>
 
-            {productImage && (
+            {productImage ? (
               <div className="mt-6 overflow-hidden rounded-xl">
-                <img src={productImage} className="h-40 w-full object-cover" />
+                <img
+                  src={productImage}
+                  alt={productName}
+                  className="h-40 w-full object-cover"
+                />
               </div>
-            )}
+            ) : null}
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <Info label="Product" value={productName} />
-              <Info label="Quantity" value={quantity} />
-              <Info label="Size" value={size} />
-              <Info label="Paper" value={paper} />
-              <Info label="Finish" value={finish} />
-              <Info label="Sides" value={sides} />
+              <InfoCard label="Product" value={productName} />
+              <InfoCard label="Quantity" value={quantity} />
+              <InfoCard label="Size" value={size} />
+              <InfoCard label="Paper" value={paper} />
+              <InfoCard label="Finish" value={finish} />
+              <InfoCard label="Sides" value={sides} />
 
-              <div className="sm:col-span-2">
+              <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
                 <p className="text-sm text-slate-500">Artwork</p>
 
-                {artworkUrl && (
-                  <>
-                    {/* PREVIEW */}
-                    {isImage && (
+                {artworkUrl ? (
+                  <div className="mt-2">
+                    <p className="font-semibold text-slate-900">
+                      {fileName || "Uploaded artwork"}
+                    </p>
+
+                    {isImage ? (
                       <img
                         src={artworkUrl}
-                        className="mt-3 max-h-[400px] w-full rounded-xl border object-contain"
+                        alt="Uploaded artwork preview"
+                        className="mt-4 max-h-[500px] w-full rounded-xl border border-slate-200 object-contain bg-white"
                       />
-                    )}
+                    ) : null}
 
-                    {isPdf && (
+                    {isPdf ? (
                       <iframe
                         src={artworkUrl}
-                        className="mt-3 h-[500px] w-full rounded-xl border bg-white"
+                        title="Uploaded PDF Preview"
+                        className="mt-4 h-[650px] w-full rounded-xl border border-slate-200 bg-white"
                       />
-                    )}
+                    ) : null}
 
-                    {/* VIEW BUTTON */}
                     <a
                       href={artworkUrl}
                       target="_blank"
-                      className="mt-3 inline-block font-semibold text-blue-600"
+                      rel="noreferrer"
+                      className="mt-4 inline-block font-semibold text-blue-600 hover:underline"
                     >
                       View Uploaded File
                     </a>
-                  </>
+                  </div>
+                ) : (
+                  <p className="mt-1 font-semibold text-slate-900">No file uploaded</p>
                 )}
               </div>
 
-              <Info label="Notes" value={notes || "—"} />
+              <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
+                <p className="text-sm text-slate-500">Notes</p>
+                <p className="mt-1 font-semibold text-slate-900">{notes || "—"}</p>
+              </div>
             </div>
 
-            <h2 className="mt-8 text-xl font-semibold">Your Info</h2>
+            <h2 className="mt-8 text-xl font-semibold text-slate-900">Your Info</h2>
 
             <div className="mt-4 space-y-4">
               <input
+                type="text"
                 placeholder="Full Name"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full rounded-xl border p-3"
+                className="w-full rounded-xl border border-slate-300 p-3"
               />
 
               <input
+                type="email"
                 placeholder="Email Address"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
-                className="w-full rounded-xl border p-3"
+                className="w-full rounded-xl border border-slate-300 p-3"
               />
             </div>
 
-            {error && <p className="mt-4 text-red-500">{error}</p>}
+            {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
           </section>
 
-          <aside className="rounded-2xl border bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold">Summary</h2>
+          <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-2xl font-semibold text-slate-900">Summary</h2>
 
             <div className="mt-6 space-y-4">
-              <Row label="Subtotal" value={formatMoney(subtotal)} />
-              <Row label="Shipping" value={formatMoney(shipping)} />
+              <SummaryRow label="Subtotal" value={formatMoney(subtotal)} />
+              <SummaryRow label="Shipping" value={formatMoney(shipping)} />
 
-              <div className="border-t pt-4 flex justify-between font-bold">
-                <span>Total</span>
-                <span>${formatMoney(total)}</span>
+              <div className="border-t border-slate-200 pt-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-semibold text-slate-900">Total</span>
+                  <span className="text-2xl font-bold text-slate-900">
+                    ${formatMoney(total)}
+                  </span>
+                </div>
               </div>
             </div>
 
             <button
+              type="button"
               onClick={handleCheckout}
               disabled={loading}
-              className="mt-6 w-full rounded-xl bg-blue-600 py-4 text-white font-bold"
+              className="mt-6 block w-full rounded-xl bg-blue-600 px-4 py-4 text-center text-base font-semibold text-white transition hover:bg-blue-700 disabled:bg-slate-400"
             >
               {loading ? "Redirecting..." : "Pay Securely"}
             </button>
 
-            <a href="/order" className="mt-4 block text-center text-sm">
+            <a
+              href="/order"
+              className="mt-4 block w-full rounded-xl border border-slate-300 px-4 py-4 text-center text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
               Back to Order
             </a>
           </aside>
@@ -212,27 +241,38 @@ function CheckoutInner() {
   );
 }
 
-function Info({ label, value }) {
+function InfoCard({ label, value }) {
   return (
     <div className="rounded-xl bg-slate-50 p-4">
       <p className="text-sm text-slate-500">{label}</p>
-      <p className="font-semibold">{value}</p>
+      <p className="mt-1 font-semibold text-slate-900">{value}</p>
     </div>
   );
 }
 
-function Row({ label, value }) {
+function SummaryRow({ label, value }) {
   return (
-    <div className="flex justify-between text-sm">
+    <div className="flex items-center justify-between text-sm">
       <span className="text-slate-500">{label}</span>
-      <span className="font-medium">${value}</span>
+      <span className="font-medium text-slate-900">${value}</span>
     </div>
   );
 }
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<div className="p-10">Loading...</div>}>
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-50 px-6 py-12">
+          <div className="mx-auto max-w-5xl">
+            <h1 className="mb-6 text-4xl font-bold text-slate-900">Checkout Page</h1>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-slate-600">Loading checkout...</p>
+            </div>
+          </div>
+        </main>
+      }
+    >
       <CheckoutInner />
     </Suspense>
   );
