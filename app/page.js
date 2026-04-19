@@ -42,7 +42,7 @@ export default function HomePage() {
           <div className="mb-8 flex items-center justify-between gap-4">
             <Link href="/" className="flex items-center gap-3">
               <img
-                src="/images/logo-here.png"
+                src="/images/logo-hero.png"
                 alt="EnVision Direct"
                 className="h-14 w-auto object-contain sm:h-16"
               />
