@@ -200,12 +200,10 @@ export default async function AdminOrderPrintPage({ params }) {
               <div className="flex flex-wrap gap-3 print:hidden">
                 {order.artwork_url ? (
                   <a
-                    href={order.artwork_url}
-                    target="_blank"
-                    rel="noreferrer"
+                    href={`/api/orders/${order.id}/artwork-download`}
                     className="inline-flex rounded-xl bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700"
                   >
-                    Open Artwork
+                    Download Artwork
                   </a>
                 ) : (
                   <span className="font-semibold text-slate-900">No artwork</span>
