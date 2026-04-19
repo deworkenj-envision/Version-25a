@@ -77,7 +77,7 @@ export default function OrderPage({ params }) {
             target="_blank"
             className="bg-blue-600 text-white px-6 py-3 rounded"
           >
-            Open Sheet
+            Print Packing Slip
           </a>
         )}
 
