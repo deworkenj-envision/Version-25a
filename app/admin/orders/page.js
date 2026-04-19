@@ -40,42 +40,25 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [drafts, setDrafts] = useState({});
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [savingId, setSavingId] = useState("");
 
-  async function loadOrders(showRefreshState = false) {
-    try {
-      if (showRefreshState) setRefreshing(true);
-      else setLoading(true);
+  async function loadOrders() {
+    const res = await fetch("/api/orders", { cache: "no-store" });
+    const data = await res.json();
 
-      setError("");
-      setSuccessMessage("");
+    const normalized = (data.orders || []).map(normalizeOrder);
+    setOrders(normalized);
 
-      const res = await fetch("/api/orders", { cache: "no-store" });
-      const data = await res.json();
+    const nextDrafts = {};
+    normalized.forEach((order) => {
+      nextDrafts[order.id] = {
+        status: order.status,
+        carrier: order.carrier,
+        tracking_number: order.tracking_number,
+      };
+    });
+    setDrafts(nextDrafts);
 
-      if (!res.ok) throw new Error(data?.error || "Failed to load orders.");
-
-      const normalized = (data.orders || []).map(normalizeOrder);
-      setOrders(normalized);
-
-      const nextDrafts = {};
-      normalized.forEach((order) => {
-        nextDrafts[order.id] = {
-          status: order.status,
-          carrier: order.carrier,
-          tracking_number: order.tracking_number,
-        };
-      });
-      setDrafts(nextDrafts);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -83,103 +66,82 @@ export default function AdminOrdersPage() {
   }, []);
 
   async function saveOrder(orderId) {
-    const draft = drafts[orderId] || {};
-    const order = orders.find((o) => o.id === orderId);
+    const draft = drafts[orderId];
 
-    try {
-      setSavingId(orderId);
+    await fetch(`/api/orders/${orderId}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(draft),
+    });
 
-      const res = await fetch(`/api/orders/${orderId}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: draft.status,
-          carrier: draft.carrier,
-          tracking_number: draft.tracking_number,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-
-      setSuccessMessage("Order updated");
-      await loadOrders(true);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSavingId("");
-    }
+    await loadOrders();
   }
 
-  return (
-    <main className="min-h-screen bg-slate-50">
-      <section className="max-w-[1500px] mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-6">Admin Orders</h1>
+  if (loading) return <div className="p-10">Loading...</div>;
 
+  return (
+    <main className="min-h-screen bg-slate-50 p-6">
+      <h1 className="text-4xl font-bold mb-8">Admin Orders</h1>
+
+      <div className="space-y-6">
         {orders.map((order) => {
-          const draft = drafts[order.id] || {};
+          const draft = drafts[order.id];
           const address = buildAddress(order);
 
           return (
-            <div key={order.id} className="mb-6 rounded-2xl bg-white shadow p-6">
-              
-              {/* HEADER */}
-              <div className="grid md:grid-cols-4 gap-4 mb-4">
+            <div key={order.id} className="rounded-3xl border bg-white shadow">
+
+              {/* 🔥 BLACK HEADER (kept) */}
+              <div className="bg-slate-900 text-white p-6 rounded-t-3xl grid md:grid-cols-6 gap-4">
                 <div>
-                  <p className="text-xs text-gray-500">Order</p>
+                  <p className="text-xs text-slate-400">Order</p>
                   <p className="font-bold">{order.order_number}</p>
                 </div>
 
                 <div>
-                  <p className="text-xs text-gray-500">Customer</p>
+                  <p className="text-xs text-slate-400">Customer</p>
                   <p className="font-bold">{order.customer_name}</p>
                 </div>
 
                 <div>
-                  <p className="text-xs text-gray-500">Email</p>
+                  <p className="text-xs text-slate-400">Email</p>
                   <p className="font-bold">{order.customer_email}</p>
                 </div>
 
                 <div>
-                  <p className="text-xs text-gray-500">Phone</p>
+                  <p className="text-xs text-slate-400">Phone</p>
                   <p className="font-bold">{order.customer_phone || "-"}</p>
                 </div>
-              </div>
 
-              {/* SHIPPING */}
-              <div className="mb-4">
-                <p className="text-xs text-gray-500">Shipping Address</p>
-                <p className="font-semibold">
-                  {order.shipping_name}
-                </p>
-                <p>{address || "-"}</p>
-              </div>
-
-              {/* ORDER DETAILS */}
-              <div className="grid md:grid-cols-4 gap-4 mb-4">
                 <div>
-                  <p className="text-xs text-gray-500">Product</p>
-                  <p>{order.product_name}</p>
+                  <p className="text-xs text-slate-400">Total</p>
+                  <p className="font-bold">{formatMoney(order.total)}</p>
                 </div>
 
                 <div>
-                  <p className="text-xs text-gray-500">Qty</p>
-                  <p>{order.quantity}</p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-500">Total</p>
-                  <p>{formatMoney(order.total)}</p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-500">Created</p>
-                  <p>{formatDate(order.created_at)}</p>
+                  <p className="text-xs text-slate-400">Created</p>
+                  <p className="font-bold">{formatDate(order.created_at)}</p>
                 </div>
               </div>
 
-              {/* ARTWORK */}
-              <div className="mb-4">
+              <div className="p-6">
+
+                {/* 🔥 SHIPPING BLOCK (NEW) */}
+                <div className="mb-6 rounded-xl bg-slate-50 p-4">
+                  <p className="text-xs text-slate-500">Shipping</p>
+                  <p className="font-semibold">{order.shipping_name}</p>
+                  <p className="text-sm text-slate-700">{address || "-"}</p>
+                </div>
+
+                {/* ORDER DETAILS */}
+                <div className="grid md:grid-cols-4 gap-4 mb-6">
+                  <Info label="Product" value={order.product_name} />
+                  <Info label="Quantity" value={order.quantity} />
+                  <Info label="Paper" value={order.paper} />
+                  <Info label="Finish" value={order.finish} />
+                </div>
+
+                {/* ARTWORK */}
                 {order.artwork_url && (
                   <a
                     href={order.artwork_url}
@@ -189,53 +151,63 @@ export default function AdminOrdersPage() {
                     Download Artwork
                   </a>
                 )}
-              </div>
 
-              {/* STATUS UPDATE */}
-              <div className="grid md:grid-cols-3 gap-4">
-                <select
-                  value={draft.status}
-                  onChange={(e) =>
-                    setDrafts({
-                      ...drafts,
-                      [order.id]: { ...draft, status: e.target.value },
-                    })
-                  }
-                  className="border p-2 rounded"
-                >
-                  <option>pending</option>
-                  <option>paid</option>
-                  <option>printing</option>
-                  <option>shipped</option>
-                  <option>delivered</option>
-                </select>
+                {/* STATUS */}
+                <div className="mt-6 grid md:grid-cols-3 gap-4">
+                  <select
+                    value={draft.status}
+                    onChange={(e) =>
+                      setDrafts({
+                        ...drafts,
+                        [order.id]: { ...draft, status: e.target.value },
+                      })
+                    }
+                    className="border p-2 rounded"
+                  >
+                    <option>pending</option>
+                    <option>paid</option>
+                    <option>printing</option>
+                    <option>shipped</option>
+                    <option>delivered</option>
+                  </select>
 
-                <input
-                  placeholder="Tracking Number"
-                  value={draft.tracking_number}
-                  onChange={(e) =>
-                    setDrafts({
-                      ...drafts,
-                      [order.id]: {
-                        ...draft,
-                        tracking_number: e.target.value,
-                      },
-                    })
-                  }
-                  className="border p-2 rounded"
-                />
+                  <input
+                    placeholder="Tracking Number"
+                    value={draft.tracking_number}
+                    onChange={(e) =>
+                      setDrafts({
+                        ...drafts,
+                        [order.id]: {
+                          ...draft,
+                          tracking_number: e.target.value,
+                        },
+                      })
+                    }
+                    className="border p-2 rounded"
+                  />
 
-                <button
-                  onClick={() => saveOrder(order.id)}
-                  className="bg-blue-600 text-white p-2 rounded"
-                >
-                  Save
-                </button>
+                  <button
+                    onClick={() => saveOrder(order.id)}
+                    className="bg-blue-600 text-white p-2 rounded"
+                  >
+                    Save
+                  </button>
+                </div>
+
               </div>
             </div>
           );
         })}
-      </section>
+      </div>
     </main>
+  );
+}
+
+function Info({ label, value }) {
+  return (
+    <div className="bg-slate-50 p-4 rounded-xl">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="font-semibold">{value || "-"}</p>
+    </div>
   );
 }
