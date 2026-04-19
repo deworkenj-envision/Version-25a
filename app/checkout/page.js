@@ -198,7 +198,7 @@ function CheckoutInner() {
             </div>
           </section>
 
-          <aside className="space-y-6">
+          <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
             <div className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="text-2xl font-semibold text-slate-900">Summary</h2>
 
