@@ -136,38 +136,19 @@ function CheckoutInner() {
 
               <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
                 <p className="text-sm text-slate-500">Artwork</p>
+                <p className="mt-1 font-semibold text-slate-900">
+                  {fileName || "Uploaded artwork"}
+                </p>
 
                 {artworkUrl ? (
-                  <div className="mt-2">
-                    <p className="font-semibold text-slate-900">
-                      {fileName || "Uploaded artwork"}
-                    </p>
-
-                    {isImage ? (
-                      <img
-                        src={artworkUrl}
-                        alt="Uploaded artwork preview"
-                        className="mt-4 max-h-[500px] w-full rounded-xl border border-slate-200 object-contain bg-white"
-                      />
-                    ) : null}
-
-                    {isPdf ? (
-                      <iframe
-                        src={artworkUrl}
-                        title="Uploaded PDF Preview"
-                        className="mt-4 h-[650px] w-full rounded-xl border border-slate-200 bg-white"
-                      />
-                    ) : null}
-
-                    <a
-                      href={artworkUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-4 inline-block font-semibold text-blue-600 hover:underline"
-                    >
-                      View Uploaded File
-                    </a>
-                  </div>
+                  <a
+                    href={artworkUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-block font-semibold text-blue-600 hover:underline"
+                  >
+                    View Uploaded File
+                  </a>
                 ) : (
                   <p className="mt-1 font-semibold text-slate-900">No file uploaded</p>
                 )}
@@ -202,38 +183,74 @@ function CheckoutInner() {
             {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
           </section>
 
-          <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold text-slate-900">Summary</h2>
+          <aside className="space-y-6">
+            <div className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-2xl font-semibold text-slate-900">Summary</h2>
 
-            <div className="mt-6 space-y-4">
-              <SummaryRow label="Subtotal" value={formatMoney(subtotal)} />
-              <SummaryRow label="Shipping" value={formatMoney(shipping)} />
+              <div className="mt-6 space-y-4">
+                <SummaryRow label="Subtotal" value={formatMoney(subtotal)} />
+                <SummaryRow label="Shipping" value={formatMoney(shipping)} />
 
-              <div className="border-t border-slate-200 pt-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-semibold text-slate-900">Total</span>
-                  <span className="text-2xl font-bold text-slate-900">
-                    ${formatMoney(total)}
-                  </span>
+                <div className="border-t border-slate-200 pt-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-base font-semibold text-slate-900">Total</span>
+                    <span className="text-2xl font-bold text-slate-900">
+                      ${formatMoney(total)}
+                    </span>
+                  </div>
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={handleCheckout}
+                disabled={loading}
+                className="mt-6 block w-full rounded-xl bg-blue-600 px-4 py-4 text-center text-base font-semibold text-white transition hover:bg-blue-700 disabled:bg-slate-400"
+              >
+                {loading ? "Redirecting..." : "Pay Securely"}
+              </button>
+
+              <a
+                href="/order"
+                className="mt-4 block w-full rounded-xl border border-slate-300 px-4 py-4 text-center text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Back to Order
+              </a>
             </div>
 
-            <button
-              type="button"
-              onClick={handleCheckout}
-              disabled={loading}
-              className="mt-6 block w-full rounded-xl bg-blue-600 px-4 py-4 text-center text-base font-semibold text-white transition hover:bg-blue-700 disabled:bg-slate-400"
-            >
-              {loading ? "Redirecting..." : "Pay Securely"}
-            </button>
+            {artworkUrl ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 className="text-xl font-semibold text-slate-900">Artwork Preview</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  {fileName || "Uploaded artwork"}
+                </p>
 
-            <a
-              href="/order"
-              className="mt-4 block w-full rounded-xl border border-slate-300 px-4 py-4 text-center text-base font-semibold text-slate-700 transition hover:bg-slate-50"
-            >
-              Back to Order
-            </a>
+                {isImage ? (
+                  <img
+                    src={artworkUrl}
+                    alt="Uploaded artwork preview"
+                    className="mt-4 max-h-[500px] w-full rounded-xl border border-slate-200 bg-white object-contain"
+                  />
+                ) : null}
+
+                {isPdf ? (
+                  <iframe
+                    src={artworkUrl}
+                    title="Uploaded PDF Preview"
+                    className="mt-4 h-[650px] w-full rounded-xl border border-slate-200 bg-white"
+                  />
+                ) : null}
+
+                <a
+                  href={artworkUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 inline-block font-semibold text-blue-600 hover:underline"
+                >
+                  View Uploaded File
+                </a>
+              </div>
+            ) : null}
           </aside>
         </div>
       </div>
