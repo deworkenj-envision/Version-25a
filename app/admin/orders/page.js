@@ -465,7 +465,7 @@ export default function AdminOrdersPage() {
                       </div>
                     </div>
 
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                         <p className="text-xs uppercase tracking-wide text-slate-500">
                           Saved Carrier
@@ -482,6 +482,26 @@ export default function AdminOrdersPage() {
                         <p className="mt-1 break-all font-semibold text-slate-900">
                           {order.tracking_number || "-"}
                         </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Tracking Link
+                        </p>
+                        {order.tracking_url ? (
+                          <a
+                            href={order.tracking_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-2 inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                          >
+                            Open Tracking
+                          </a>
+                        ) : (
+                          <p className="mt-1 font-semibold text-slate-900">
+                            Not available
+                          </p>
+                        )}
                       </div>
 
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
