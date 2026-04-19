@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 function formatMoney(value) {
   return `$${Number(value || 0).toFixed(2)}`;
@@ -44,6 +44,8 @@ export default function AdminOrdersPage() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [savingId, setSavingId] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   async function loadOrders(showRefreshState = false) {
     try {
@@ -147,12 +149,40 @@ export default function AdminOrdersPage() {
     }
   }
 
+  const filteredOrders = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    return orders.filter((order) => {
+      const matchesStatus =
+        statusFilter === "all" ? true : (order.status || "pending") === statusFilter;
+
+      if (!matchesStatus) return false;
+
+      if (!query) return true;
+
+      const searchableText = [
+        order.order_number,
+        order.customer_name,
+        order.customer_email,
+        order.customer_phone,
+        order.product_name,
+        order.file_name,
+        order.id,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(query);
+    });
+  }, [orders, searchTerm, statusFilter]);
+
   return (
     <main className="min-h-screen bg-slate-50">
-      <section className="max-w-[1500px] mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">
+            <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
               Admin Orders
             </h1>
             <p className="mt-2 text-slate-600">
@@ -168,6 +198,46 @@ export default function AdminOrdersPage() {
           >
             {refreshing ? "Refreshing..." : "Refresh Orders"}
           </button>
+        </div>
+
+        <div className="mb-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Search Orders
+              </label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by order #, customer, email, phone, product..."
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Filter by Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-500"
+              >
+                <option value="all">all statuses</option>
+                <option value="pending">pending</option>
+                <option value="paid">paid</option>
+                <option value="printing">printing</option>
+                <option value="shipped">shipped</option>
+                <option value="delivered">delivered</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-4 text-sm text-slate-500">
+            Showing <span className="font-semibold text-slate-900">{filteredOrders.length}</span> of{" "}
+            <span className="font-semibold text-slate-900">{orders.length}</span> orders
+          </div>
         </div>
 
         {error ? (
@@ -188,15 +258,15 @@ export default function AdminOrdersPage() {
           </div>
         ) : null}
 
-        {!loading && orders.length === 0 ? (
+        {!loading && filteredOrders.length === 0 ? (
           <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
-            No orders found.
+            No matching orders found.
           </div>
         ) : null}
 
-        {!loading && orders.length > 0 ? (
+        {!loading && filteredOrders.length > 0 ? (
           <div className="space-y-6">
-            {orders.map((order) => {
+            {filteredOrders.map((order) => {
               const draft = drafts[order.id] || {};
               const isSaving = savingId === order.id;
               const address = buildAddress(order);
@@ -212,7 +282,7 @@ export default function AdminOrdersPage() {
                         <p className="text-xs uppercase tracking-wide text-slate-300">
                           Order Number
                         </p>
-                        <p className="mt-1 text-base font-semibold break-all">
+                        <p className="mt-1 break-all text-base font-semibold">
                           {order.order_number || "-"}
                         </p>
                       </div>
@@ -221,7 +291,7 @@ export default function AdminOrdersPage() {
                         <p className="text-xs uppercase tracking-wide text-slate-300">
                           Customer
                         </p>
-                        <p className="mt-1 text-base font-semibold break-all">
+                        <p className="mt-1 break-all text-base font-semibold">
                           {order.customer_name || "-"}
                         </p>
                       </div>
@@ -230,7 +300,7 @@ export default function AdminOrdersPage() {
                         <p className="text-xs uppercase tracking-wide text-slate-300">
                           Email
                         </p>
-                        <p className="mt-1 text-base font-semibold break-all">
+                        <p className="mt-1 break-all text-base font-semibold">
                           {order.customer_email || "-"}
                         </p>
                       </div>
@@ -239,7 +309,7 @@ export default function AdminOrdersPage() {
                         <p className="text-xs uppercase tracking-wide text-slate-300">
                           Phone
                         </p>
-                        <p className="mt-1 text-base font-semibold break-all">
+                        <p className="mt-1 break-all text-base font-semibold">
                           {order.customer_phone || "-"}
                         </p>
                       </div>
@@ -257,7 +327,7 @@ export default function AdminOrdersPage() {
                         <p className="text-xs uppercase tracking-wide text-slate-300">
                           Created
                         </p>
-                        <p className="mt-1 text-base font-semibold break-all">
+                        <p className="mt-1 break-all text-base font-semibold">
                           {formatDate(order.created_at)}
                         </p>
                       </div>
@@ -297,7 +367,7 @@ export default function AdminOrdersPage() {
                         <p className="text-xs uppercase tracking-wide text-slate-500">
                           Current Status
                         </p>
-                        <p className="mt-1 font-semibold text-blue-700 break-all">
+                        <p className="mt-1 break-all font-semibold text-blue-700">
                           {order.status || "pending"}
                         </p>
                       </div>
@@ -308,7 +378,7 @@ export default function AdminOrdersPage() {
                         <p className="text-xs uppercase tracking-wide text-slate-500">
                           File Name
                         </p>
-                        <p className="mt-1 font-semibold text-slate-900 break-all">
+                        <p className="mt-1 break-all font-semibold text-slate-900">
                           {order.file_name || "-"}
                         </p>
                       </div>
@@ -320,7 +390,7 @@ export default function AdminOrdersPage() {
                         <p className="mt-1 font-semibold text-slate-900">
                           {order.shipping_name || "-"}
                         </p>
-                        <p className="mt-1 text-sm text-slate-700 break-words">
+                        <p className="mt-1 break-words text-sm text-slate-700">
                           {address || "-"}
                         </p>
                       </div>
@@ -331,7 +401,7 @@ export default function AdminOrdersPage() {
                         <p className="text-xs uppercase tracking-wide text-slate-500">
                           Notes
                         </p>
-                        <p className="mt-1 text-slate-900 whitespace-pre-wrap">
+                        <p className="mt-1 whitespace-pre-wrap text-slate-900">
                           {order.notes}
                         </p>
                       </div>
@@ -400,7 +470,7 @@ export default function AdminOrdersPage() {
                         <p className="text-xs uppercase tracking-wide text-slate-500">
                           Saved Carrier
                         </p>
-                        <p className="mt-1 font-semibold text-slate-900 break-all">
+                        <p className="mt-1 break-all font-semibold text-slate-900">
                           {order.carrier || "-"}
                         </p>
                       </div>
@@ -409,7 +479,7 @@ export default function AdminOrdersPage() {
                         <p className="text-xs uppercase tracking-wide text-slate-500">
                           Saved Tracking Number
                         </p>
-                        <p className="mt-1 font-semibold text-slate-900 break-all">
+                        <p className="mt-1 break-all font-semibold text-slate-900">
                           {order.tracking_number || "-"}
                         </p>
                       </div>
@@ -418,7 +488,7 @@ export default function AdminOrdersPage() {
                         <p className="text-xs uppercase tracking-wide text-slate-500">
                           Order ID
                         </p>
-                        <p className="mt-1 font-semibold text-slate-900 break-all text-sm">
+                        <p className="mt-1 break-all text-sm font-semibold text-slate-900">
                           {order.id || "-"}
                         </p>
                       </div>
