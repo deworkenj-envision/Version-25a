@@ -12,18 +12,23 @@ export default async function CheckoutPage({ searchParams }) {
 
   const productName = params?.productName || "Business Cards";
   const quantity = params?.quantity || "100";
+  const size = params?.size || "—";
   const paper = params?.paper || "Standard";
   const finish = params?.finish || "Matte";
   const sides = params?.sides || "Front Only";
+
   const customerName = params?.customerName || "";
   const customerEmail = params?.customerEmail || "";
   const notes = params?.notes || "";
+
   const artworkUrl = params?.artworkUrl || "";
   const fileName = params?.fileName || "";
 
+  const productImage = params?.productImage || "";
+
   const subtotal = toNumber(params?.subtotal);
-  const shipping = toNumber(params?.shipping);
-  const total = toNumber(params?.total);
+  const shipping = 12.95; // keep consistent with order page
+  const total = subtotal + shipping;
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-12">
@@ -36,10 +41,22 @@ export default async function CheckoutPage({ searchParams }) {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+          {/* LEFT */}
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-semibold text-slate-900">
               Order details
             </h2>
+
+            {/* PRODUCT IMAGE */}
+            {productImage && (
+              <div className="mt-6 overflow-hidden rounded-xl">
+                <img
+                  src={productImage}
+                  alt={productName}
+                  className="h-40 w-full object-cover"
+                />
+              </div>
+            )}
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl bg-slate-50 p-4">
@@ -50,6 +67,11 @@ export default async function CheckoutPage({ searchParams }) {
               <div className="rounded-xl bg-slate-50 p-4">
                 <p className="text-sm text-slate-500">Quantity</p>
                 <p className="mt-1 font-semibold text-slate-900">{quantity}</p>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-4">
+                <p className="text-sm text-slate-500">Size</p>
+                <p className="mt-1 font-semibold text-slate-900">{size}</p>
               </div>
 
               <div className="rounded-xl bg-slate-50 p-4">
@@ -114,6 +136,7 @@ export default async function CheckoutPage({ searchParams }) {
             </div>
           </section>
 
+          {/* RIGHT */}
           <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-semibold text-slate-900">
               Pricing summary
