@@ -44,8 +44,7 @@ async function getOrder(id) {
 }
 
 export default async function AdminOrderPrintPage({ params }) {
-  const resolvedParams = await params;
-  const orderId = resolvedParams?.id || "";
+  const orderId = params?.id || "";
   const order = await getOrder(orderId);
 
   if (!order) {
@@ -53,9 +52,7 @@ export default async function AdminOrderPrintPage({ params }) {
       <main className="min-h-screen bg-slate-100 px-6 py-10">
         <div className="mx-auto max-w-5xl rounded-3xl bg-white p-8 shadow-sm">
           <h1 className="text-3xl font-bold text-slate-900">Order Not Found</h1>
-          <p className="mt-3 text-slate-600">
-            We could not load this order.
-          </p>
+          <p className="mt-3 text-slate-600">We could not load this order.</p>
           <Link
             href="/admin/orders"
             className="mt-6 inline-flex rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white"
@@ -84,14 +81,6 @@ export default async function AdminOrderPrintPage({ params }) {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white hover:bg-slate-800"
-              >
-                Print / Save PDF
-              </button>
-
               <Link
                 href="/admin/orders"
                 className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50"
@@ -180,11 +169,7 @@ export default async function AdminOrderPrintPage({ params }) {
                 <PriceRow label="Subtotal" value={formatMoney(order.subtotal)} />
                 <PriceRow label="Shipping" value={formatMoney(order.shipping)} />
                 <div className="border-t border-slate-200 pt-3">
-                  <PriceRow
-                    label="Total"
-                    value={formatMoney(order.total)}
-                    bold
-                  />
+                  <PriceRow label="Total" value={formatMoney(order.total)} bold />
                 </div>
               </div>
             </section>
@@ -217,7 +202,7 @@ export default async function AdminOrderPrintPage({ params }) {
               </div>
 
               {order.artwork_url ? (
-                <div className="hidden print:block break-all text-slate-900">
+                <div className="hidden break-all text-slate-900 print:block">
                   {order.artwork_url}
                 </div>
               ) : null}
@@ -230,6 +215,10 @@ export default async function AdminOrderPrintPage({ params }) {
               {order.notes || "-"}
             </div>
           </section>
+
+          <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-700 print:hidden">
+            Use your browser print option to print or save this page as a PDF.
+          </div>
         </div>
       </div>
     </main>
