@@ -29,10 +29,14 @@ function buildAddress(order) {
 }
 
 async function getOrder(id) {
+  if (!id) return null;
+
+  const decodedId = decodeURIComponent(String(id));
+
   const { data, error } = await supabaseAdmin
     .from("orders")
     .select("*")
-    .eq("id", id)
+    .eq("id", decodedId)
     .maybeSingle();
 
   if (error) {
@@ -44,7 +48,8 @@ async function getOrder(id) {
 }
 
 export default async function AdminOrderPrintPage({ params }) {
-  const orderId = params?.id || "";
+  const resolvedParams = await params;
+  const orderId = resolvedParams?.id || "";
   const order = await getOrder(orderId);
 
   if (!order) {
@@ -53,6 +58,12 @@ export default async function AdminOrderPrintPage({ params }) {
         <div className="mx-auto max-w-5xl rounded-3xl bg-white p-8 shadow-sm">
           <h1 className="text-3xl font-bold text-slate-900">Order Not Found</h1>
           <p className="mt-3 text-slate-600">We could not load this order.</p>
+          <div className="mt-6">
+            <div className="text-sm text-slate-500">Requested ID</div>
+            <div className="mt-1 break-all font-mono text-sm text-slate-900">
+              {String(orderId || "-")}
+            </div>
+          </div>
           <Link
             href="/admin/orders"
             className="mt-6 inline-flex rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white"
