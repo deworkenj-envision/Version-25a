@@ -36,6 +36,16 @@ function buildAddress(order) {
     .join(", ");
 }
 
+function getTimeValue(value) {
+  const time = new Date(value || "").getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
+function getMoneyValue(value) {
+  const num = Number(value || 0);
+  return Number.isFinite(num) ? num : 0;
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [drafts, setDrafts] = useState({});
@@ -46,6 +56,7 @@ export default function AdminOrdersPage() {
   const [savingId, setSavingId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
   async function loadOrders(showRefreshState = false) {
     try {
@@ -152,12 +163,13 @@ export default function AdminOrdersPage() {
   const filteredOrders = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
-    return orders.filter((order) => {
+    const filtered = orders.filter((order) => {
       const matchesStatus =
-        statusFilter === "all" ? true : (order.status || "pending") === statusFilter;
+        statusFilter === "all"
+          ? true
+          : (order.status || "pending") === statusFilter;
 
       if (!matchesStatus) return false;
-
       if (!query) return true;
 
       const searchableText = [
@@ -175,7 +187,40 @@ export default function AdminOrdersPage() {
 
       return searchableText.includes(query);
     });
-  }, [orders, searchTerm, statusFilter]);
+
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "oldest":
+          return getTimeValue(a.created_at) - getTimeValue(b.created_at);
+
+        case "highest_total":
+          return getMoneyValue(b.total) - getMoneyValue(a.total);
+
+        case "lowest_total":
+          return getMoneyValue(a.total) - getMoneyValue(b.total);
+
+        case "customer_az":
+          return String(a.customer_name || "").localeCompare(
+            String(b.customer_name || ""),
+            undefined,
+            { sensitivity: "base" }
+          );
+
+        case "customer_za":
+          return String(b.customer_name || "").localeCompare(
+            String(a.customer_name || ""),
+            undefined,
+            { sensitivity: "base" }
+          );
+
+        case "newest":
+        default:
+          return getTimeValue(b.created_at) - getTimeValue(a.created_at);
+      }
+    });
+
+    return sorted;
+  }, [orders, searchTerm, statusFilter, sortBy]);
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -201,7 +246,7 @@ export default function AdminOrdersPage() {
         </div>
 
         <div className="mb-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px_220px]">
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-700">
                 Search Orders
@@ -230,6 +275,24 @@ export default function AdminOrdersPage() {
                 <option value="printing">printing</option>
                 <option value="shipped">shipped</option>
                 <option value="delivered">delivered</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Sort Orders
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-500"
+              >
+                <option value="newest">newest first</option>
+                <option value="oldest">oldest first</option>
+                <option value="highest_total">highest total</option>
+                <option value="lowest_total">lowest total</option>
+                <option value="customer_az">customer name A-Z</option>
+                <option value="customer_za">customer name Z-A</option>
               </select>
             </div>
           </div>
