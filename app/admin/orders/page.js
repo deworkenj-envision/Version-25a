@@ -160,6 +160,16 @@ export default function AdminOrdersPage() {
     }
   }
 
+  function exportCsv() {
+    const params = new URLSearchParams({
+      search: searchTerm,
+      status: statusFilter,
+      sort: sortBy,
+    });
+
+    window.open(`/api/orders/export?${params.toString()}`, "_blank");
+  }
+
   const filteredOrders = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
@@ -235,14 +245,25 @@ export default function AdminOrdersPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => loadOrders(true)}
-            disabled={refreshing || loading}
-            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
-          >
-            {refreshing ? "Refreshing..." : "Refresh Orders"}
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={exportCsv}
+              disabled={loading}
+              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+            >
+              Export CSV
+            </button>
+
+            <button
+              type="button"
+              onClick={() => loadOrders(true)}
+              disabled={refreshing || loading}
+              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+            >
+              {refreshing ? "Refreshing..." : "Refresh Orders"}
+            </button>
+          </div>
         </div>
 
         <div className="mb-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
