@@ -1,14 +1,16 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
+import { useParams, useRouter } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-function formatMoney(value) {
-  return `$${Number(value || 0).toFixed(2)}`;
+function money(value) {
+  const num = Number(value || 0);
+  return `$${num.toFixed(2)}`;
 }
 
 function formatDate(value) {
-  if (!value) return "-";
+  if (!value) return "—";
   try {
     return new Date(value).toLocaleString();
   } catch {
@@ -16,242 +18,582 @@ function formatDate(value) {
   }
 }
 
-function buildAddress(order) {
-  return [
-    order.shipping_name,
-    order.shipping_address_line1,
-    order.shipping_address_line2,
-    `${order.shipping_city || ""}${order.shipping_city && (order.shipping_state || order.shipping_postal_code) ? ", " : ""}${order.shipping_state || ""} ${order.shipping_postal_code || ""}`.trim(),
-    order.shipping_country,
-  ]
-    .filter(Boolean)
-    .join("\n");
+function buildTrackingUrl(carrier, trackingNumber) {
+  const number = encodeURIComponent((trackingNumber || "").trim());
+  if (!number) return "";
+
+  switch ((carrier || "").toLowerCase()) {
+    case "ups":
+      return `https://www.ups.com/track?tracknum=${number}`;
+    case "usps":
+      return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${number}`;
+    case "fedex":
+      return `https://www.fedex.com/fedextrack/?trknbr=${number}`;
+    default:
+      return "";
+  }
 }
 
-async function getOrder(id) {
-  if (!id) return null;
+function getFileExtensionFromUrl(url) {
+  if (!url) return "";
+  try {
+    const cleanUrl = url.split("?")[0];
+    const lastPart = cleanUrl.split("/").pop() || "";
+    const parts = lastPart.split(".");
+    if (parts.length < 2) return "";
+    return parts.pop();
+  } catch {
+    return "";
+  }
+}
 
-  const decodedId = decodeURIComponent(String(id));
+async function downloadArtworkWithOrderNumber(artworkUrl, orderNumber) {
+  if (!artworkUrl) return;
 
-  const { data, error } = await supabaseAdmin
-    .from("orders")
-    .select("*")
-    .eq("id", decodedId)
-    .maybeSingle();
-
-  if (error) {
-    console.error("Failed to load order:", error);
-    return null;
+  const response = await fetch(artworkUrl);
+  if (!response.ok) {
+    throw new Error("Could not download artwork.");
   }
 
-  return data;
+  const blob = await response.blob();
+  const extension = getFileExtensionFromUrl(artworkUrl) || "pdf";
+  const filename = `${orderNumber || "artwork"}.${extension}`;
+
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(objectUrl);
 }
 
-export default async function AdminOrderPrintPage({ params }) {
-  const resolvedParams = await params;
-  const orderId = resolvedParams?.id || "";
-  const order = await getOrder(orderId);
+export default function AdminOrderDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = params?.id;
 
-  if (!order) {
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [artworkDownloading, setArtworkDownloading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const [status, setStatus] = useState("pending");
+  const [trackingCarrier, setTrackingCarrier] = useState("");
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadOrder() {
+      try {
+        setLoading(true);
+        setError("");
+        setSuccess("");
+
+        const res = await fetch(`/api/orders/${id}`, {
+          cache: "no-store",
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data?.error || "Failed to load order.");
+        }
+
+        const loadedOrder = data?.order || data;
+
+        if (!cancelled) {
+          setOrder(loadedOrder);
+          setStatus(loadedOrder?.status || "pending");
+          setTrackingCarrier(loadedOrder?.tracking_carrier || "");
+          setTrackingNumber(loadedOrder?.tracking_number || "");
+          setNotes(loadedOrder?.notes || "");
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || "Failed to load order.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    if (id) {
+      loadOrder();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  const trackingUrl = useMemo(() => {
+    return buildTrackingUrl(trackingCarrier, trackingNumber);
+  }, [trackingCarrier, trackingNumber]);
+
+  async function handleSave() {
+    try {
+      setSaving(true);
+      setError("");
+      setSuccess("");
+
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status,
+          tracking_carrier: trackingCarrier || null,
+          tracking_number: trackingNumber || null,
+          notes,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to save order.");
+      }
+
+      const updatedOrder = data?.order || data;
+
+      setOrder(updatedOrder);
+      setStatus(updatedOrder?.status || status);
+      setTrackingCarrier(updatedOrder?.tracking_carrier || trackingCarrier);
+      setTrackingNumber(updatedOrder?.tracking_number || trackingNumber);
+      setNotes(updatedOrder?.notes || notes);
+      setSuccess("Order updated successfully.");
+      router.refresh();
+    } catch (err) {
+      setError(err.message || "Failed to save order.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleArtworkDownload() {
+    if (!order?.artwork_url) return;
+
+    try {
+      setArtworkDownloading(true);
+      setError("");
+      setSuccess("");
+      await downloadArtworkWithOrderNumber(order.artwork_url, order.order_number);
+    } catch (err) {
+      setError(err.message || "Failed to download artwork.");
+    } finally {
+      setArtworkDownloading(false);
+    }
+  }
+
+  if (loading) {
     return (
-      <main className="min-h-screen bg-slate-100 px-6 py-10">
-        <div className="mx-auto max-w-5xl rounded-3xl bg-white p-8 shadow-sm">
-          <h1 className="text-3xl font-bold text-slate-900">Order Not Found</h1>
-          <p className="mt-3 text-slate-600">We could not load this order.</p>
-          <div className="mt-6">
-            <div className="text-sm text-slate-500">Requested ID</div>
-            <div className="mt-1 break-all font-mono text-sm text-slate-900">
-              {String(orderId || "-")}
-            </div>
-          </div>
-          <Link
-            href="/admin/orders"
-            className="mt-6 inline-flex rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white"
-          >
-            Back to Admin Orders
-          </Link>
-        </div>
-      </main>
-    );
-  }
-
-  const shippingAddress = buildAddress(order);
-
-  return (
-    <main className="min-h-screen bg-slate-100 px-6 py-10 print:bg-white print:px-0 print:py-0">
-      <div className="mx-auto max-w-5xl rounded-3xl bg-white shadow-sm print:max-w-none print:rounded-none print:shadow-none">
-        <div className="border-b border-slate-200 px-8 py-6 print:hidden">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">
-                Fulfillment Sheet
-              </h1>
-              <p className="mt-1 text-slate-600">
-                Print-ready order summary for production and shipping.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/admin/orders"
-                className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Back to Orders
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        <div className="px-8 py-8">
-          <div className="mb-8 flex items-start justify-between gap-6 border-b border-slate-200 pb-6">
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                EnVision Direct
-              </div>
-              <h2 className="mt-2 text-4xl font-bold text-slate-950">
-                Order #{order.order_number || order.id}
-              </h2>
-              <p className="mt-2 text-slate-600">
-                Created: {formatDate(order.created_at)}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-slate-900 px-5 py-4 text-right text-white">
-              <div className="text-xs uppercase tracking-wide text-slate-300">
-                Status
-              </div>
-              <div className="mt-1 text-2xl font-bold uppercase">
-                {order.status || "paid"}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <section className="rounded-2xl border border-slate-200 p-5">
-              <h3 className="text-lg font-bold text-slate-900">Customer</h3>
-              <div className="mt-4 space-y-3 text-sm">
-                <div>
-                  <div className="text-slate-500">Name</div>
-                  <div className="font-semibold text-slate-900">
-                    {order.customer_name || "-"}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-slate-500">Email</div>
-                  <div className="font-semibold text-slate-900 break-all">
-                    {order.customer_email || "-"}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-slate-500">Phone</div>
-                  <div className="font-semibold text-slate-900">
-                    {order.customer_phone || "-"}
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-200 p-5">
-              <h3 className="text-lg font-bold text-slate-900">Ship To</h3>
-              <div className="mt-4 whitespace-pre-line text-sm font-semibold text-slate-900">
-                {shippingAddress || "-"}
-              </div>
-            </section>
-          </div>
-
-          <div className="mt-6 grid gap-6 md:grid-cols-2">
-            <section className="rounded-2xl border border-slate-200 p-5">
-              <h3 className="text-lg font-bold text-slate-900">Product Specs</h3>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 text-sm">
-                <Spec label="Product" value={order.product_name} />
-                <Spec label="Quantity" value={order.quantity} />
-                <Spec label="Size" value={order.size} />
-                <Spec label="Paper" value={order.paper} />
-                <Spec label="Finish" value={order.finish} />
-                <Spec label="Sides" value={order.sides} />
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-200 p-5">
-              <h3 className="text-lg font-bold text-slate-900">Pricing</h3>
-              <div className="mt-4 space-y-3 text-sm">
-                <PriceRow label="Subtotal" value={formatMoney(order.subtotal)} />
-                <PriceRow label="Shipping" value={formatMoney(order.shipping)} />
-                <div className="border-t border-slate-200 pt-3">
-                  <PriceRow label="Total" value={formatMoney(order.total)} bold />
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <section className="mt-6 rounded-2xl border border-slate-200 p-5">
-            <h3 className="text-lg font-bold text-slate-900">Artwork</h3>
-
-            <div className="mt-4 space-y-3 text-sm">
-              <div>
-                <div className="text-slate-500">File Name</div>
-                <div className="font-semibold text-slate-900 break-all">
-                  {order.file_name || "-"}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-3 print:hidden">
-                {order.artwork_url ? (
-                  <a
-                    href={`/api/orders/${order.id}/artwork-download`}
-                    className="inline-flex rounded-xl bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700"
-                  >
-                    Download Artwork
-                  </a>
-                ) : (
-                  <span className="font-semibold text-slate-900">No artwork</span>
-                )}
-              </div>
-
-              {order.artwork_url ? (
-                <div className="hidden break-all text-slate-900 print:block">
-                  {order.artwork_url}
-                </div>
-              ) : null}
-            </div>
-          </section>
-
-          <section className="mt-6 rounded-2xl border border-slate-200 p-5">
-            <h3 className="text-lg font-bold text-slate-900">Notes</h3>
-            <div className="mt-4 min-h-[80px] whitespace-pre-wrap text-sm text-slate-900">
-              {order.notes || "-"}
-            </div>
-          </section>
-
-          <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-700 print:hidden">
-            Use your browser print option to print or save this page as a PDF.
+      <div className="min-h-screen bg-neutral-950 text-white">
+        <div className="mx-auto max-w-7xl px-6 py-10">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+            Loading order...
           </div>
         </div>
       </div>
-    </main>
-  );
-}
+    );
+  }
 
-function Spec({ label, value }) {
-  return (
-    <div className="rounded-xl bg-slate-50 p-4">
-      <div className="text-slate-500">{label}</div>
-      <div className="mt-1 font-semibold text-slate-900">{value || "-"}</div>
-    </div>
-  );
-}
+  if (error && !order) {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-white">
+        <div className="mx-auto max-w-7xl px-6 py-10">
+          <div className="rounded-3xl border border-red-500/30 bg-red-500/10 p-6">
+            {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-function PriceRow({ label, value, bold = false }) {
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-white">
+        <div className="mx-auto max-w-7xl px-6 py-10">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+            Order not found.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const subtotal = Number(order.subtotal || 0);
+  const shipping = Number(order.shipping || 0);
+  const total = Number(order.total || subtotal + shipping);
+
   return (
-    <div className="flex items-center justify-between">
-      <span className={bold ? "font-semibold text-slate-900" : "text-slate-500"}>
-        {label}
-      </span>
-      <span className={bold ? "text-lg font-bold text-slate-900" : "font-semibold text-slate-900"}>
-        {value}
-      </span>
+    <div className="min-h-screen bg-neutral-950 text-white">
+      <div className="mx-auto max-w-7xl px-6 py-8">
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="mb-2">
+              <Link
+                href="/admin/orders"
+                className="text-sm text-white/70 transition hover:text-white"
+              >
+                ← Back to Orders
+              </Link>
+            </div>
+
+            <h1 className="text-3xl font-semibold tracking-tight">
+              Order {order.order_number || order.id}
+            </h1>
+
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-white/65">
+              <span>Created: {formatDate(order.created_at)}</span>
+              <span>•</span>
+              <span>Stripe Session: {order.stripe_session_id || "—"}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <a
+              href={`/admin/orders/${order.id}/packing-slip`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-white/90"
+            >
+              Print Packing Slip
+            </a>
+
+            {order.artwork_url ? (
+              <>
+                <a
+                  href={order.artwork_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-400"
+                >
+                  Open Sheet
+                </a>
+
+                <button
+                  type="button"
+                  onClick={handleArtworkDownload}
+                  disabled={artworkDownloading}
+                  className="inline-flex items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {artworkDownloading ? "Downloading..." : "Download Artwork"}
+                </button>
+              </>
+            ) : null}
+          </div>
+        </div>
+
+        {error ? (
+          <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {error}
+          </div>
+        ) : null}
+
+        {success ? (
+          <div className="mb-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            {success}
+          </div>
+        ) : null}
+
+        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-white/10 bg-black p-6 shadow-2xl">
+              <div className="mb-5 flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Order Details</h2>
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                    (status || "").toLowerCase() === "delivered"
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : (status || "").toLowerCase() === "shipped"
+                      ? "bg-sky-500/20 text-sky-300"
+                      : (status || "").toLowerCase() === "printing"
+                      ? "bg-amber-500/20 text-amber-300"
+                      : (status || "").toLowerCase() === "paid"
+                      ? "bg-violet-500/20 text-violet-300"
+                      : "bg-white/10 text-white"
+                  }`}
+                >
+                  {status || "pending"}
+                </span>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                    Product
+                  </div>
+                  <div className="text-lg font-medium">
+                    {order.product_name || "—"}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                    Quantity
+                  </div>
+                  <div className="text-lg font-medium">{order.quantity || "—"}</div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                    Size
+                  </div>
+                  <div className="text-lg font-medium">{order.size || "—"}</div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                    Sides
+                  </div>
+                  <div className="text-lg font-medium">{order.sides || "—"}</div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                    Paper
+                  </div>
+                  <div className="text-lg font-medium">{order.paper || "—"}</div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                    Finish
+                  </div>
+                  <div className="text-lg font-medium">{order.finish || "—"}</div>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-white/10 bg-black p-6 shadow-2xl">
+              <h2 className="mb-5 text-xl font-semibold">Customer</h2>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                    Name
+                  </div>
+                  <div className="text-lg font-medium">
+                    {order.customer_name || "—"}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                    Email
+                  </div>
+                  <div className="break-all text-lg font-medium">
+                    {order.customer_email || "—"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                  Internal / Customer Notes
+                </div>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={5}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-neutral-950 px-4 py-3 text-sm text-white outline-none placeholder:text-white/30"
+                  placeholder="Add order notes here..."
+                />
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-white/10 bg-black p-6 shadow-2xl">
+              <h2 className="mb-5 text-xl font-semibold">Fulfillment</h2>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div>
+                  <label className="mb-2 block text-sm text-white/70">
+                    Status
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-neutral-950 px-4 py-3 text-white outline-none"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                    <option value="printing">Printing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm text-white/70">
+                    Carrier
+                  </label>
+                  <select
+                    value={trackingCarrier}
+                    onChange={(e) => setTrackingCarrier(e.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-neutral-950 px-4 py-3 text-white outline-none"
+                  >
+                    <option value="">Select carrier</option>
+                    <option value="UPS">UPS</option>
+                    <option value="USPS">USPS</option>
+                    <option value="FedEx">FedEx</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm text-white/70">
+                    Tracking Number
+                  </label>
+                  <input
+                    type="text"
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-neutral-950 px-4 py-3 text-white outline-none placeholder:text-white/30"
+                    placeholder="Enter tracking number"
+                  />
+                </div>
+              </div>
+
+              {trackingUrl ? (
+                <div className="mt-4 rounded-2xl border border-sky-500/20 bg-sky-500/10 p-4">
+                  <div className="mb-2 text-sm font-medium text-sky-200">
+                    Clickable Tracking Link
+                  </div>
+                  <a
+                    href={trackingUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="break-all text-sm text-sky-300 underline"
+                  >
+                    {trackingUrl}
+                  </a>
+                </div>
+              ) : null}
+
+              <div className="mt-5">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving ? "Saving..." : "Save Fulfillment Updates"}
+                </button>
+              </div>
+            </section>
+          </div>
+
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-white/10 bg-black p-6 shadow-2xl">
+              <h2 className="mb-5 text-xl font-semibold">Payment Summary</h2>
+
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <span className="text-white/70">Subtotal</span>
+                  <span className="font-medium">{money(subtotal)}</span>
+                </div>
+
+                <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <span className="text-white/70">Shipping</span>
+                  <span className="font-medium">{money(shipping)}</span>
+                </div>
+
+                <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-base">
+                  <span className="font-semibold">Total</span>
+                  <span className="font-semibold">{money(total)}</span>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-white/10 bg-black p-6 shadow-2xl">
+              <h2 className="mb-5 text-xl font-semibold">Artwork</h2>
+
+              {order.artwork_url ? (
+                <div className="space-y-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                    <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                      File Name
+                    </div>
+                    <div className="text-sm text-white/80">
+                      {order.file_name || `${order.order_number || "Order"} artwork`}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3">
+                    <a
+                      href={order.artwork_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400"
+                    >
+                      Open Sheet
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={handleArtworkDownload}
+                      disabled={artworkDownloading}
+                      className="inline-flex items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {artworkDownloading ? "Downloading..." : "Download Artwork"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/60">
+                  No artwork uploaded for this order.
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-3xl border border-white/10 bg-black p-6 shadow-2xl">
+              <h2 className="mb-5 text-xl font-semibold">Quick Info</h2>
+
+              <div className="space-y-3 text-sm">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                    Order ID
+                  </div>
+                  <div className="break-all text-white/85">{order.id}</div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                    Payment Status
+                  </div>
+                  <div className="text-white/85">{order.status || "pending"}</div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                    Carrier
+                  </div>
+                  <div className="text-white/85">
+                    {trackingCarrier || order.tracking_carrier || "—"}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <div className="mb-1 text-xs uppercase tracking-[0.18em] text-white/45">
+                    Tracking Number
+                  </div>
+                  <div className="break-all text-white/85">
+                    {trackingNumber || order.tracking_number || "—"}
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
