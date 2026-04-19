@@ -103,7 +103,7 @@ export default async function OrderSuccessPage({ searchParams }) {
               </p>
             )}
 
-            {canPreviewImage ? (
+            {canPreviewImage && (
               <div className="mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3">
                 <img
                   src={artworkUrl}
@@ -111,10 +111,6 @@ export default async function OrderSuccessPage({ searchParams }) {
                   className="max-h-[420px] w-full rounded-xl object-contain"
                 />
               </div>
-            ) : (
-              <p className="mb-4 text-slate-600">
-                Preview is not available for this file type, but your artwork was uploaded successfully.
-              </p>
             )}
 
             <a
