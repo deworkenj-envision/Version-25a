@@ -86,6 +86,30 @@ function buildShipmentEmail(order, trackingUrl) {
   };
 }
 
+function buildDeliveredEmail(order, trackingUrl) {
+  const orderNumber = order.order_number || order.id || "Your Order";
+  const customerName = order.customer_name || "Customer";
+  const productName = order.product_name || "your order";
+
+  return {
+    subject: `Your EnVision Direct order ${orderNumber} has been delivered`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
+        <h2 style="margin-bottom: 8px;">Your order has been delivered</h2>
+        <p>Hello ${customerName},</p>
+        <p>Your order <strong>${orderNumber}</strong> for <strong>${productName}</strong> has been marked as delivered.</p>
+        <p>We hope everything arrived safely and looks great.</p>
+        ${
+          trackingUrl
+            ? `<p><a href="${trackingUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:600;">View Tracking</a></p>`
+            : ""
+        }
+        <p>Thank you for choosing EnVision Direct.</p>
+      </div>
+    `,
+  };
+}
+
 export async function PUT(req, { params }) {
   try {
     const resolvedParams = await params;
@@ -144,17 +168,36 @@ export async function PUT(req, { params }) {
     const becameShipped =
       existingOrder.status !== "shipped" && updatedOrder.status === "shipped";
 
+    const becameDelivered =
+      existingOrder.status !== "delivered" && updatedOrder.status === "delivered";
+
     if (
       becameShipped &&
       updatedOrder.customer_email &&
       updatedOrder.tracking_number
     ) {
-      const shipmentEmail = buildShipmentEmail(updatedOrder, updatedOrder.tracking_url);
+      const shipmentEmail = buildShipmentEmail(
+        updatedOrder,
+        updatedOrder.tracking_url
+      );
 
       await sendEmail({
         to: updatedOrder.customer_email,
         subject: shipmentEmail.subject,
         html: shipmentEmail.html,
+      });
+    }
+
+    if (becameDelivered && updatedOrder.customer_email) {
+      const deliveredEmail = buildDeliveredEmail(
+        updatedOrder,
+        updatedOrder.tracking_url
+      );
+
+      await sendEmail({
+        to: updatedOrder.customer_email,
+        subject: deliveredEmail.subject,
+        html: deliveredEmail.html,
       });
     }
 
