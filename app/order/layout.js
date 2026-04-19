@@ -9,7 +9,7 @@ export default function OrderLayout({ children }) {
           <div className="flex flex-col items-center justify-center gap-3 text-center">
             <Link href="/" className="inline-flex items-center justify-center">
               <Image
-                src="/logo.webp"
+                src="/logo-hero.png"
                 alt="EnVision Direct"
                 width={240}
                 height={80}
