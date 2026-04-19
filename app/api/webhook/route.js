@@ -80,12 +80,21 @@ export async function POST(req) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
       const metadata = session.metadata || {};
+      const customerDetails = session.customer_details || {};
+      const shippingDetails = session.shipping_details || {};
+      const shippingAddress = shippingDetails.address || {};
 
       const stripeSessionId = session.id;
+
       const customerName =
-        metadata.customerName || session.customer_details?.name || "";
+        metadata.customerName || customerDetails.name || shippingDetails.name || "";
+
       const customerEmail =
-        metadata.customerEmail || session.customer_details?.email || "";
+        metadata.customerEmail || customerDetails.email || "";
+
+      const customerPhone =
+        metadata.customerPhone || customerDetails.phone || "";
+
       const productName = metadata.productName || "";
       const size = metadata.size || "";
       const paper = metadata.paper || "";
@@ -99,35 +108,61 @@ export async function POST(req) {
       const fileName = metadata.fileName || "";
       const artworkUrl = metadata.artworkUrl || "";
 
-      const { data: existingOrder } = await supabaseAdmin
+      const shippingName = shippingDetails.name || customerName || "";
+      const shippingAddressLine1 = shippingAddress.line1 || "";
+      const shippingAddressLine2 = shippingAddress.line2 || "";
+      const shippingCity = shippingAddress.city || "";
+      const shippingState = shippingAddress.state || "";
+      const shippingPostalCode = shippingAddress.postal_code || "";
+      const shippingCountry = shippingAddress.country || "";
+
+      const orderPayload = {
+        status: "paid",
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
+        product_name: productName,
+        size,
+        paper,
+        finish,
+        sides,
+        quantity,
+        subtotal,
+        shipping,
+        total,
+        file_name: fileName,
+        artwork_url: artworkUrl,
+        notes,
+
+        shipping_name: shippingName,
+        shipping_address_line1: shippingAddressLine1,
+        shipping_address_line2: shippingAddressLine2,
+        shipping_city: shippingCity,
+        shipping_state: shippingState,
+        shipping_postal_code: shippingPostalCode,
+        shipping_country: shippingCountry,
+
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: existingOrder, error: existingOrderError } = await supabaseAdmin
         .from("orders")
         .select("*")
         .eq("stripe_session_id", stripeSessionId)
         .maybeSingle();
+
+      if (existingOrderError) {
+        throw new Error(
+          existingOrderError.message || "Failed to check for existing order."
+        );
+      }
 
       let orderRecord = null;
 
       if (existingOrder) {
         const { data: updatedOrder, error: updateError } = await supabaseAdmin
           .from("orders")
-          .update({
-            status: "paid",
-            customer_name: customerName,
-            customer_email: customerEmail,
-            product_name: productName,
-            size,
-            paper,
-            finish,
-            sides,
-            quantity,
-            subtotal,
-            shipping,
-            total,
-            file_name: fileName,
-            artwork_url: artworkUrl,
-            notes,
-            updated_at: new Date().toISOString(),
-          })
+          .update(orderPayload)
           .eq("id", existingOrder.id)
           .select("*")
           .single();
@@ -145,21 +180,7 @@ export async function POST(req) {
           .insert({
             order_number: orderNumber,
             stripe_session_id: stripeSessionId,
-            status: "paid",
-            customer_name: customerName,
-            customer_email: customerEmail,
-            product_name: productName,
-            size,
-            paper,
-            finish,
-            sides,
-            quantity,
-            subtotal,
-            shipping,
-            total,
-            file_name: fileName,
-            artwork_url: artworkUrl,
-            notes,
+            ...orderPayload,
           })
           .select("*")
           .single();
