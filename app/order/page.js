@@ -25,7 +25,7 @@ function slugify(value) {
 const PRODUCT_META = {
   "business-cards": {
     label: "Business Cards",
-    image: "/products/business-cards.png",
+    image: "/products/business-cards.jpg",
     short: "Premium cards for networking, branding, and first impressions.",
   },
   flyers: {
