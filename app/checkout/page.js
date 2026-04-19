@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 function toNumber(value) {
@@ -12,7 +12,7 @@ function formatMoney(value) {
   return toNumber(value).toFixed(2);
 }
 
-export default function CheckoutPage() {
+function CheckoutInner() {
   const searchParams = useSearchParams();
 
   const productName =
@@ -113,7 +113,7 @@ export default function CheckoutPage() {
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-semibold text-slate-900">Order Details</h2>
 
-            {productImage && (
+            {productImage ? (
               <div className="mt-6 overflow-hidden rounded-xl">
                 <img
                   src={productImage}
@@ -121,7 +121,7 @@ export default function CheckoutPage() {
                   className="h-40 w-full object-cover"
                 />
               </div>
-            )}
+            ) : null}
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl bg-slate-50 p-4">
@@ -196,7 +196,7 @@ export default function CheckoutPage() {
               />
             </div>
 
-            {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+            {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
           </section>
 
           <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -246,5 +246,24 @@ export default function CheckoutPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-50 px-6 py-12">
+          <div className="mx-auto max-w-5xl">
+            <h1 className="mb-6 text-4xl font-bold text-slate-900">Checkout</h1>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-slate-600">Loading checkout...</p>
+            </div>
+          </div>
+        </main>
+      }
+    >
+      <CheckoutInner />
+    </Suspense>
   );
 }
