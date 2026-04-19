@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const LOGO_SRC = "/logo.png";
+
 function formatMoney(value) {
   const num = Number(value || 0);
   return `$${num.toFixed(2)}`;
@@ -23,7 +25,7 @@ function slugify(value) {
 const PRODUCT_META = {
   "business-cards": {
     label: "Business Cards",
-    image: "/products/business-cards.jpg",
+    image: "/products/business-cards.png",
     short: "Premium cards for networking, branding, and first impressions.",
   },
   flyers: {
@@ -452,7 +454,29 @@ export default function OrderPage() {
   return (
     <main className="min-h-screen bg-[#eef2f7]">
       <section className="bg-gradient-to-r from-[#2457f5] via-[#1f63f4] to-[#0e98ff] text-white">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-8 lg:py-16">
+        <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+          <div className="mb-6 flex items-center justify-between">
+            <a href="/" className="flex items-center gap-3">
+              <img
+                src={LOGO_SRC}
+                alt="EnVision Direct"
+                className="h-12 w-auto object-contain"
+              />
+              <span className="text-xl font-bold tracking-tight text-white">
+                EnVision Direct
+              </span>
+            </a>
+
+            <a
+              href="/track"
+              className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+            >
+              Track Order
+            </a>
+          </div>
+        </div>
+
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-8 lg:pb-16">
           <div className="flex flex-col justify-center">
             <div className="mb-5 inline-flex w-fit rounded-full border border-white/20 bg-white/10 px-4 py-1 text-sm">
               EnVision Direct Premium Estimator
