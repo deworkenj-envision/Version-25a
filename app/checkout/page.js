@@ -116,53 +116,10 @@ function CheckoutInner() {
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold text-slate-900">Order Details</h2>
-
-            {productImage ? (
-              <div className="mt-6 overflow-hidden rounded-xl">
-                <img
-                  src={productImage}
-                  alt={productName}
-                  className="h-40 w-full object-cover"
-                />
-              </div>
-            ) : null}
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <InfoCard label="Product" value={productName} />
-              <InfoCard label="Quantity" value={quantity} />
-              <InfoCard label="Size" value={size} />
-              <InfoCard label="Paper" value={paper} />
-              <InfoCard label="Finish" value={finish} />
-              <InfoCard label="Sides" value={sides} />
-
-              <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
-                <p className="text-sm text-slate-500">Artwork</p>
-                <p className="mt-1 font-semibold text-slate-900">
-                  {fileName || "Uploaded artwork"}
-                </p>
-
-                {artworkUrl ? (
-                  <a
-                    href={artworkUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-3 inline-block font-semibold text-blue-600 hover:underline"
-                  >
-                    View Uploaded File
-                  </a>
-                ) : (
-                  <p className="mt-1 font-semibold text-slate-900">No file uploaded</p>
-                )}
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
-                <p className="text-sm text-slate-500">Notes</p>
-                <p className="mt-1 font-semibold text-slate-900">{notes || "—"}</p>
-              </div>
-            </div>
-
-            <h2 className="mt-8 text-xl font-semibold text-slate-900">Your Info</h2>
+            <h2 className="text-2xl font-semibold text-slate-900">Your Info</h2>
+            <p className="mt-2 text-sm text-slate-500">
+              Please enter your contact information before continuing to payment.
+            </p>
 
             <div className="mt-4 space-y-4">
               <input
@@ -191,6 +148,54 @@ function CheckoutInner() {
             </div>
 
             {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
+
+            <div className="mt-8 border-t border-slate-200 pt-8">
+              <h2 className="text-2xl font-semibold text-slate-900">Order Details</h2>
+
+              {productImage ? (
+                <div className="mt-6 overflow-hidden rounded-xl">
+                  <img
+                    src={productImage}
+                    alt={productName}
+                    className="h-40 w-full object-cover"
+                  />
+                </div>
+              ) : null}
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <InfoCard label="Product" value={productName} />
+                <InfoCard label="Quantity" value={quantity} />
+                <InfoCard label="Size" value={size} />
+                <InfoCard label="Paper" value={paper} />
+                <InfoCard label="Finish" value={finish} />
+                <InfoCard label="Sides" value={sides} />
+
+                <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
+                  <p className="text-sm text-slate-500">Artwork</p>
+                  <p className="mt-1 font-semibold text-slate-900">
+                    {fileName || "Uploaded artwork"}
+                  </p>
+
+                  {artworkUrl ? (
+                    <a
+                      href={artworkUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-3 inline-block font-semibold text-blue-600 hover:underline"
+                    >
+                      View Uploaded File
+                    </a>
+                  ) : (
+                    <p className="mt-1 font-semibold text-slate-900">No file uploaded</p>
+                  )}
+                </div>
+
+                <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
+                  <p className="text-sm text-slate-500">Notes</p>
+                  <p className="mt-1 font-semibold text-slate-900">{notes || "—"}</p>
+                </div>
+              </div>
+            </div>
           </section>
 
           <aside className="space-y-6">
