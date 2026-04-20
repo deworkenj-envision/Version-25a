@@ -49,8 +49,11 @@ function getMoneyValue(value) {
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [drafts, setDrafts] = useState({});
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkStatus, setBulkStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [bulkSaving, setBulkSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [savingId, setSavingId] = useState("");
@@ -114,6 +117,26 @@ export default function AdminOrdersPage() {
     }));
   }
 
+  function toggleSelected(orderId) {
+    setSelectedIds((prev) =>
+      prev.includes(orderId)
+        ? prev.filter((id) => id !== orderId)
+        : [...prev, orderId]
+    );
+  }
+
+  function toggleSelectAllVisible() {
+    const visibleIds = filteredOrders.map((order) => order.id);
+    const allVisibleSelected =
+      visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
+
+    if (allVisibleSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])));
+    }
+  }
+
   async function saveOrder(orderId) {
     try {
       setSavingId(orderId);
@@ -157,6 +180,54 @@ export default function AdminOrdersPage() {
       setError(err.message || "Failed to update order.");
     } finally {
       setSavingId("");
+    }
+  }
+
+  async function applyBulkStatus() {
+    try {
+      if (!selectedIds.length) {
+        setError("Select at least one order.");
+        return;
+      }
+
+      if (!bulkStatus) {
+        setError("Select a bulk status.");
+        return;
+      }
+
+      setBulkSaving(true);
+      setError("");
+      setSuccessMessage("");
+
+      const res = await fetch("/api/orders/bulk-status", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderIds: selectedIds,
+          status: bulkStatus,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to bulk update orders.");
+      }
+
+      setSuccessMessage(
+        data?.message || `${selectedIds.length} order(s) updated successfully.`
+      );
+
+      setSelectedIds([]);
+      setBulkStatus("");
+      await loadOrders(true);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to bulk update orders.");
+    } finally {
+      setBulkSaving(false);
     }
   }
 
@@ -231,6 +302,10 @@ export default function AdminOrdersPage() {
 
     return sorted;
   }, [orders, searchTerm, statusFilter, sortBy]);
+
+  const visibleIds = filteredOrders.map((order) => order.id);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -324,6 +399,55 @@ export default function AdminOrdersPage() {
           </div>
         </div>
 
+        <div className="mb-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-wrap items-center gap-4">
+              <label className="inline-flex items-center gap-3 text-sm font-semibold text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  onChange={toggleSelectAllVisible}
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                Select all visible
+              </label>
+
+              <div className="text-sm text-slate-600">
+                Selected: <span className="font-semibold text-slate-900">{selectedIds.length}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Bulk Status
+                </label>
+                <select
+                  value={bulkStatus}
+                  onChange={(e) => setBulkStatus(e.target.value)}
+                  className="w-full min-w-[220px] rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-500"
+                >
+                  <option value="">Select bulk status</option>
+                  <option value="pending">pending</option>
+                  <option value="paid">paid</option>
+                  <option value="printing">printing</option>
+                  <option value="shipped">shipped</option>
+                  <option value="delivered">delivered</option>
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={applyBulkStatus}
+                disabled={bulkSaving || !selectedIds.length || !bulkStatus}
+                className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              >
+                {bulkSaving ? "Applying..." : "Apply to Selected"}
+              </button>
+            </div>
+          </div>
+        </div>
+
         {error ? (
           <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
             {error}
@@ -354,6 +478,7 @@ export default function AdminOrdersPage() {
               const draft = drafts[order.id] || {};
               const isSaving = savingId === order.id;
               const address = buildAddress(order);
+              const isSelected = selectedIds.includes(order.id);
 
               return (
                 <div
@@ -361,6 +486,18 @@ export default function AdminOrdersPage() {
                   className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
                 >
                   <div className="border-b border-slate-200 bg-slate-900 px-6 py-5 text-white">
+                    <div className="mb-4 flex items-center justify-between">
+                      <label className="inline-flex items-center gap-3 text-sm font-semibold text-white">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelected(order.id)}
+                          className="h-4 w-4 rounded border-slate-300"
+                        />
+                        Select Order
+                      </label>
+                    </div>
+
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
                       <div>
                         <p className="text-xs uppercase tracking-wide text-slate-300">
