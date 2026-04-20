@@ -66,6 +66,41 @@ async function sendShippedEmail(order) {
   });
 }
 
+async function sendDeliveredEmail(order) {
+  if (!process.env.RESEND_API_KEY) return;
+  if (!order?.customer_email) return;
+
+  const fromEmail =
+    process.env.RESEND_FROM_EMAIL ||
+    "EnVision Direct <orders@envisiondirect.net>";
+
+  const subject = `Your EnVision Direct order ${order.order_number} was delivered`;
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111;">
+      <h2 style="margin-bottom:8px;">Your order was delivered</h2>
+      <p>Hi ${order.customer_name || "Customer"},</p>
+      <p>Your order <strong>${order.order_number || ""}</strong> has been marked as delivered.</p>
+
+      <div style="margin:16px 0;padding:16px;border:1px solid #e5e7eb;border-radius:12px;">
+        <p style="margin:0 0 8px;"><strong>Product:</strong> ${order.product_name || "-"}</p>
+        <p style="margin:0 0 8px;"><strong>Quantity:</strong> ${order.quantity || "-"}</p>
+        <p style="margin:0;"><strong>Status:</strong> Delivered</p>
+      </div>
+
+      <p>Thank you for your order and for choosing EnVision Direct.</p>
+      <p>EnVision Direct</p>
+    </div>
+  `;
+
+  await resend.emails.send({
+    from: fromEmail,
+    to: order.customer_email,
+    subject,
+    html,
+  });
+}
+
 export async function PUT(request, context) {
   try {
     const { id } = await context.params;
@@ -75,11 +110,27 @@ export async function PUT(request, context) {
       return NextResponse.json({ error: "Missing order id" }, { status: 400 });
     }
 
-    const nextStatus = body.status || "pending";
-    const nextCarrier = body.carrier || "";
-    const nextTrackingNumber = body.tracking_number || "";
+    const { data: existingOrder, error: existingOrderError } = await supabaseAdmin
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (existingOrderError) {
+      return NextResponse.json(
+        { error: existingOrderError.message || "Order not found" },
+        { status: 500 }
+      );
+    }
+
+    const nextStatus = body.status || existingOrder.status || "pending";
+    const nextCarrier = body.carrier ?? existingOrder.carrier ?? "";
+    const nextTrackingNumber =
+      body.tracking_number ?? existingOrder.tracking_number ?? "";
     const nextTrackingUrl =
-      body.tracking_url || buildTrackingUrl(nextCarrier, nextTrackingNumber);
+      body.tracking_url ||
+      existingOrder.tracking_url ||
+      buildTrackingUrl(nextCarrier, nextTrackingNumber);
 
     const { data: updatedOrder, error: updateError } = await supabaseAdmin
       .from("orders")
@@ -101,12 +152,19 @@ export async function PUT(request, context) {
       );
     }
 
-    if (nextStatus === "shipped") {
-      try {
+    try {
+      const previousStatus = (existingOrder.status || "").toLowerCase();
+      const currentStatus = (updatedOrder.status || "").toLowerCase();
+
+      if (currentStatus === "shipped" && previousStatus !== "shipped") {
         await sendShippedEmail(updatedOrder);
-      } catch (emailError) {
-        console.error("Shipped email failed:", emailError);
       }
+
+      if (currentStatus === "delivered" && previousStatus !== "delivered") {
+        await sendDeliveredEmail(updatedOrder);
+      }
+    } catch (emailError) {
+      console.error("Order status email failed:", emailError);
     }
 
     return NextResponse.json({
