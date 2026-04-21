@@ -47,11 +47,13 @@ export default function AdminOrdersPage() {
       setLoading(true);
       const res = await fetch("/api/orders", { cache: "no-store" });
       const data = await res.json();
+
       const rows = Array.isArray(data?.orders)
         ? data.orders
         : Array.isArray(data)
         ? data
         : [];
+
       setOrders(rows);
     } catch (error) {
       console.error("Failed to load orders:", error);
@@ -117,8 +119,8 @@ export default function AdminOrdersPage() {
 
   function openBulkPackingSlips() {
     if (!selectedIds.length) return;
-    const ids = encodeURIComponent(selectedIds.join(","));
-    window.open(`/admin/packing-slips?ids=${ids}`, "_blank");
+    const ids = selectedIds.join(",");
+    window.open(`/admin/packing-slips?ids=${encodeURIComponent(ids)}`, "_blank");
   }
 
   function openSinglePackingSlip(id) {

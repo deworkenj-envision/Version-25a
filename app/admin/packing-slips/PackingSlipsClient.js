@@ -31,8 +31,14 @@ export default function PackingSlipsClient({ ids }) {
         setLoading(true);
         setError("");
 
+        if (!ids) {
+          setOrders([]);
+          setLoading(false);
+          return;
+        }
+
         const res = await fetch(
-          `/api/admin/packing-slips?ids=${encodeURIComponent(ids || "")}`,
+          `/api/admin/packing-slips?ids=${encodeURIComponent(ids)}`,
           { cache: "no-store" }
         );
 
