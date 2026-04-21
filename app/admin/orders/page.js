@@ -21,19 +21,19 @@ function statusClasses(status) {
   const s = String(status || "").toLowerCase();
 
   if (s === "paid") {
-    return "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30";
+    return "bg-emerald-100 text-emerald-700 border border-emerald-200";
   }
   if (s === "printing") {
-    return "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30";
+    return "bg-amber-100 text-amber-700 border border-amber-200";
   }
   if (s === "shipped") {
-    return "bg-sky-500/15 text-sky-300 ring-1 ring-sky-500/30";
+    return "bg-sky-100 text-sky-700 border border-sky-200";
   }
   if (s === "delivered") {
-    return "bg-violet-500/15 text-violet-300 ring-1 ring-violet-500/30";
+    return "bg-violet-100 text-violet-700 border border-violet-200";
   }
 
-  return "bg-zinc-500/15 text-zinc-300 ring-1 ring-zinc-500/30";
+  return "bg-slate-100 text-slate-700 border border-slate-200";
 }
 
 export default function AdminOrdersPage() {
@@ -47,11 +47,14 @@ export default function AdminOrdersPage() {
       setLoading(true);
       const res = await fetch("/api/orders", { cache: "no-store" });
       const data = await res.json();
-
-      const rows = Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : [];
+      const rows = Array.isArray(data?.orders)
+        ? data.orders
+        : Array.isArray(data)
+        ? data
+        : [];
       setOrders(rows);
-    } catch (err) {
-      console.error("Failed to load orders:", err);
+    } catch (error) {
+      console.error("Failed to load orders:", error);
       setOrders([]);
     } finally {
       setLoading(false);
@@ -123,13 +126,15 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-slate-100 text-slate-900">
       <div className="mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Admin Orders</h1>
-            <p className="mt-2 text-sm text-zinc-400">
-              Manage orders, view details, and bulk print packing slips.
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+              Admin Orders
+            </h1>
+            <p className="mt-2 text-sm text-slate-600">
+              Manage orders, open details, and print packing slips in bulk.
             </p>
           </div>
 
@@ -138,11 +143,11 @@ export default function AdminOrdersPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search order #, customer, email, product..."
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-zinc-600 sm:w-96"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 sm:w-96"
             />
             <button
               onClick={loadOrders}
-              className="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:opacity-90"
+              className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
               Refresh
             </button>
@@ -150,41 +155,45 @@ export default function AdminOrdersPage() {
         </div>
 
         {selectedIds.length > 0 && (
-          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="text-sm text-zinc-300">
-              <span className="font-semibold text-white">{selectedIds.length}</span>{" "}
-              order{selectedIds.length === 1 ? "" : "s"} selected
-            </div>
+          <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="text-sm text-slate-700">
+                <span className="font-semibold text-slate-900">
+                  {selectedIds.length}
+                </span>{" "}
+                order{selectedIds.length === 1 ? "" : "s"} selected
+              </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={openBulkPackingSlips}
-                className="rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-black transition hover:opacity-90"
-              >
-                Print Packing Slips
-              </button>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={openBulkPackingSlips}
+                  className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                >
+                  Bulk Print Packing Slips
+                </button>
 
-              <button
-                onClick={clearSelection}
-                className="rounded-xl border border-zinc-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-900"
-              >
-                Clear Selection
-              </button>
+                <button
+                  onClick={clearSelection}
+                  className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+                >
+                  Clear Selection
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
-              <thead className="border-b border-zinc-800 bg-zinc-900/80 text-xs uppercase tracking-wider text-zinc-400">
+              <thead className="bg-slate-900 text-xs uppercase tracking-wider text-slate-200">
                 <tr>
                   <th className="px-4 py-4">
                     <input
                       type="checkbox"
                       checked={allVisibleSelected}
                       onChange={toggleAllVisible}
-                      className="h-4 w-4 rounded border-zinc-600 bg-zinc-900"
+                      className="h-4 w-4"
                     />
                   </th>
                   <th className="px-4 py-4">Order</th>
@@ -200,13 +209,13 @@ export default function AdminOrdersPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-zinc-400">
+                    <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
                       Loading orders...
                     </td>
                   </tr>
                 ) : filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-zinc-400">
+                    <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
                       No orders found.
                     </td>
                   </tr>
@@ -217,8 +226,8 @@ export default function AdminOrdersPage() {
                     return (
                       <tr
                         key={order.id}
-                        className={`border-b border-zinc-800 last:border-b-0 ${
-                          isSelected ? "bg-zinc-900/70" : "bg-transparent"
+                        className={`border-b border-slate-200 last:border-b-0 ${
+                          isSelected ? "bg-emerald-50" : "bg-white"
                         }`}
                       >
                         <td className="px-4 py-4 align-top">
@@ -226,43 +235,43 @@ export default function AdminOrdersPage() {
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleOne(order.id)}
-                            className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-900"
+                            className="mt-1 h-4 w-4"
                           />
                         </td>
 
                         <td className="px-4 py-4 align-top">
-                          <div className="font-semibold text-white">
+                          <div className="font-semibold text-slate-900">
                             {order.order_number || "No Order #"}
                           </div>
-                          <div className="mt-1 text-xs text-zinc-500 break-all">
+                          <div className="mt-1 break-all text-xs text-slate-500">
                             {order.id}
                           </div>
                         </td>
 
                         <td className="px-4 py-4 align-top">
-                          <div className="font-medium text-white">
+                          <div className="font-medium text-slate-900">
                             {order.customer_name || "—"}
                           </div>
-                          <div className="mt-1 text-sm text-zinc-400">
+                          <div className="mt-1 text-sm text-slate-600">
                             {order.customer_email || "—"}
                           </div>
                         </td>
 
                         <td className="px-4 py-4 align-top">
-                          <div className="font-medium text-white">
+                          <div className="font-medium text-slate-900">
                             {order.product_name || "—"}
                           </div>
-                          <div className="mt-1 text-sm text-zinc-400">
+                          <div className="mt-1 text-sm text-slate-600">
                             {[order.size, order.paper, order.finish, order.sides]
                               .filter(Boolean)
                               .join(" • ") || "—"}
                           </div>
-                          <div className="mt-1 text-sm text-zinc-500">
+                          <div className="mt-1 text-sm text-slate-500">
                             Qty: {order.quantity || "—"}
                           </div>
                         </td>
 
-                        <td className="px-4 py-4 align-top font-semibold text-white">
+                        <td className="px-4 py-4 align-top font-semibold text-slate-900">
                           {money(order.total)}
                         </td>
 
@@ -276,7 +285,7 @@ export default function AdminOrdersPage() {
                           </span>
                         </td>
 
-                        <td className="px-4 py-4 align-top text-sm text-zinc-400">
+                        <td className="px-4 py-4 align-top text-sm text-slate-600">
                           {formatDate(order.created_at)}
                         </td>
 
@@ -284,14 +293,14 @@ export default function AdminOrdersPage() {
                           <div className="flex flex-wrap gap-2">
                             <Link
                               href={`/admin/orders/${order.id}`}
-                              className="rounded-lg border border-zinc-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-zinc-900"
+                              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition hover:bg-slate-50"
                             >
                               Open
                             </Link>
 
                             <button
                               onClick={() => openSinglePackingSlip(order.id)}
-                              className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-black transition hover:opacity-90"
+                              className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700"
                             >
                               Packing Slip
                             </button>

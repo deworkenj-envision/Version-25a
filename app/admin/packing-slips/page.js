@@ -1,4 +1,7 @@
-import { supabaseAdmin } from "../../../lib/supabaseAdmin";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 function safe(value) {
   return value || "—";
@@ -18,375 +21,226 @@ function formatMoney(value) {
   return `$${num.toFixed(2)}`;
 }
 
-export const dynamic = "force-dynamic";
+export default function PackingSlipsPage() {
+  const searchParams = useSearchParams();
+  const ids = searchParams.get("ids") || "";
 
-export default async function PackingSlipsPage({ searchParams }) {
-  const params = await searchParams;
-  const idsParam = params?.ids || "";
-  const ids = String(idsParam)
-    .split(",")
-    .map((x) => x.trim())
-    .filter(Boolean);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  let orders = [];
+  useEffect(() => {
+    async function loadPackingSlips() {
+      try {
+        setLoading(true);
+        setError("");
 
-  if (ids.length > 0) {
-    const { data, error } = await supabaseAdmin
-      .from("orders")
-      .select("*")
-      .in("id", ids)
-      .order("created_at", { ascending: false });
+        const res = await fetch(
+          `/api/admin/packing-slips?ids=${encodeURIComponent(ids)}`,
+          { cache: "no-store" }
+        );
 
-    if (error) {
-      console.error("Packing slips fetch error:", error);
-    } else {
-      const map = new Map((data || []).map((order) => [order.id, order]));
-      orders = ids.map((id) => map.get(id)).filter(Boolean);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data?.error || "Failed to load packing slips.");
+        }
+
+        setOrders(Array.isArray(data?.orders) ? data.orders : []);
+      } catch (err) {
+        console.error(err);
+        setError(err.message || "Failed to load packing slips.");
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
     }
-  }
+
+    loadPackingSlips();
+  }, [ids]);
 
   return (
-    <html>
-      <head>
-        <title>Packing Slips</title>
-        <style>{`
-          * {
-            box-sizing: border-box;
-          }
-
-          html, body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f4f5;
-            color: #111827;
-          }
-
-          .toolbar {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 20px;
-            background: #111827;
-            color: white;
-            border-bottom: 1px solid #27272a;
-          }
-
-          .toolbar-left {
-            font-size: 14px;
-            font-weight: 600;
-          }
-
-          .toolbar-buttons {
-            display: flex;
-            gap: 10px;
-          }
-
-          .btn {
-            border: 0;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-          }
-
-          .btn-print {
-            background: #22c55e;
-            color: #000;
-          }
-
-          .btn-close {
-            background: #27272a;
-            color: #fff;
-          }
-
-          .container {
-            padding: 24px;
-          }
-
-          .sheet {
-            width: 8.5in;
-            min-height: 11in;
-            margin: 0 auto 24px auto;
-            background: white;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-            padding: 28px;
-            page-break-after: always;
-          }
-
-          .sheet:last-child {
-            page-break-after: auto;
-          }
-
-          .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 16px;
-            border-bottom: 2px solid #111827;
-            padding-bottom: 14px;
-            margin-bottom: 18px;
-          }
-
-          .brand h1 {
-            margin: 0;
-            font-size: 28px;
-            line-height: 1.1;
-          }
-
-          .brand p {
-            margin: 6px 0 0 0;
-            color: #52525b;
-            font-size: 13px;
-          }
-
-          .slip-title {
-            text-align: right;
-          }
-
-          .slip-title h2 {
-            margin: 0;
-            font-size: 24px;
-          }
-
-          .slip-title p {
-            margin: 6px 0 0 0;
-            color: #52525b;
-            font-size: 13px;
-          }
-
-          .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            margin-bottom: 20px;
-          }
-
-          .card {
-            border: 1px solid #e4e4e7;
-            border-radius: 14px;
-            padding: 16px;
-          }
-
-          .card h3 {
-            margin: 0 0 12px 0;
-            font-size: 14px;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            color: #52525b;
-          }
-
-          .line {
-            margin-bottom: 8px;
-            font-size: 14px;
-          }
-
-          .label {
-            display: inline-block;
-            min-width: 110px;
-            color: #52525b;
-            font-weight: 700;
-          }
-
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-          }
-
-          th, td {
-            border: 1px solid #e4e4e7;
-            padding: 10px;
-            text-align: left;
-            font-size: 14px;
-            vertical-align: top;
-          }
-
-          th {
-            background: #f4f4f5;
-          }
-
-          .notes {
-            margin-top: 18px;
-            border: 1px solid #e4e4e7;
-            border-radius: 14px;
-            padding: 16px;
-          }
-
-          .notes h3 {
-            margin: 0 0 12px 0;
-            font-size: 14px;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            color: #52525b;
-          }
-
-          .footer {
-            margin-top: 24px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-          }
-
-          .signature {
-            border-top: 1px solid #d4d4d8;
-            padding-top: 10px;
-            font-size: 13px;
-            color: #52525b;
-            min-height: 52px;
-          }
-
-          .empty {
-            max-width: 900px;
-            margin: 40px auto;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-          }
-
-          @media print {
-            body {
-              background: white;
-            }
-
-            .toolbar {
-              display: none;
-            }
-
-            .container {
-              padding: 0;
-            }
-
-            .sheet {
-              margin: 0;
-              box-shadow: none;
-              width: 100%;
-              min-height: auto;
-              padding: 0.35in;
-            }
-          }
-        `}</style>
-      </head>
-      <body>
-        <div className="toolbar">
-          <div className="toolbar-left">
-            {orders.length} Packing Slip{orders.length === 1 ? "" : "s"}
+    <div className="min-h-screen bg-zinc-100 text-zinc-900 print:bg-white">
+      <div className="sticky top-0 z-20 border-b border-zinc-800 bg-zinc-900 px-6 py-4 text-white print:hidden">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
+          <div className="text-sm font-semibold">
+            {loading
+              ? "Loading packing slips..."
+              : `${orders.length} Packing Slip${orders.length === 1 ? "" : "s"}`}
           </div>
-          <div className="toolbar-buttons">
-            <button className="btn btn-print" onClick={() => window.print()}>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => window.print()}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+            >
               Print
             </button>
-            <button className="btn btn-close" onClick={() => window.close()}>
+            <button
+              onClick={() => window.close()}
+              className="rounded-lg bg-zinc-700 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-600"
+            >
               Close
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="container">
-          {orders.length === 0 ? (
-            <div className="empty">
-              <h1 style={{ marginTop: 0 }}>No packing slips found</h1>
-              <p style={{ color: "#52525b", marginBottom: 0 }}>
-                Go back to Admin Orders, select one or more orders, then click
-                <strong> Print Packing Slips</strong>.
-              </p>
-            </div>
-          ) : (
-            orders.map((order) => (
-              <div className="sheet" key={order.id}>
-                <div className="header">
-                  <div className="brand">
-                    <h1>EnVision Direct</h1>
-                    <p>Production Packing Slip</p>
+      <div className="px-4 py-6 print:p-0">
+        {loading ? (
+          <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow-sm">
+            Loading packing slips...
+          </div>
+        ) : error ? (
+          <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow-sm">
+            <h1 className="mb-2 text-2xl font-bold">Could not load packing slips</h1>
+            <p className="text-sm text-zinc-600">{error}</p>
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow-sm">
+            <h1 className="mb-2 text-2xl font-bold">No packing slips found</h1>
+            <p className="text-sm text-zinc-600">
+              Go back to Admin Orders, select one or more orders, then click
+              {" "}
+              <strong>Bulk Print Packing Slips</strong>.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-6 print:space-y-0">
+            {orders.map((order) => (
+              <div
+                key={order.id}
+                className="mx-auto min-h-[11in] w-full max-w-[8.5in] break-after-page bg-white p-8 shadow-sm print:shadow-none"
+              >
+                <div className="mb-6 flex items-start justify-between gap-6 border-b-2 border-zinc-900 pb-4">
+                  <div>
+                    <h1 className="text-3xl font-bold">EnVision Direct</h1>
+                    <p className="mt-1 text-sm text-zinc-600">
+                      Production Packing Slip
+                    </p>
                   </div>
 
-                  <div className="slip-title">
-                    <h2>{safe(order.order_number)}</h2>
-                    <p>Created: {formatDate(order.created_at)}</p>
-                  </div>
-                </div>
-
-                <div className="grid">
-                  <div className="card">
-                    <h3>Customer</h3>
-                    <div className="line">
-                      <span className="label">Name:</span>
-                      {safe(order.customer_name)}
-                    </div>
-                    <div className="line">
-                      <span className="label">Email:</span>
-                      {safe(order.customer_email)}
-                    </div>
-                  </div>
-
-                  <div className="card">
-                    <h3>Order Summary</h3>
-                    <div className="line">
-                      <span className="label">Status:</span>
-                      {safe(order.status)}
-                    </div>
-                    <div className="line">
-                      <span className="label">Total:</span>
-                      {formatMoney(order.total)}
-                    </div>
-                    <div className="line">
-                      <span className="label">Order ID:</span>
-                      {safe(order.id)}
-                    </div>
+                  <div className="text-right">
+                    <h2 className="text-2xl font-bold">
+                      {safe(order.order_number)}
+                    </h2>
+                    <p className="mt-1 text-sm text-zinc-600">
+                      Created: {formatDate(order.created_at)}
+                    </p>
                   </div>
                 </div>
 
-                <table>
-                  <thead>
-                    <tr>
-                      <th style={{ width: "28%" }}>Product</th>
-                      <th style={{ width: "15%" }}>Size</th>
-                      <th style={{ width: "15%" }}>Paper</th>
-                      <th style={{ width: "12%" }}>Finish</th>
-                      <th style={{ width: "12%" }}>Sides</th>
-                      <th style={{ width: "8%" }}>Qty</th>
-                      <th style={{ width: "10%" }}>Artwork</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>{safe(order.product_name)}</td>
-                      <td>{safe(order.size)}</td>
-                      <td>{safe(order.paper)}</td>
-                      <td>{safe(order.finish)}</td>
-                      <td>{safe(order.sides)}</td>
-                      <td>{safe(order.quantity)}</td>
-                      <td>{safe(order.file_name)}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="rounded-2xl border border-zinc-200 p-4">
+                    <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-zinc-500">
+                      Customer
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="inline-block min-w-[110px] font-semibold text-zinc-500">
+                          Name:
+                        </span>
+                        {safe(order.customer_name)}
+                      </div>
+                      <div>
+                        <span className="inline-block min-w-[110px] font-semibold text-zinc-500">
+                          Email:
+                        </span>
+                        {safe(order.customer_email)}
+                      </div>
+                    </div>
+                  </div>
 
-                <div className="notes">
-                  <h3>Production Notes</h3>
-                  <div style={{ fontSize: "14px", minHeight: "70px" }}>
+                  <div className="rounded-2xl border border-zinc-200 p-4">
+                    <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-zinc-500">
+                      Order Summary
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="inline-block min-w-[110px] font-semibold text-zinc-500">
+                          Status:
+                        </span>
+                        {safe(order.status)}
+                      </div>
+                      <div>
+                        <span className="inline-block min-w-[110px] font-semibold text-zinc-500">
+                          Total:
+                        </span>
+                        {formatMoney(order.total)}
+                      </div>
+                      <div className="break-all">
+                        <span className="inline-block min-w-[110px] font-semibold text-zinc-500">
+                          Order ID:
+                        </span>
+                        {safe(order.id)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="overflow-hidden rounded-2xl border border-zinc-200">
+                  <table className="min-w-full border-collapse text-left text-sm">
+                    <thead className="bg-zinc-100">
+                      <tr>
+                        <th className="border-b border-zinc-200 px-3 py-3">Product</th>
+                        <th className="border-b border-zinc-200 px-3 py-3">Size</th>
+                        <th className="border-b border-zinc-200 px-3 py-3">Paper</th>
+                        <th className="border-b border-zinc-200 px-3 py-3">Finish</th>
+                        <th className="border-b border-zinc-200 px-3 py-3">Sides</th>
+                        <th className="border-b border-zinc-200 px-3 py-3">Qty</th>
+                        <th className="border-b border-zinc-200 px-3 py-3">Artwork</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="border-b border-zinc-200 px-3 py-3">
+                          {safe(order.product_name)}
+                        </td>
+                        <td className="border-b border-zinc-200 px-3 py-3">
+                          {safe(order.size)}
+                        </td>
+                        <td className="border-b border-zinc-200 px-3 py-3">
+                          {safe(order.paper)}
+                        </td>
+                        <td className="border-b border-zinc-200 px-3 py-3">
+                          {safe(order.finish)}
+                        </td>
+                        <td className="border-b border-zinc-200 px-3 py-3">
+                          {safe(order.sides)}
+                        </td>
+                        <td className="border-b border-zinc-200 px-3 py-3">
+                          {safe(order.quantity)}
+                        </td>
+                        <td className="border-b border-zinc-200 px-3 py-3">
+                          {safe(order.file_name)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-zinc-200 p-4">
+                  <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-zinc-500">
+                    Production Notes
+                  </h3>
+                  <div className="min-h-[70px] text-sm">
                     {order.notes ? order.notes : "No customer notes provided."}
                   </div>
                 </div>
 
-                <div className="footer">
-                  <div className="signature">
+                <div className="mt-8 grid grid-cols-2 gap-8 text-sm text-zinc-500">
+                  <div className="border-t border-zinc-300 pt-3">
                     Packed By: ______________________________________
                   </div>
-                  <div className="signature">
+                  <div className="border-t border-zinc-300 pt-3">
                     Checked By: _____________________________________
                   </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      </body>
-    </html>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
