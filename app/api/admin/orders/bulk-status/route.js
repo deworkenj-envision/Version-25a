@@ -166,6 +166,14 @@ export async function POST(req) {
     const body = await req.json();
     const orderIds = Array.isArray(body?.orderIds) ? body.orderIds : [];
     const status = (body?.status || "").toLowerCase().trim();
+    const tracking_number =
+      typeof body?.tracking_number === "string" && body.tracking_number.trim()
+        ? body.tracking_number.trim()
+        : null;
+    const tracking_carrier =
+      typeof body?.tracking_carrier === "string" && body.tracking_carrier.trim()
+        ? body.tracking_carrier.trim()
+        : null;
 
     if (!orderIds.length) {
       return NextResponse.json(
@@ -177,6 +185,13 @@ export async function POST(req) {
     if (!ALLOWED_STATUSES.includes(status)) {
       return NextResponse.json(
         { error: "Invalid status." },
+        { status: 400 }
+      );
+    }
+
+    if (status === "shipped" && (!tracking_number || !tracking_carrier)) {
+      return NextResponse.json(
+        { error: "Tracking carrier and tracking number are required for shipped status." },
         { status: 400 }
       );
     }
@@ -193,9 +208,16 @@ export async function POST(req) {
       );
     }
 
+    const updatePayload = { status };
+
+    if (status === "shipped") {
+      updatePayload.tracking_number = tracking_number;
+      updatePayload.tracking_carrier = tracking_carrier;
+    }
+
     const { data: updatedOrders, error: updateError } = await supabaseAdmin
       .from("orders")
-      .update({ status })
+      .update(updatePayload)
       .in("id", orderIds)
       .select("*");
 
@@ -208,9 +230,10 @@ export async function POST(req) {
 
     try {
       if (status === "shipped" || status === "delivered") {
-        const ordersToEmail = Array.isArray(updatedOrders) && updatedOrders.length
-          ? updatedOrders
-          : existingOrders || [];
+        const ordersToEmail =
+          Array.isArray(updatedOrders) && updatedOrders.length
+            ? updatedOrders
+            : existingOrders || [];
 
         for (const order of ordersToEmail) {
           await sendStatusEmail(req, order, status);

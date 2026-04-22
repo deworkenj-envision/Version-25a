@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
-const STATUS_OPTIONS = ["pending", "paid", "printing", "shipped", "delivered"];
-
 const FILTERS = [
   { key: "all", label: "All" },
   { key: "paid", label: "Paid" },
@@ -64,6 +62,9 @@ export default function AdminOrdersPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busyAction, setBusyAction] = useState("");
+  const [showShipModal, setShowShipModal] = useState(false);
+  const [shipCarrier, setShipCarrier] = useState("UPS");
+  const [shipTrackingNumber, setShipTrackingNumber] = useState("");
 
   async function loadOrders() {
     try {
@@ -81,8 +82,7 @@ export default function AdminOrdersPage() {
         throw new Error(data?.error || "Failed to load orders");
       }
 
-      const nextOrders = normalizeOrdersPayload(data);
-      setOrders(nextOrders);
+      setOrders(normalizeOrdersPayload(data));
     } catch (err) {
       setError(err.message || "Failed to load orders");
     } finally {
@@ -131,11 +131,11 @@ export default function AdminOrdersPage() {
     setSelectedIds([]);
   }
 
-  async function applyBulkStatus(status) {
+  async function applyBulkStatus(status, extra = {}) {
     if (!selectedIds.length) {
       setError("Please select at least one order.");
       setMessage("");
-      return;
+      return false;
     }
 
     try {
@@ -151,6 +151,7 @@ export default function AdminOrdersPage() {
         body: JSON.stringify({
           orderIds: selectedIds,
           status,
+          ...extra,
         }),
       });
 
@@ -161,17 +162,56 @@ export default function AdminOrdersPage() {
       }
 
       setMessage(
-        `${selectedIds.length} order${
-          selectedIds.length === 1 ? "" : "s"
-        } updated to ${status}.`
+        data?.warning ||
+          `${selectedIds.length} order${
+            selectedIds.length === 1 ? "" : "s"
+          } updated to ${status}.`
       );
 
       await loadOrders();
       setSelectedIds([]);
+      return true;
     } catch (err) {
       setError(err.message || "Bulk update failed.");
+      return false;
     } finally {
       setBusyAction("");
+    }
+  }
+
+  function openShipModal() {
+    if (!selectedIds.length) {
+      setError("Please select at least one order.");
+      setMessage("");
+      return;
+    }
+
+    setError("");
+    setMessage("");
+    setShipCarrier("UPS");
+    setShipTrackingNumber("");
+    setShowShipModal(true);
+  }
+
+  async function submitBulkShipped() {
+    if (!shipCarrier.trim()) {
+      setError("Please choose a carrier.");
+      return;
+    }
+
+    if (!shipTrackingNumber.trim()) {
+      setError("Please enter a tracking number.");
+      return;
+    }
+
+    const ok = await applyBulkStatus("shipped", {
+      tracking_carrier: shipCarrier.trim(),
+      tracking_number: shipTrackingNumber.trim(),
+    });
+
+    if (ok) {
+      setShowShipModal(false);
+      setShipTrackingNumber("");
     }
   }
 
@@ -242,11 +282,11 @@ export default function AdminOrdersPage() {
               </button>
 
               <button
-                onClick={() => applyBulkStatus("shipped")}
+                onClick={openShipModal}
                 disabled={!selectedIds.length || busyAction !== ""}
                 className="rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {busyAction === "shipped" ? "Updating..." : "Mark Shipped"}
+                Mark Shipped + Tracking
               </button>
 
               <button
@@ -331,6 +371,9 @@ export default function AdminOrdersPage() {
                     Status
                   </th>
                   <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wide">
+                    Tracking
+                  </th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wide">
                     Created
                   </th>
                   <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wide">
@@ -342,13 +385,13 @@ export default function AdminOrdersPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-10 text-center text-slate-500">
+                    <td colSpan={9} className="px-6 py-10 text-center text-slate-500">
                       Loading orders...
                     </td>
                   </tr>
                 ) : filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-10 text-center text-slate-500">
+                    <td colSpan={9} className="px-6 py-10 text-center text-slate-500">
                       No orders found for this filter.
                     </td>
                   </tr>
@@ -397,6 +440,13 @@ export default function AdminOrdersPage() {
                           <StatusBadge status={order.status} />
                         </td>
 
+                        <td className="px-4 py-5 align-top text-sm text-slate-700">
+                          <div>{order.tracking_carrier || "—"}</div>
+                          <div className="mt-1 break-all text-slate-500">
+                            {order.tracking_number || "—"}
+                          </div>
+                        </td>
+
                         <td className="px-4 py-5 align-top text-slate-700">
                           {formatDate(order.created_at)}
                         </td>
@@ -417,6 +467,68 @@ export default function AdminOrdersPage() {
             </table>
           </div>
         </div>
+
+        {showShipModal ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-lg rounded-[28px] bg-white p-6 shadow-2xl">
+              <h2 className="text-2xl font-bold text-slate-900">
+                Mark Selected Orders Shipped
+              </h2>
+              <p className="mt-2 text-sm text-slate-600">
+                This will update {selectedIds.length} selected order
+                {selectedIds.length === 1 ? "" : "s"} to shipped and send the shipped email.
+              </p>
+
+              <div className="mt-6 space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Carrier
+                  </label>
+                  <select
+                    value={shipCarrier}
+                    onChange={(e) => setShipCarrier(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-500"
+                  >
+                    <option value="UPS">UPS</option>
+                    <option value="USPS">USPS</option>
+                    <option value="FedEx">FedEx</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Tracking Number
+                  </label>
+                  <input
+                    type="text"
+                    value={shipTrackingNumber}
+                    onChange={(e) => setShipTrackingNumber(e.target.value)}
+                    placeholder="Enter tracking number"
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-500"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap justify-end gap-3">
+                <button
+                  onClick={() => setShowShipModal(false)}
+                  disabled={busyAction !== ""}
+                  className="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={submitBulkShipped}
+                  disabled={busyAction !== ""}
+                  className="rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
+                >
+                  {busyAction === "shipped" ? "Updating..." : "Save + Send Shipped Email"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </main>
   );
