@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function normalizeStatus(status) {
   return (status || "pending").toLowerCase();
@@ -46,34 +46,31 @@ function buildTrackingLink(carrier, trackingNumber) {
 
 export default function TrackPage() {
   const [orderNumber, setOrderNumber] = useState("");
-  const [searchedNumber, setSearchedNumber] = useState("");
+  const [email, setEmail] = useState("");
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [searched, setSearched] = useState(false);
+  const [loadedFromToken, setLoadedFromToken] = useState(false);
 
-  async function handleTrackOrder(e) {
-    e.preventDefault();
-
-    const cleaned = orderNumber.trim().toUpperCase();
-
-    if (!cleaned) {
-      setError("Please enter your order number.");
-      setOrder(null);
-      return;
-    }
-
+  async function fetchOrder({ token = "", orderNumber = "", email = "" }) {
     try {
       setLoading(true);
       setError("");
       setOrder(null);
-      setSearchedNumber(cleaned);
 
-      const res = await fetch(
-        `/api/orders/track?orderNumber=${encodeURIComponent(cleaned)}`,
-        {
-          cache: "no-store",
-        }
-      );
+      const params = new URLSearchParams();
+
+      if (token) {
+        params.set("token", token);
+      } else {
+        params.set("orderNumber", orderNumber.trim().toUpperCase());
+        params.set("email", email.trim().toLowerCase());
+      }
+
+      const res = await fetch(`/api/orders/track?${params.toString()}`, {
+        cache: "no-store",
+      });
 
       const data = await res.json();
 
@@ -94,8 +91,43 @@ export default function TrackPage() {
     }
   }
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = (params.get("token") || "").trim();
+
+    if (token) {
+      setLoadedFromToken(true);
+      setSearched(true);
+      fetchOrder({ token });
+    }
+  }, []);
+
+  async function handleManualLookup(e) {
+    e.preventDefault();
+
+    const cleanedOrder = orderNumber.trim().toUpperCase();
+    const cleanedEmail = email.trim().toLowerCase();
+
+    if (!cleanedOrder || !cleanedEmail) {
+      setError("Please enter both your order number and email address.");
+      setOrder(null);
+      setSearched(true);
+      return;
+    }
+
+    setLoadedFromToken(false);
+    setSearched(true);
+    await fetchOrder({
+      orderNumber: cleanedOrder,
+      email: cleanedEmail,
+    });
+  }
+
   const timeline = getTimeline(order?.status);
-  const trackingLink = buildTrackingLink(order?.tracking_carrier, order?.tracking_number);
+  const carrierTrackingLink = buildTrackingLink(
+    order?.tracking_carrier,
+    order?.tracking_number
+  );
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
@@ -105,20 +137,29 @@ export default function TrackPage() {
             Track Your Order
           </h1>
           <p className="mt-3 text-center text-base text-white/85">
-            Enter your order number to view the latest status.
+            Use your secure email link, or enter your order number and email.
           </p>
 
           <form
-            onSubmit={handleTrackOrder}
-            className="mx-auto mt-8 flex max-w-3xl flex-col gap-4 rounded-[28px] bg-white p-4 shadow-lg sm:flex-row"
+            onSubmit={handleManualLookup}
+            className="mx-auto mt-8 grid max-w-4xl gap-4 rounded-[28px] bg-white p-4 shadow-lg md:grid-cols-[1fr_1fr_auto]"
           >
             <input
               type="text"
               value={orderNumber}
               onChange={(e) => setOrderNumber(e.target.value)}
-              placeholder="Enter order number (example: EV-10114)"
-              className="h-18 flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-base font-medium text-slate-900 outline-none focus:border-blue-500"
+              placeholder="Order number (example: EV-10114)"
+              className="rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-base font-medium text-slate-900 outline-none focus:border-blue-500"
             />
+
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email used on the order"
+              className="rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-base font-medium text-slate-900 outline-none focus:border-blue-500"
+            />
+
             <button
               type="submit"
               disabled={loading}
@@ -128,8 +169,14 @@ export default function TrackPage() {
             </button>
           </form>
 
+          {loadedFromToken ? (
+            <div className="mx-auto mt-4 max-w-4xl rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              Secure tracking link used.
+            </div>
+          ) : null}
+
           {error ? (
-            <div className="mx-auto mt-4 max-w-3xl rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mx-auto mt-4 max-w-4xl rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : null}
@@ -138,12 +185,16 @@ export default function TrackPage() {
 
       <section className="px-6 py-10">
         <div className="mx-auto max-w-6xl">
-          {!order && !loading ? (
+          {!order && !loading && searched ? (
+            <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
+              <p className="text-sm text-slate-500">No matching order found.</p>
+            </div>
+          ) : null}
+
+          {!order && !loading && !searched ? (
             <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
               <p className="text-sm text-slate-500">
-                {searchedNumber
-                  ? `No order found for ${searchedNumber}.`
-                  : "Enter an order number above to track an order."}
+                Use your secure email link or enter your order number and email above.
               </p>
             </div>
           ) : null}
@@ -267,9 +318,9 @@ export default function TrackPage() {
                       </p>
                     </div>
 
-                    {trackingLink ? (
+                    {carrierTrackingLink ? (
                       <a
-                        href={trackingLink}
+                        href={carrierTrackingLink}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex rounded-2xl bg-[#2563eb] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1d4ed8]"
