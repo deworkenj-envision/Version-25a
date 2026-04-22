@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { randomBytes } from "crypto";
 import { Resend } from "resend";
-import { supabaseAdmin } from "../../../lib/supabaseAdmin";
+import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = process.env.RESEND_API_KEY
