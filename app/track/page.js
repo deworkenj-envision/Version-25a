@@ -2,24 +2,11 @@
 
 import { useState } from "react";
 
-function formatDate(value) {
-  if (!value) return "-";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
-}
-
-function formatMoney(value) {
-  return `$${Number(value || 0).toFixed(2)}`;
-}
-
 function normalizeStatus(status) {
-  return String(status || "pending").toLowerCase();
+  return (status || "pending").toLowerCase();
 }
 
-function statusSteps(status) {
+function getTimeline(status) {
   const current = normalizeStatus(status);
 
   const steps = [
@@ -29,37 +16,47 @@ function statusSteps(status) {
     { key: "delivered", label: "Delivered" },
   ];
 
-  const order = {
-    pending: 0,
-    paid: 1,
-    printing: 2,
-    shipped: 3,
-    delivered: 4,
-  };
-
-  const currentLevel = order[current] || 0;
+  const order = ["paid", "printing", "shipped", "delivered"];
+  const currentIndex = order.indexOf(current);
 
   return steps.map((step, index) => {
-    const level = index + 1;
+    let state = "upcoming";
+    if (currentIndex > index) state = "complete";
+    if (currentIndex === index) state = "current";
+
     return {
       ...step,
-      complete: currentLevel > level,
-      current: currentLevel === level,
+      state,
     };
   });
 }
 
+function buildTrackingLink(carrier, trackingNumber) {
+  if (!trackingNumber) return "";
+
+  const num = encodeURIComponent(trackingNumber.trim());
+  const c = (carrier || "").toLowerCase();
+
+  if (c === "ups") return `https://www.ups.com/track?tracknum=${num}`;
+  if (c === "usps") return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${num}`;
+  if (c === "fedex") return `https://www.fedex.com/fedextrack/?trknbr=${num}`;
+
+  return "";
+}
+
 export default function TrackPage() {
   const [orderNumber, setOrderNumber] = useState("");
+  const [searchedNumber, setSearchedNumber] = useState("");
+  const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [order, setOrder] = useState(null);
 
-  async function handleTrack(e) {
+  async function handleTrackOrder(e) {
     e.preventDefault();
 
-    const value = orderNumber.trim();
-    if (!value) {
+    const cleaned = orderNumber.trim().toUpperCase();
+
+    if (!cleaned) {
       setError("Please enter your order number.");
       setOrder(null);
       return;
@@ -69,10 +66,14 @@ export default function TrackPage() {
       setLoading(true);
       setError("");
       setOrder(null);
+      setSearchedNumber(cleaned);
 
-      const res = await fetch(`/api/orders?orderNumber=${encodeURIComponent(value)}`, {
-        cache: "no-store",
-      });
+      const res = await fetch(
+        `/api/orders/track?orderNumber=${encodeURIComponent(cleaned)}`,
+        {
+          cache: "no-store",
+        }
+      );
 
       const data = await res.json();
 
@@ -80,242 +81,243 @@ export default function TrackPage() {
         throw new Error(data?.error || "Order not found.");
       }
 
-      const foundOrder =
-        data?.order ||
-        (Array.isArray(data?.orders) ? data.orders[0] : null);
-
-      if (!foundOrder) {
+      if (!data?.order) {
         throw new Error("Order not found.");
       }
 
-      setOrder(foundOrder);
+      setOrder(data.order);
     } catch (err) {
-      setError(err.message || "Order not found.");
       setOrder(null);
+      setError(err.message || "Unable to find that order.");
     } finally {
       setLoading(false);
     }
   }
 
-  const steps = statusSteps(order?.status);
+  const timeline = getTimeline(order?.status);
+  const trackingLink = buildTrackingLink(order?.tracking_carrier, order?.tracking_number);
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <section className="bg-gradient-to-r from-sky-900 via-blue-800 to-sky-700 text-white">
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1 text-sm font-medium">
-              EnVision Direct Order Tracking
-            </div>
+    <main className="min-h-screen bg-slate-100 text-slate-900">
+      <section className="bg-[#1452ad] px-6 py-14 text-white">
+        <div className="mx-auto max-w-5xl">
+          <h1 className="text-center text-4xl font-bold tracking-tight">
+            Track Your Order
+          </h1>
+          <p className="mt-3 text-center text-base text-white/85">
+            Enter your order number to view the latest status.
+          </p>
 
-            <h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">
-              Track Your Order
-            </h1>
-
-            <p className="mt-4 text-base text-blue-100 sm:text-lg">
-              Enter your order number to check status, shipment details, and tracking updates.
-            </p>
-
-            <form
-              onSubmit={handleTrack}
-              className="mt-8 rounded-3xl bg-white p-4 shadow-2xl"
+          <form
+            onSubmit={handleTrackOrder}
+            className="mx-auto mt-8 flex max-w-3xl flex-col gap-4 rounded-[28px] bg-white p-4 shadow-lg sm:flex-row"
+          >
+            <input
+              type="text"
+              value={orderNumber}
+              onChange={(e) => setOrderNumber(e.target.value)}
+              placeholder="Enter order number (example: EV-10114)"
+              className="h-18 flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-base font-medium text-slate-900 outline-none focus:border-blue-500"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-2xl bg-[#2563eb] px-8 py-4 text-base font-semibold text-white transition hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <input
-                  type="text"
-                  value={orderNumber}
-                  onChange={(e) => setOrderNumber(e.target.value)}
-                  placeholder="Enter order number (example: EV-10109)"
-                  className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-base text-slate-900 outline-none focus:border-blue-500"
-                />
+              {loading ? "Tracking..." : "Track Order"}
+            </button>
+          </form>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="inline-flex items-center justify-center rounded-2xl bg-blue-600 px-6 py-4 text-base font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-                >
-                  {loading ? "Searching..." : "Track Order"}
-                </button>
-              </div>
-            </form>
-
-            {error ? (
-              <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {error}
-              </div>
-            ) : null}
-          </div>
+          {error ? (
+            <div className="mx-auto mt-4 max-w-3xl rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          ) : null}
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        {!order ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
-            Enter your order number above to view the latest status.
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="bg-slate-900 px-6 py-5 text-white">
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-slate-300">
+      <section className="px-6 py-10">
+        <div className="mx-auto max-w-6xl">
+          {!order && !loading ? (
+            <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
+              <p className="text-sm text-slate-500">
+                {searchedNumber
+                  ? `No order found for ${searchedNumber}.`
+                  : "Enter an order number above to track an order."}
+              </p>
+            </div>
+          ) : null}
+
+          {order ? (
+            <div className="space-y-6">
+              <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+                <div className="grid gap-0 md:grid-cols-5">
+                  <div className="bg-[#06163f] px-6 py-5 text-white">
+                    <p className="text-xs uppercase tracking-wide text-white/70">
                       Order Number
                     </p>
-                    <p className="mt-1 text-base font-semibold break-all">
-                      {order.order_number || "-"}
+                    <p className="mt-2 text-2xl font-bold">
+                      {order.order_number || "—"}
                     </p>
                   </div>
 
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-slate-300">
+                  <div className="bg-[#06163f] px-6 py-5 text-white">
+                    <p className="text-xs uppercase tracking-wide text-white/70">
                       Status
                     </p>
-                    <p className="mt-1 text-base font-semibold uppercase">
-                      {order.status || "pending"}
+                    <p className="mt-2 text-2xl font-bold uppercase">
+                      {order.status || "—"}
                     </p>
                   </div>
 
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-slate-300">
+                  <div className="bg-[#06163f] px-6 py-5 text-white">
+                    <p className="text-xs uppercase tracking-wide text-white/70">
                       Product
                     </p>
-                    <p className="mt-1 text-base font-semibold break-all">
-                      {order.product_name || "-"}
+                    <p className="mt-2 text-2xl font-bold">
+                      {order.product_name || "—"}
                     </p>
                   </div>
 
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-slate-300">
+                  <div className="bg-[#06163f] px-6 py-5 text-white">
+                    <p className="text-xs uppercase tracking-wide text-white/70">
                       Quantity
                     </p>
-                    <p className="mt-1 text-base font-semibold">
-                      {order.quantity ?? "-"}
+                    <p className="mt-2 text-2xl font-bold">
+                      {order.quantity || "—"}
                     </p>
                   </div>
 
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-slate-300">
+                  <div className="bg-[#06163f] px-6 py-5 text-white">
+                    <p className="text-xs uppercase tracking-wide text-white/70">
                       Order Date
                     </p>
-                    <p className="mt-1 text-base font-semibold break-all">
-                      {formatDate(order.created_at)}
+                    <p className="mt-2 text-lg font-bold">
+                      {order.created_at
+                        ? new Date(order.created_at).toLocaleString()
+                        : "—"}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 className="text-2xl font-bold text-slate-900">Order Progress</h2>
+                <p className="mt-2 text-sm text-slate-500">
+                  Current status for order {order.order_number}
+                </p>
 
-                <div className="mt-6 grid gap-4 md:grid-cols-4">
-                  {steps.map((step) => (
-                    <div
-                      key={step.key}
-                      className={`rounded-2xl border p-5 ${
-                        step.complete
-                          ? "border-emerald-200 bg-emerald-50"
-                          : step.current
+                <div className="mt-8 grid gap-4 md:grid-cols-4">
+                  {timeline.map((step, index) => {
+                    const isComplete = step.state === "complete";
+                    const isCurrent = step.state === "current";
+
+                    return (
+                      <div
+                        key={step.key}
+                        className={`rounded-2xl border p-5 ${
+                          isComplete
+                            ? "border-emerald-200 bg-emerald-50"
+                            : isCurrent
                             ? "border-blue-200 bg-blue-50"
                             : "border-slate-200 bg-slate-50"
-                      }`}
-                    >
-                      <div
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${
-                          step.complete
-                            ? "bg-emerald-600 text-white"
-                            : step.current
-                              ? "bg-blue-600 text-white"
-                              : "bg-slate-300 text-slate-700"
                         }`}
                       >
-                        {step.complete ? "Complete" : step.current ? "Current" : "Pending"}
-                      </div>
+                        <div
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                            isComplete
+                              ? "bg-emerald-600 text-white"
+                              : isCurrent
+                              ? "bg-blue-600 text-white"
+                              : "bg-slate-300 text-slate-700"
+                          }`}
+                        >
+                          {isComplete ? "Complete" : isCurrent ? "In Progress" : "Pending"}
+                        </div>
 
-                      <p className="mt-4 text-lg font-semibold text-slate-900">
-                        {step.label}
+                        <p className="mt-4 text-lg font-semibold text-slate-900">
+                          {index + 1}. {step.label}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+                  <h3 className="text-xl font-bold text-slate-900">Shipping Details</h3>
+
+                  <div className="mt-5 space-y-4">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
+                        Carrier
+                      </p>
+                      <p className="mt-1 text-base font-semibold text-slate-900">
+                        {order.tracking_carrier || "Not assigned yet"}
                       </p>
                     </div>
-                  ))}
+
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
+                        Tracking Number
+                      </p>
+                      <p className="mt-1 break-all text-base font-semibold text-slate-900">
+                        {order.tracking_number || "Not available yet"}
+                      </p>
+                    </div>
+
+                    {trackingLink ? (
+                      <a
+                        href={trackingLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex rounded-2xl bg-[#2563eb] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1d4ed8]"
+                      >
+                        Open Carrier Tracking
+                      </a>
+                    ) : null}
+                  </div>
                 </div>
 
-                <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  <InfoCard label="Size" value={order.size || "-"} />
-                  <InfoCard label="Paper" value={order.paper || "-"} />
-                  <InfoCard label="Finish" value={order.finish || "-"} />
-                  <InfoCard label="Sides" value={order.sides || "-"} />
+                <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+                  <h3 className="text-xl font-bold text-slate-900">Order Details</h3>
+
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Size</p>
+                      <p className="mt-1 text-base font-semibold text-slate-900">
+                        {order.size || "—"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Sides</p>
+                      <p className="mt-1 text-base font-semibold text-slate-900">
+                        {order.sides || "—"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Paper</p>
+                      <p className="mt-1 text-base font-semibold text-slate-900">
+                        {order.paper || "—"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Finish</p>
+                      <p className="mt-1 text-base font-semibold text-slate-900">
+                        {order.finish || "—"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-xl font-bold text-slate-900">Shipment Details</h2>
-
-                <div className="mt-5 space-y-4">
-                  <ShipmentRow label="Carrier" value={order.carrier || order.tracking_carrier || "-"} />
-                  <ShipmentRow label="Tracking Number" value={order.tracking_number || "-"} />
-                  <ShipmentRow
-                    label="Tracking Link"
-                    value={
-                      order.tracking_url ? (
-                        <a
-                          href={order.tracking_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                        >
-                          Track Package
-                        </a>
-                      ) : (
-                        "Not available yet"
-                      )
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-xl font-bold text-slate-900">Order Summary</h2>
-
-                <div className="mt-5 space-y-4">
-                  <ShipmentRow label="Subtotal" value={formatMoney(order.subtotal)} />
-                  <ShipmentRow label="Shipping" value={formatMoney(order.shipping)} />
-                  <ShipmentRow label="Total" value={formatMoney(order.total)} />
-                </div>
-
-                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">
-                    Need help?
-                  </p>
-                  <p className="mt-2 text-sm text-slate-700">
-                    If you have any questions about your order, contact EnVision Direct and include
-                    your order number for faster support.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+          ) : null}
+        </div>
       </section>
     </main>
-  );
-}
-
-function InfoCard({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 font-semibold text-slate-900">{value}</p>
-    </div>
-  );
-}
-
-function ShipmentRow({ label, value }) {
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4 last:border-b-0 last:pb-0">
-      <span className="text-sm text-slate-500">{label}</span>
-      <div className="text-right text-sm font-semibold text-slate-900">{value}</div>
-    </div>
   );
 }
