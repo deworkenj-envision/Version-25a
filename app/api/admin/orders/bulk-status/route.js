@@ -1,183 +1,17 @@
 import { NextResponse } from "next/server";
-import { randomBytes } from "crypto";
-import { Resend } from "resend";
 import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
-
 const ALLOWED_STATUSES = ["pending", "paid", "printing", "shipped", "delivered"];
-
-function generateTrackingToken() {
-  return randomBytes(24).toString("hex");
-}
-
-function getBaseUrl(req) {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.SITE_URL ||
-    new URL(req.url).origin
-  ).replace(/\/$/, "");
-}
-
-async function ensureTrackingToken(order) {
-  if (order?.tracking_token) return order.tracking_token;
-
-  const token = generateTrackingToken();
-
-  const { error } = await supabaseAdmin
-    .from("orders")
-    .update({ tracking_token: token })
-    .eq("id", order.id);
-
-  if (error) {
-    throw new Error(error.message || "Failed to create tracking token.");
-  }
-
-  return token;
-}
-
-function getCarrierTrackingLink(carrier, trackingNumber) {
-  if (!trackingNumber) return "";
-
-  const num = encodeURIComponent(trackingNumber.trim());
-  const normalized = (carrier || "").toLowerCase();
-
-  if (normalized === "ups") {
-    return `https://www.ups.com/track?tracknum=${num}`;
-  }
-
-  if (normalized === "usps") {
-    return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${num}`;
-  }
-
-  if (normalized === "fedex") {
-    return `https://www.fedex.com/fedextrack/?trknbr=${num}`;
-  }
-
-  return "";
-}
-
-function buildShippedEmailHtml(order, trackingUrl, carrierLink) {
-  return `
-    <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
-      <h2 style="margin-bottom: 8px;">Your order has shipped</h2>
-      <p>Hello ${order.customer_name || "Customer"},</p>
-      <p>Your order <strong>${order.order_number || ""}</strong> has been shipped.</p>
-
-      <div style="margin: 20px 0; padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px;">
-        <p style="margin: 0 0 8px;"><strong>Order Number:</strong> ${order.order_number || "—"}</p>
-        <p style="margin: 0 0 8px;"><strong>Status:</strong> shipped</p>
-        <p style="margin: 0 0 8px;"><strong>Product:</strong> ${order.product_name || "—"}</p>
-        <p style="margin: 0 0 8px;"><strong>Carrier:</strong> ${order.tracking_carrier || "—"}</p>
-        <p style="margin: 0;"><strong>Tracking Number:</strong> ${order.tracking_number || "—"}</p>
-      </div>
-
-      <p style="margin-top: 20px;">
-        <a href="${trackingUrl}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 700;">
-          Track Your Order
-        </a>
-      </p>
-
-      ${
-        carrierLink
-          ? `<p style="margin-top: 14px;"><a href="${carrierLink}" style="color: #2563eb;">Open carrier tracking</a></p>`
-          : ""
-      }
-
-      <p style="margin-top: 18px;">You can also use the secure tracking link above anytime.</p>
-      <p>Thank you for choosing EnVision Direct.</p>
-    </div>
-  `;
-}
-
-function buildDeliveredEmailHtml(order, trackingUrl) {
-  return `
-    <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
-      <h2 style="margin-bottom: 8px;">Your order was delivered</h2>
-      <p>Hello ${order.customer_name || "Customer"},</p>
-      <p>Your order <strong>${order.order_number || ""}</strong> has been marked as delivered.</p>
-
-      <div style="margin: 20px 0; padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px;">
-        <p style="margin: 0 0 8px;"><strong>Order Number:</strong> ${order.order_number || "—"}</p>
-        <p style="margin: 0 0 8px;"><strong>Status:</strong> delivered</p>
-        <p style="margin: 0 0 8px;"><strong>Product:</strong> ${order.product_name || "—"}</p>
-        <p style="margin: 0;"><strong>Total:</strong> $${Number(order.total || 0).toFixed(2)}</p>
-      </div>
-
-      <p style="margin-top: 20px;">
-        <a href="${trackingUrl}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 700;">
-          View Order Status
-        </a>
-      </p>
-
-      <p style="margin-top: 18px;">Thank you for your business.</p>
-      <p>We appreciate your order with EnVision Direct.</p>
-    </div>
-  `;
-}
-
-async function sendStatusEmail(req, order, status) {
-  if (!resend) return;
-  if (!order?.customer_email) return;
-  if (status !== "shipped" && status !== "delivered") return;
-
-  const trackingToken = await ensureTrackingToken(order);
-  const baseUrl = getBaseUrl(req);
-  const trackingUrl = `${baseUrl}/track?token=${trackingToken}`;
-  const carrierLink = getCarrierTrackingLink(
-    order.tracking_carrier,
-    order.tracking_number
-  );
-
-  if (status === "shipped") {
-    await resend.emails.send({
-      from:
-        process.env.RESEND_FROM_EMAIL ||
-        "EnVision Direct <orders@envisiondirect.net>",
-      to: order.customer_email,
-      subject: `Your order ${order.order_number || ""} has shipped`,
-      html: buildShippedEmailHtml(
-        { ...order, status: "shipped", tracking_token: trackingToken },
-        trackingUrl,
-        carrierLink
-      ),
-    });
-  }
-
-  if (status === "delivered") {
-    await resend.emails.send({
-      from:
-        process.env.RESEND_FROM_EMAIL ||
-        "EnVision Direct <orders@envisiondirect.net>",
-      to: order.customer_email,
-      subject: `Your order ${order.order_number || ""} was delivered`,
-      html: buildDeliveredEmailHtml(
-        { ...order, status: "delivered", tracking_token: trackingToken },
-        trackingUrl
-      ),
-    });
-  }
-}
 
 export async function POST(req) {
   try {
     const body = await req.json();
     const orderIds = Array.isArray(body?.orderIds) ? body.orderIds : [];
-    const status = (body?.status || "").toLowerCase().trim();
-    const tracking_number =
-      typeof body?.tracking_number === "string" && body.tracking_number.trim()
-        ? body.tracking_number.trim()
-        : null;
-    const tracking_carrier =
-      typeof body?.tracking_carrier === "string" && body.tracking_carrier.trim()
-        ? body.tracking_carrier.trim()
-        : null;
+    const status = typeof body?.status === "string" ? body.status.trim().toLowerCase() : "";
 
     if (!orderIds.length) {
       return NextResponse.json(
-        { error: "No orders selected." },
+        { error: "No order IDs were provided." },
         { status: 400 }
       );
     }
@@ -189,75 +23,33 @@ export async function POST(req) {
       );
     }
 
-    if (status === "shipped" && (!tracking_number || !tracking_carrier)) {
-      return NextResponse.json(
-        { error: "Tracking carrier and tracking number are required for shipped status." },
-        { status: 400 }
-      );
-    }
+    const updateData = {
+      status,
+    };
 
-    const { data: existingOrders, error: fetchError } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from("orders")
-      .select("*")
-      .in("id", orderIds);
-
-    if (fetchError) {
-      return NextResponse.json(
-        { error: fetchError.message || "Failed to load orders." },
-        { status: 500 }
-      );
-    }
-
-    const updatePayload = { status };
-
-    if (status === "shipped") {
-      updatePayload.tracking_number = tracking_number;
-      updatePayload.tracking_carrier = tracking_carrier;
-    }
-
-    const { data: updatedOrders, error: updateError } = await supabaseAdmin
-      .from("orders")
-      .update(updatePayload)
+      .update(updateData)
       .in("id", orderIds)
-      .select("*");
+      .select("id, order_number, status");
 
-    if (updateError) {
+    if (error) {
+      console.error("Bulk status update error:", error);
       return NextResponse.json(
-        { error: updateError.message || "Failed to update orders." },
+        { error: error.message || "Failed to update orders." },
         { status: 500 }
-      );
-    }
-
-    try {
-      if (status === "shipped" || status === "delivered") {
-        const ordersToEmail =
-          Array.isArray(updatedOrders) && updatedOrders.length
-            ? updatedOrders
-            : existingOrders || [];
-
-        for (const order of ordersToEmail) {
-          await sendStatusEmail(req, order, status);
-        }
-      }
-    } catch (emailError) {
-      return NextResponse.json(
-        {
-          success: true,
-          orders: updatedOrders || [],
-          warning:
-            emailError.message || "Orders updated, but one or more emails failed.",
-        },
-        { status: 200 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      orders: updatedOrders || [],
+      updatedCount: data?.length || 0,
+      orders: data || [],
     });
-  } catch (err) {
+  } catch (error) {
+    console.error("Bulk status route error:", error);
     return NextResponse.json(
-      { error: err.message || "Server error." },
+      { error: "Server error while updating bulk order status." },
       { status: 500 }
     );
   }
