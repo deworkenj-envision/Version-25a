@@ -1,46 +1,43 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const raw = searchParams.get("orderNumber") || searchParams.get("q") || "";
-    const lookup = raw.trim();
+    const orderNumber = (searchParams.get("orderNumber") || "").trim().toUpperCase();
 
-    if (!lookup) {
+    if (!orderNumber) {
       return NextResponse.json(
-        { error: "Missing order number" },
+        { error: "Order number is required." },
         { status: 400 }
       );
     }
 
-    let query = supabaseAdmin.from("orders").select("*").limit(1);
+    const { data, error } = await supabaseAdmin
+      .from("orders")
+      .select("*")
+      .ilike("order_number", orderNumber)
+      .limit(1)
+      .maybeSingle();
 
-    const isUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        lookup
+    if (error) {
+      return NextResponse.json(
+        { error: error.message || "Failed to look up order." },
+        { status: 500 }
       );
-
-    if (isUuid) {
-      query = query.eq("id", lookup);
-    } else {
-      query = query.eq("order_number", lookup.toUpperCase());
     }
 
-    const { data, error } = await query.single();
-
-    if (error || !data) {
+    if (!data) {
       return NextResponse.json(
-        { error: "Order not found" },
+        { error: "Order not found." },
         { status: 404 }
       );
     }
 
     return NextResponse.json({ order: data });
   } catch (err) {
-    console.error("Track order error:", err);
     return NextResponse.json(
-      { error: "Failed to track order" },
+      { error: err.message || "Server error." },
       { status: 500 }
     );
   }
