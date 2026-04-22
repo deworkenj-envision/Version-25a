@@ -27,17 +27,9 @@ function getCarrierTrackingLink(carrier, trackingNumber) {
   const num = encodeURIComponent(trackingNumber.trim());
   const normalized = (carrier || "").toLowerCase();
 
-  if (normalized === "ups") {
-    return `https://www.ups.com/track?tracknum=${num}`;
-  }
-
-  if (normalized === "usps") {
-    return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${num}`;
-  }
-
-  if (normalized === "fedex") {
-    return `https://www.fedex.com/fedextrack/?trknbr=${num}`;
-  }
+  if (normalized === "ups") return `https://www.ups.com/track?tracknum=${num}`;
+  if (normalized === "usps") return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${num}`;
+  if (normalized === "fedex") return `https://www.fedex.com/fedextrack/?trknbr=${num}`;
 
   return "";
 }
@@ -57,6 +49,19 @@ async function ensureTrackingToken(order) {
   }
 
   return token;
+}
+
+async function addOrderEvent(orderId, eventType, eventLabel, eventNote = null) {
+  try {
+    await supabaseAdmin.from("order_events").insert({
+      order_id: orderId,
+      event_type: eventType,
+      event_label: eventLabel,
+      event_note: eventNote,
+    });
+  } catch (err) {
+    console.error("Failed to add order event:", err?.message || err);
+  }
 }
 
 function buildShippedEmailHtml(order, trackingUrl, carrierLink) {
@@ -182,7 +187,18 @@ export async function GET(req, context) {
       );
     }
 
-    return NextResponse.json({ order: data });
+    const { data: events } = await supabaseAdmin
+      .from("order_events")
+      .select("*")
+      .eq("order_id", id)
+      .order("created_at", { ascending: false });
+
+    return NextResponse.json({
+      order: {
+        ...data,
+        events: events || [],
+      },
+    });
   } catch (err) {
     return NextResponse.json(
       { error: err.message || "Server error." },
@@ -221,6 +237,12 @@ export async function PUT(req, context) {
       );
     }
 
+    const { data: beforeOrder } = await supabaseAdmin
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .single();
+
     const updatePayload = {
       status,
       tracking_number,
@@ -241,9 +263,37 @@ export async function PUT(req, context) {
       );
     }
 
+    if (beforeOrder?.status !== updatedOrder.status) {
+      await addOrderEvent(
+        id,
+        "status_change",
+        `Status changed to ${updatedOrder.status}`,
+        `Previous status: ${beforeOrder?.status || "none"}`
+      );
+    }
+
+    const trackingChanged =
+      (beforeOrder?.tracking_number || "") !== (updatedOrder?.tracking_number || "") ||
+      (beforeOrder?.tracking_carrier || "") !== (updatedOrder?.tracking_carrier || "");
+
+    if (trackingChanged && (updatedOrder?.tracking_number || updatedOrder?.tracking_carrier)) {
+      await addOrderEvent(
+        id,
+        "tracking_update",
+        "Tracking information updated",
+        `${updatedOrder?.tracking_carrier || "Carrier"} ${updatedOrder?.tracking_number || ""}`.trim()
+      );
+    }
+
     try {
       if (status === "shipped" || status === "delivered") {
         await sendStatusEmail(req, updatedOrder, status);
+        await addOrderEvent(
+          id,
+          "email_sent",
+          `${status === "shipped" ? "Shipped" : "Delivered"} email sent`,
+          `Sent to ${updatedOrder.customer_email || "customer"}`
+        );
       }
     } catch (emailError) {
       return NextResponse.json(
@@ -256,7 +306,18 @@ export async function PUT(req, context) {
       );
     }
 
-    return NextResponse.json({ order: updatedOrder });
+    const { data: events } = await supabaseAdmin
+      .from("order_events")
+      .select("*")
+      .eq("order_id", id)
+      .order("created_at", { ascending: false });
+
+    return NextResponse.json({
+      order: {
+        ...updatedOrder,
+        events: events || [],
+      },
+    });
   } catch (err) {
     return NextResponse.json(
       { error: err.message || "Server error." },
