@@ -77,6 +77,7 @@ export default function AdminOrderDetailPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [warning, setWarning] = useState("");
 
   const [status, setStatus] = useState("pending");
   const [trackingCarrier, setTrackingCarrier] = useState("");
@@ -89,6 +90,7 @@ export default function AdminOrderDetailPage() {
       setLoading(true);
       setError("");
       setSuccess("");
+      setWarning("");
 
       const res = await fetch(`/api/orders/${id}`, {
         cache: "no-store",
@@ -120,10 +122,24 @@ export default function AdminOrderDetailPage() {
   async function saveOrderUpdates() {
     if (!id) return;
 
+    const normalizedStatus = (status || "").toLowerCase().trim();
+    const trimmedCarrier = trackingCarrier.trim();
+    const trimmedTracking = trackingNumber.trim();
+
+    if (normalizedStatus === "shipped") {
+      if (!trimmedCarrier || !trimmedTracking) {
+        setError("Tracking carrier and tracking number are required before marking an order as shipped.");
+        setSuccess("");
+        setWarning("");
+        return;
+      }
+    }
+
     try {
       setSaving(true);
       setError("");
       setSuccess("");
+      setWarning("");
 
       const res = await fetch(`/api/orders/${id}`, {
         method: "PUT",
@@ -131,9 +147,9 @@ export default function AdminOrderDetailPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          status,
-          tracking_carrier: trackingCarrier,
-          tracking_number: trackingNumber,
+          status: normalizedStatus,
+          tracking_carrier: trimmedCarrier,
+          tracking_number: trimmedTracking,
         }),
       });
 
@@ -143,7 +159,12 @@ export default function AdminOrderDetailPage() {
         throw new Error(data?.error || "Failed to save order");
       }
 
-      setSuccess("Order updated successfully.");
+      if (data?.warning) {
+        setWarning(data.warning);
+      } else {
+        setSuccess("Order updated successfully.");
+      }
+
       await loadOrder();
     } catch (err) {
       setError(err.message || "Failed to save order");
@@ -155,6 +176,10 @@ export default function AdminOrderDetailPage() {
   const trackingLink = useMemo(() => {
     return getTrackingLink(trackingCarrier, trackingNumber);
   }, [trackingCarrier, trackingNumber]);
+
+  const shippedNeedsTracking =
+    (status || "").toLowerCase() === "shipped" &&
+    (!trackingCarrier.trim() || !trackingNumber.trim());
 
   if (loading) {
     return (
@@ -253,6 +278,12 @@ export default function AdminOrderDetailPage() {
         {error ? (
           <div className="mb-6 rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">
             {error}
+          </div>
+        ) : null}
+
+        {warning ? (
+          <div className="mb-6 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 text-sm text-amber-100">
+            {warning}
           </div>
         ) : null}
 
@@ -393,26 +424,34 @@ export default function AdminOrderDetailPage() {
                   />
                 </div>
 
-                <div className="flex flex-col gap-3 pt-2">
-                  {trackingLink ? (
-                    <a
-                      href={trackingLink}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center justify-center rounded-xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-black transition hover:opacity-90"
-                    >
-                      Open Tracking Link
-                    </a>
-                  ) : null}
+                {(status || "").toLowerCase() === "shipped" ? (
+                  <div className="rounded-2xl border border-sky-400/20 bg-sky-500/10 p-4 text-sm text-sky-100">
+                    To mark this order as shipped, both tracking carrier and tracking number are required. The shipped email will include the secure tracking link.
+                  </div>
+                ) : null}
 
-                  <button
-                    onClick={saveOrderUpdates}
-                    disabled={saving}
-                    className="w-full rounded-xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                {trackingLink ? (
+                  <a
+                    href={trackingLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-black transition hover:opacity-90"
                   >
-                    {saving ? "Saving..." : "Save Changes"}
-                  </button>
-                </div>
+                    Open Tracking Link
+                  </a>
+                ) : null}
+
+                <button
+                  onClick={saveOrderUpdates}
+                  disabled={saving || shippedNeedsTracking}
+                  className="w-full rounded-xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving
+                    ? "Saving..."
+                    : shippedNeedsTracking
+                    ? "Tracking Required for Shipped"
+                    : "Save Changes"}
+                </button>
               </div>
             </section>
 
