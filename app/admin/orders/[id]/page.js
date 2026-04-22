@@ -38,17 +38,17 @@ function StatusBadge({ status }) {
   const normalized = (status || "").toLowerCase();
 
   const styles = {
-    pending: "bg-amber-500/15 text-amber-300 border-amber-400/20",
-    paid: "bg-sky-500/15 text-sky-300 border-sky-400/20",
-    printing: "bg-violet-500/15 text-violet-300 border-violet-400/20",
-    shipped: "bg-cyan-500/15 text-cyan-300 border-cyan-400/20",
-    delivered: "bg-emerald-500/15 text-emerald-300 border-emerald-400/20",
+    pending: "bg-amber-500/20 text-amber-200 border-amber-300/30",
+    paid: "bg-sky-500/20 text-sky-200 border-sky-300/30",
+    printing: "bg-violet-500/20 text-violet-200 border-violet-300/30",
+    shipped: "bg-cyan-500/20 text-cyan-200 border-cyan-300/30",
+    delivered: "bg-emerald-500/20 text-emerald-200 border-emerald-300/30",
   };
 
   return (
     <span
       className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${
-        styles[normalized] || "bg-white/10 text-white border-white/15"
+        styles[normalized] || "bg-white/10 text-white border-white/20"
       }`}
     >
       {status || "—"}
@@ -56,20 +56,13 @@ function StatusBadge({ status }) {
   );
 }
 
-function InfoCard({ label, children, accent = "cyan" }) {
-  const accentStyles = {
-    cyan: "from-cyan-500/10 to-transparent border-cyan-400/10",
-    emerald: "from-emerald-500/10 to-transparent border-emerald-400/10",
-    violet: "from-violet-500/10 to-transparent border-violet-400/10",
-    amber: "from-amber-500/10 to-transparent border-amber-400/10",
-  };
-
+function InfoCard({ label, children }) {
   return (
-    <div
-      className={`rounded-2xl border bg-gradient-to-br ${accentStyles[accent] || accentStyles.cyan} bg-neutral-950/95 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.25)]`}
-    >
-      <p className="text-[11px] uppercase tracking-[0.16em] text-white/45">{label}</p>
-      <div className="mt-2 text-base font-semibold text-white">{children}</div>
+    <div className="rounded-2xl border border-white/10 bg-slate-800 p-4 shadow-[0_8px_24px_rgba(0,0,0,0.22)]">
+      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300/70">
+        {label}
+      </p>
+      <div className="mt-3 text-base font-semibold text-white">{children}</div>
     </div>
   );
 }
@@ -165,10 +158,10 @@ export default function AdminOrderDetailPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-black text-white">
+      <main className="min-h-screen bg-slate-950 text-white">
         <div className="mx-auto max-w-7xl px-6 py-10">
-          <div className="rounded-3xl border border-white/10 bg-neutral-900 p-8 shadow-2xl">
-            <p className="text-sm text-white/70">Loading order...</p>
+          <div className="rounded-3xl border border-white/10 bg-slate-900 p-8">
+            <p className="text-sm text-slate-300">Loading order...</p>
           </div>
         </div>
       </main>
@@ -177,19 +170,19 @@ export default function AdminOrderDetailPage() {
 
   if (error && !order) {
     return (
-      <main className="min-h-screen bg-black text-white">
+      <main className="min-h-screen bg-slate-950 text-white">
         <div className="mx-auto max-w-7xl px-6 py-10">
           <div className="mb-6 flex items-center justify-between gap-4">
             <h1 className="text-3xl font-semibold">Order Details</h1>
             <Link
               href="/admin/orders"
-              className="rounded-xl border border-white/15 bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+              className="rounded-xl border border-white/15 bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
             >
               Back to Orders
             </Link>
           </div>
 
-          <div className="rounded-3xl border border-red-500/30 bg-red-500/10 p-6">
+          <div className="rounded-3xl border border-red-400/30 bg-red-500/10 p-6">
             <p className="text-sm text-red-200">{error}</p>
           </div>
         </div>
@@ -199,20 +192,20 @@ export default function AdminOrderDetailPage() {
 
   if (!order) {
     return (
-      <main className="min-h-screen bg-black text-white">
+      <main className="min-h-screen bg-slate-950 text-white">
         <div className="mx-auto max-w-7xl px-6 py-10">
           <div className="mb-6 flex items-center justify-between gap-4">
             <h1 className="text-3xl font-semibold">Order Details</h1>
             <Link
               href="/admin/orders"
-              className="rounded-xl border border-white/15 bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+              className="rounded-xl border border-white/15 bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
             >
               Back to Orders
             </Link>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-neutral-900 p-6">
-            <p className="text-sm text-white/70">Order not found.</p>
+          <div className="rounded-3xl border border-white/10 bg-slate-900 p-6">
+            <p className="text-sm text-slate-300">Order not found.</p>
           </div>
         </div>
       </main>
@@ -220,21 +213,21 @@ export default function AdminOrderDetailPage() {
   }
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-slate-950 text-white">
       <div className="mx-auto max-w-7xl px-6 py-10">
-        <div className="mb-8 rounded-[28px] border border-cyan-500/10 bg-gradient-to-br from-neutral-900 via-black to-neutral-950 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+        <div className="mb-8 rounded-[28px] border border-white/10 bg-slate-900 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="mb-2 text-sm uppercase tracking-[0.28em] text-cyan-300/90">
+              <p className="mb-2 text-sm uppercase tracking-[0.28em] text-cyan-300">
                 Admin Order View
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-4xl font-bold tracking-tight">
+                <h1 className="text-4xl font-bold tracking-tight text-white">
                   {order.order_number || "Order"}
                 </h1>
                 <StatusBadge status={order.status} />
               </div>
-              <p className="mt-3 text-sm text-white/60">
+              <p className="mt-3 text-sm text-slate-300">
                 Created {formatDate(order.created_at)}
               </p>
             </div>
@@ -242,14 +235,14 @@ export default function AdminOrderDetailPage() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/admin/orders"
-                className="rounded-xl border border-white/15 bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+                className="rounded-xl border border-white/15 bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
               >
                 Back to Orders
               </Link>
 
               <button
                 onClick={() => router.refresh()}
-                className="rounded-xl border border-white/15 bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+                className="rounded-xl border border-white/15 bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
               >
                 Refresh
               </button>
@@ -258,84 +251,88 @@ export default function AdminOrderDetailPage() {
         </div>
 
         {error ? (
-          <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+          <div className="mb-6 rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">
             {error}
           </div>
         ) : null}
 
         {success ? (
-          <div className="mb-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+          <div className="mb-6 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
             {success}
           </div>
         ) : null}
 
         <div className="grid gap-6 xl:grid-cols-[1.65fr_0.85fr]">
-          <section className="rounded-[28px] border border-white/10 bg-neutral-900/95 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.4)]">
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-2xl font-semibold text-white">Order Information</h2>
-                <p className="mt-1 text-sm text-white/50">
-                  Full order summary and production details
-                </p>
-              </div>
+          <section className="rounded-[28px] border border-white/10 bg-slate-900 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
+            <div className="mb-5">
+              <h2 className="text-2xl font-semibold text-white">Order Information</h2>
+              <p className="mt-1 text-sm text-slate-300">
+                Full order summary and production details
+              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <InfoCard label="Order Number" accent="cyan">
+              <InfoCard label="Order Number">
                 {order.order_number || "—"}
               </InfoCard>
 
-              <InfoCard label="Status" accent="violet">
+              <InfoCard label="Status">
                 <StatusBadge status={order.status} />
               </InfoCard>
 
-              <InfoCard label="Customer" accent="cyan">
+              <InfoCard label="Customer">
                 {order.customer_name || "—"}
               </InfoCard>
 
-              <InfoCard label="Email" accent="cyan">
+              <InfoCard label="Email">
                 <span className="break-all">{order.customer_email || "—"}</span>
               </InfoCard>
 
-              <InfoCard label="Product" accent="emerald">
+              <InfoCard label="Product">
                 {order.product_name || "—"}
               </InfoCard>
 
-              <InfoCard label="Quantity" accent="emerald">
+              <InfoCard label="Quantity">
                 {order.quantity || "—"}
               </InfoCard>
 
-              <InfoCard label="Size" accent="amber">
+              <InfoCard label="Size">
                 {order.size || "—"}
               </InfoCard>
 
-              <InfoCard label="Sides" accent="amber">
+              <InfoCard label="Sides">
                 {order.sides || "—"}
               </InfoCard>
 
-              <InfoCard label="Paper" accent="amber">
+              <InfoCard label="Paper">
                 {order.paper || "—"}
               </InfoCard>
 
-              <InfoCard label="Finish" accent="amber">
+              <InfoCard label="Finish">
                 {order.finish || "—"}
               </InfoCard>
 
-              <InfoCard label="Subtotal" accent="emerald">
+              <InfoCard label="Subtotal">
                 {money(order.subtotal)}
               </InfoCard>
 
-              <InfoCard label="Shipping" accent="emerald">
+              <InfoCard label="Shipping">
                 {money(order.shipping)}
               </InfoCard>
 
-              <div className="sm:col-span-2 rounded-2xl border border-emerald-400/15 bg-gradient-to-r from-emerald-500/10 via-neutral-950 to-neutral-950 p-5 shadow-[0_12px_35px_rgba(0,0,0,0.25)]">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-white/45">Total</p>
-                <p className="mt-2 text-3xl font-bold text-white">{money(order.total)}</p>
+              <div className="sm:col-span-2 rounded-2xl border border-emerald-400/20 bg-slate-800 p-5 shadow-[0_8px_24px_rgba(0,0,0,0.22)]">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300/70">
+                  Total
+                </p>
+                <p className="mt-2 text-3xl font-bold text-white">
+                  {money(order.total)}
+                </p>
               </div>
 
-              <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-neutral-950/90 p-5 shadow-[0_12px_35px_rgba(0,0,0,0.25)]">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-white/45">Notes</p>
+              <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-slate-800 p-5 shadow-[0_8px_24px_rgba(0,0,0,0.22)]">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300/70">
+                  Notes
+                </p>
                 <p className="mt-3 min-h-[56px] whitespace-pre-wrap text-base font-medium text-white">
                   {order.notes || "—"}
                 </p>
@@ -344,19 +341,21 @@ export default function AdminOrderDetailPage() {
           </section>
 
           <aside className="space-y-6">
-            <section className="rounded-[28px] border border-cyan-500/10 bg-gradient-to-br from-neutral-900 to-neutral-950 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.4)]">
+            <section className="rounded-[28px] border border-white/10 bg-slate-900 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
               <h2 className="mb-1 text-2xl font-semibold text-white">Update Order</h2>
-              <p className="mb-5 text-sm text-white/50">
+              <p className="mb-5 text-sm text-slate-300">
                 Manage status and shipment details
               </p>
 
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-white/75">Status</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                    Status
+                  </label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400/40"
+                    className="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400"
                   >
                     <option value="pending">Pending</option>
                     <option value="paid">Paid</option>
@@ -367,13 +366,13 @@ export default function AdminOrderDetailPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-white/75">
+                  <label className="mb-2 block text-sm font-medium text-slate-200">
                     Tracking Carrier
                   </label>
                   <select
                     value={trackingCarrier}
                     onChange={(e) => setTrackingCarrier(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400/40"
+                    className="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400"
                   >
                     <option value="">Select carrier</option>
                     <option value="UPS">UPS</option>
@@ -383,14 +382,14 @@ export default function AdminOrderDetailPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-white/75">
+                  <label className="mb-2 block text-sm font-medium text-slate-200">
                     Tracking Number
                   </label>
                   <input
                     value={trackingNumber}
                     onChange={(e) => setTrackingNumber(e.target.value)}
                     placeholder="Enter tracking number"
-                    className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none placeholder:text-white/30 transition focus:border-cyan-400/40"
+                    className="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-400 transition focus:border-cyan-400"
                   />
                 </div>
 
@@ -417,16 +416,16 @@ export default function AdminOrderDetailPage() {
               </div>
             </section>
 
-            <section className="rounded-[28px] border border-emerald-500/10 bg-gradient-to-br from-neutral-900 to-neutral-950 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.4)]">
+            <section className="rounded-[28px] border border-white/10 bg-slate-900 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
               <h2 className="mb-1 text-2xl font-semibold text-white">Artwork</h2>
-              <p className="mb-5 text-sm text-white/50">
+              <p className="mb-5 text-sm text-slate-300">
                 Production file attached to this order
               </p>
 
               {order.artwork_url ? (
                 <div className="space-y-4">
-                  <div className="rounded-2xl border border-white/10 bg-black/70 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-white/45">
+                  <div className="rounded-2xl border border-white/10 bg-slate-800 p-4">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300/70">
                       File Name
                     </p>
                     <p className="mt-2 break-all text-sm font-medium text-white">
@@ -444,7 +443,7 @@ export default function AdminOrderDetailPage() {
                   </a>
                 </div>
               ) : (
-                <p className="text-sm text-white/60">No artwork uploaded.</p>
+                <p className="text-sm text-slate-300">No artwork uploaded.</p>
               )}
             </section>
           </aside>
