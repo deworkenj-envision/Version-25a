@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
-const STATUS_OPTIONS = [
-  { value: "pending", label: "Pending" },
-  { value: "paid", label: "Paid" },
-  { value: "printing", label: "Printing" },
-  { value: "shipped", label: "Shipped" },
-  { value: "delivered", label: "Delivered" },
+const STATUS_OPTIONS = ["pending", "paid", "printing", "shipped", "delivered"];
+
+const FILTERS = [
+  { key: "all", label: "All" },
+  { key: "paid", label: "Paid" },
+  { key: "printing", label: "Printing" },
+  { key: "shipped", label: "Shipped" },
+  { key: "delivered", label: "Delivered" },
 ];
 
 function formatMoney(value) {
@@ -25,132 +27,121 @@ function formatDate(value) {
   }
 }
 
-function statusBadgeClass(status) {
-  switch ((status || "").toLowerCase()) {
-    case "delivered":
-      return "bg-purple-100 text-purple-700 border border-purple-200";
-    case "shipped":
-      return "bg-blue-100 text-blue-700 border border-blue-200";
-    case "printing":
-      return "bg-amber-100 text-amber-700 border border-amber-200";
-    case "paid":
-      return "bg-emerald-100 text-emerald-700 border border-emerald-200";
-    default:
-      return "bg-slate-100 text-slate-700 border border-slate-200";
-  }
+function normalizeOrdersPayload(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.orders)) return data.orders;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+}
+
+function StatusBadge({ status }) {
+  const s = (status || "").toLowerCase();
+
+  const styles = {
+    pending: "bg-amber-100 text-amber-700 border-amber-200",
+    paid: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    printing: "bg-violet-100 text-violet-700 border-violet-200",
+    shipped: "bg-sky-100 text-sky-700 border-sky-200",
+    delivered: "bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200",
+  };
+
+  return (
+    <span
+      className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold capitalize ${
+        styles[s] || "bg-slate-100 text-slate-700 border-slate-200"
+      }`}
+    >
+      {status || "—"}
+    </span>
+  );
 }
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
-  const [bulkAction, setBulkAction] = useState("");
-  const [applyingBulk, setApplyingBulk] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [busyAction, setBusyAction] = useState("");
 
-  async function loadOrders(showSpinner = true) {
+  async function loadOrders() {
     try {
-      if (showSpinner) setLoading(true);
-      else setRefreshing(true);
+      setLoading(true);
+      setError("");
+      setMessage("");
 
-      const res = await fetch("/api/orders", { cache: "no-store" });
+      const res = await fetch("/api/orders", {
+        cache: "no-store",
+      });
+
       const data = await res.json();
 
-      if (Array.isArray(data)) {
-        setOrders(data);
-      } else if (Array.isArray(data?.orders)) {
-        setOrders(data.orders);
-      } else {
-        setOrders([]);
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to load orders");
       }
-    } catch (error) {
-      console.error("Failed to load orders:", error);
-      setOrders([]);
+
+      const nextOrders = normalizeOrdersPayload(data);
+      setOrders(nextOrders);
+    } catch (err) {
+      setError(err.message || "Failed to load orders");
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }
 
   useEffect(() => {
-    loadOrders(true);
+    loadOrders();
   }, []);
 
   const filteredOrders = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return orders;
+    if (activeFilter === "all") return orders;
+    return orders.filter(
+      (order) => (order?.status || "").toLowerCase() === activeFilter
+    );
+  }, [orders, activeFilter]);
 
-    return orders.filter((order) => {
-      return [
-        order.order_number,
-        order.customer_name,
-        order.customer_email,
-        order.product_name,
-        order.status,
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(q));
-    });
-  }, [orders, search]);
-
-  const selectedCount = selectedIds.length;
+  const selectedVisibleCount = useMemo(() => {
+    const visibleSet = new Set(filteredOrders.map((o) => o.id));
+    return selectedIds.filter((id) => visibleSet.has(id)).length;
+  }, [filteredOrders, selectedIds]);
 
   const allVisibleSelected =
     filteredOrders.length > 0 &&
     filteredOrders.every((order) => selectedIds.includes(order.id));
 
-  function toggleSelectAllVisible() {
-    if (allVisibleSelected) {
-      setSelectedIds((prev) =>
-        prev.filter((id) => !filteredOrders.some((order) => order.id === id))
-      );
-      return;
-    }
-
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      filteredOrders.forEach((order) => next.add(order.id));
-      return Array.from(next);
-    });
-  }
-
-  function toggleSelectOne(id) {
+  function toggleOrder(id) {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   }
 
+  function toggleSelectAllVisible() {
+    const visibleIds = filteredOrders.map((order) => order.id);
+
+    if (allVisibleSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+      return;
+    }
+
+    setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])));
+  }
+
   function clearSelection() {
     setSelectedIds([]);
-    setBulkAction("");
   }
 
-  function handleBulkPrintPackingSlips() {
+  async function applyBulkStatus(status) {
     if (!selectedIds.length) {
-      alert("Please select at least one order first.");
+      setError("Please select at least one order.");
+      setMessage("");
       return;
     }
-
-    const ids = encodeURIComponent(selectedIds.join(","));
-    window.open(`/admin/packing-slips?ids=${ids}`, "_blank");
-  }
-
-  async function applyBulkAction() {
-    if (!selectedIds.length) {
-      alert("Please select at least one order first.");
-      return;
-    }
-
-    if (!bulkAction) {
-      alert("Please choose a bulk action first.");
-      return;
-    }
-
-    const selectedStatus = bulkAction.replace("status:", "");
 
     try {
-      setApplyingBulk(true);
+      setBusyAction(status);
+      setError("");
+      setMessage("");
 
       const res = await fetch("/api/admin/orders/bulk-status", {
         method: "POST",
@@ -159,138 +150,190 @@ export default function AdminOrdersPage() {
         },
         body: JSON.stringify({
           orderIds: selectedIds,
-          status: selectedStatus,
+          status,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data?.error || "Bulk update failed");
+        throw new Error(data?.error || `Failed to mark orders as ${status}`);
       }
 
-      await loadOrders(false);
-      clearSelection();
-      alert("Bulk action applied successfully.");
-    } catch (error) {
-      console.error(error);
-      alert(error.message || "Bulk action failed.");
+      setMessage(
+        `${selectedIds.length} order${
+          selectedIds.length === 1 ? "" : "s"
+        } updated to ${status}.`
+      );
+
+      await loadOrders();
+      setSelectedIds([]);
+    } catch (err) {
+      setError(err.message || "Bulk update failed.");
     } finally {
-      setApplyingBulk(false);
+      setBusyAction("");
     }
   }
 
-  return (
-    <div className="min-h-screen bg-slate-100 px-6 py-6 md:px-10">
-      <div className="mx-auto max-w-[1600px]">
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-[#0b1b44]">
-              Admin Orders
-            </h1>
-            <p className="mt-2 text-base text-slate-600">
-              Manage orders, open details, and print packing slips in bulk.
-            </p>
-          </div>
+  function printBulkPackingSlips() {
+    if (!selectedIds.length) {
+      setError("Please select at least one order.");
+      setMessage("");
+      return;
+    }
 
-          <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search order #, customer, email, product..."
-              className="w-full rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm outline-none transition focus:border-[#0b1b44] sm:w-[385px]"
-            />
-            <button
-              onClick={() => loadOrders(false)}
-              disabled={refreshing}
-              className="rounded-2xl bg-[#0b1b44] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </button>
-          </div>
+    setError("");
+    setMessage("");
+
+    const params = new URLSearchParams();
+    params.set("ids", selectedIds.join(","));
+
+    window.open(`/api/admin/packing-slips?${params.toString()}`, "_blank");
+  }
+
+  return (
+    <main className="min-h-screen bg-slate-100 px-8 py-8 text-slate-900">
+      <div className="mx-auto max-w-[1600px]">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">Admin Orders</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Manage production, fulfillment, and shipment workflow.
+          </p>
         </div>
 
-        {selectedCount > 0 && (
-          <div className="mb-6 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm xl:flex-row xl:items-center xl:justify-between">
-            <div className="text-base font-medium text-[#0b1b44]">
-              {selectedCount} order{selectedCount === 1 ? "" : "s"} selected
+        {error ? (
+          <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        ) : null}
+
+        {message ? (
+          <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {message}
+          </div>
+        ) : null}
+
+        <div className="mb-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <div className="text-lg font-semibold">
+                {selectedIds.length} order{selectedIds.length === 1 ? "" : "s"} selected
+              </div>
+              <div className="mt-1 text-sm text-slate-500">
+                {selectedVisibleCount} selected in current filter view
+              </div>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap xl:justify-end">
+            <div className="flex flex-wrap items-center gap-3">
               <button
-                onClick={handleBulkPrintPackingSlips}
-                className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                onClick={printBulkPackingSlips}
+                disabled={!selectedIds.length}
+                className="rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Bulk Print Packing Slips
               </button>
 
-              <select
-                value={bulkAction}
-                onChange={(e) => setBulkAction(e.target.value)}
-                className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-[#0b1b44]"
+              <button
+                onClick={() => applyBulkStatus("printing")}
+                disabled={!selectedIds.length || busyAction !== ""}
+                className="rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="">Bulk Actions</option>
-                {STATUS_OPTIONS.map((option) => (
-                  <option
-                    key={option.value}
-                    value={`status:${option.value}`}
-                  >
-                    Mark as {option.label}
-                  </option>
-                ))}
-              </select>
+                {busyAction === "printing" ? "Updating..." : "Mark Printing"}
+              </button>
 
               <button
-                onClick={applyBulkAction}
-                disabled={!bulkAction || applyingBulk}
-                className="rounded-2xl bg-[#0b1b44] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => applyBulkStatus("shipped")}
+                disabled={!selectedIds.length || busyAction !== ""}
+                className="rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {applyingBulk ? "Applying..." : "Apply"}
+                {busyAction === "shipped" ? "Updating..." : "Mark Shipped"}
+              </button>
+
+              <button
+                onClick={() => applyBulkStatus("delivered")}
+                disabled={!selectedIds.length || busyAction !== ""}
+                className="rounded-2xl bg-fuchsia-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-fuchsia-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {busyAction === "delivered" ? "Updating..." : "Mark Delivered"}
               </button>
 
               <button
                 onClick={clearSelection}
-                className="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-[#0b1b44] transition hover:bg-slate-50"
+                disabled={!selectedIds.length}
+                className="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Clear Selection
               </button>
             </div>
           </div>
-        )}
+        </div>
 
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          {FILTERS.map((filter) => {
+            const isActive = activeFilter === filter.key;
+            const count =
+              filter.key === "all"
+                ? orders.length
+                : orders.filter(
+                    (order) => (order?.status || "").toLowerCase() === filter.key
+                  ).length;
+
+            return (
+              <button
+                key={filter.key}
+                onClick={() => setActiveFilter(filter.key)}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  isActive
+                    ? "bg-slate-900 text-white"
+                    : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {filter.label} ({count})
+              </button>
+            );
+          })}
+
+          <button
+            onClick={toggleSelectAllVisible}
+            disabled={!filteredOrders.length}
+            className="ml-auto rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {allVisibleSelected ? "Unselect Visible" : "Select All Visible"}
+          </button>
+        </div>
+
+        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-full">
-              <thead className="bg-[#081633] text-white">
+              <thead className="bg-[#041b4d] text-white">
                 <tr>
-                  <th className="w-[60px] px-4 py-4 text-left">
+                  <th className="w-16 px-4 py-4 text-left">
                     <input
                       type="checkbox"
                       checked={allVisibleSelected}
                       onChange={toggleSelectAllVisible}
-                      className="h-5 w-5 rounded border-white/40"
+                      className="h-5 w-5 accent-blue-600"
                     />
                   </th>
-                  <th className="px-4 py-4 text-left text-sm font-bold uppercase tracking-wide">
+                  <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wide">
                     Order
                   </th>
-                  <th className="px-4 py-4 text-left text-sm font-bold uppercase tracking-wide">
+                  <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wide">
                     Customer
                   </th>
-                  <th className="px-4 py-4 text-left text-sm font-bold uppercase tracking-wide">
+                  <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wide">
                     Product
                   </th>
-                  <th className="px-4 py-4 text-left text-sm font-bold uppercase tracking-wide">
+                  <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wide">
                     Total
                   </th>
-                  <th className="px-4 py-4 text-left text-sm font-bold uppercase tracking-wide">
+                  <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wide">
                     Status
                   </th>
-                  <th className="px-4 py-4 text-left text-sm font-bold uppercase tracking-wide">
+                  <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wide">
                     Created
                   </th>
-                  <th className="px-4 py-4 text-left text-sm font-bold uppercase tracking-wide">
+                  <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wide">
                     Actions
                   </th>
                 </tr>
@@ -299,20 +342,14 @@ export default function AdminOrdersPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td
-                      colSpan={8}
-                      className="px-6 py-10 text-center text-slate-500"
-                    >
+                    <td colSpan={8} className="px-6 py-10 text-center text-slate-500">
                       Loading orders...
                     </td>
                   </tr>
                 ) : filteredOrders.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={8}
-                      className="px-6 py-10 text-center text-slate-500"
-                    >
-                      No orders found.
+                    <td colSpan={8} className="px-6 py-10 text-center text-slate-500">
+                      No orders found for this filter.
                     </td>
                   </tr>
                 ) : (
@@ -322,56 +359,52 @@ export default function AdminOrdersPage() {
                     return (
                       <tr
                         key={order.id}
-                        className={
-                          index % 2 === 0 ? "bg-[#eef7f1]" : "bg-white"
-                        }
+                        className={`border-t border-slate-200 ${
+                          index % 2 === 0 ? "bg-[#eef4ef]" : "bg-white"
+                        }`}
                       >
-                        <td className="px-4 py-4">
+                        <td className="px-4 py-5 align-top">
                           <input
                             type="checkbox"
                             checked={checked}
-                            onChange={() => toggleSelectOne(order.id)}
-                            className="h-5 w-5 rounded"
+                            onChange={() => toggleOrder(order.id)}
+                            className="h-5 w-5 accent-blue-600"
                           />
                         </td>
 
-                        <td className="px-4 py-4 font-semibold text-[#0b1b44]">
-                          {order.order_number || "—"}
+                        <td className="px-4 py-5 align-top">
+                          <div className="font-semibold">{order.order_number || "—"}</div>
                         </td>
 
-                        <td className="px-4 py-4">
-                          <div className="font-semibold text-slate-900">
+                        <td className="px-4 py-5 align-top">
+                          <div className="font-semibold">
                             {order.customer_name || "—"}
                           </div>
-                          <div className="text-sm text-slate-500">
-                            {order.customer_email || ""}
+                          <div className="mt-1 text-sm text-slate-600">
+                            {order.customer_email || "—"}
                           </div>
                         </td>
 
-                        <td className="px-4 py-4 text-slate-800">
+                        <td className="px-4 py-5 align-top">
                           {order.product_name || "—"}
                         </td>
 
-                        <td className="px-4 py-4 font-semibold text-slate-900">
+                        <td className="px-4 py-5 align-top font-semibold">
                           {formatMoney(order.total)}
                         </td>
 
-                        <td className="px-4 py-4">
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeClass(order.status)}`}
-                          >
-                            {order.status || "pending"}
-                          </span>
+                        <td className="px-4 py-5 align-top">
+                          <StatusBadge status={order.status} />
                         </td>
 
-                        <td className="px-4 py-4 text-slate-700">
+                        <td className="px-4 py-5 align-top text-slate-700">
                           {formatDate(order.created_at)}
                         </td>
 
-                        <td className="px-4 py-4">
+                        <td className="px-4 py-5 align-top">
                           <Link
                             href={`/admin/orders/${order.id}`}
-                            className="inline-flex rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-[#0b1b44] transition hover:bg-slate-50"
+                            className="inline-flex rounded-2xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
                           >
                             Open
                           </Link>
@@ -385,6 +418,6 @@ export default function AdminOrdersPage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
