@@ -68,7 +68,8 @@ function buildShippedEmailHtml(order, trackingUrl, carrierLink) {
 
       <div style="margin: 20px 0; padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px;">
         <p style="margin: 0 0 8px;"><strong>Order Number:</strong> ${order.order_number || "—"}</p>
-        <p style="margin: 0 0 8px;"><strong>Status:</strong> ${order.status || "shipped"}</p>
+        <p style="margin: 0 0 8px;"><strong>Status:</strong> shipped</p>
+        <p style="margin: 0 0 8px;"><strong>Product:</strong> ${order.product_name || "—"}</p>
         <p style="margin: 0 0 8px;"><strong>Carrier:</strong> ${order.tracking_carrier || "—"}</p>
         <p style="margin: 0;"><strong>Tracking Number:</strong> ${order.tracking_number || "—"}</p>
       </div>
@@ -85,7 +86,7 @@ function buildShippedEmailHtml(order, trackingUrl, carrierLink) {
           : ""
       }
 
-      <p style="margin-top: 18px;">You can also track your order anytime using the secure link above.</p>
+      <p style="margin-top: 18px;">You can also use the secure tracking link above anytime.</p>
       <p>Thank you for choosing EnVision Direct.</p>
     </div>
   `;
@@ -100,8 +101,9 @@ function buildDeliveredEmailHtml(order, trackingUrl) {
 
       <div style="margin: 20px 0; padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px;">
         <p style="margin: 0 0 8px;"><strong>Order Number:</strong> ${order.order_number || "—"}</p>
-        <p style="margin: 0 0 8px;"><strong>Status:</strong> ${order.status || "delivered"}</p>
-        <p style="margin: 0;"><strong>Product:</strong> ${order.product_name || "—"}</p>
+        <p style="margin: 0 0 8px;"><strong>Status:</strong> delivered</p>
+        <p style="margin: 0 0 8px;"><strong>Product:</strong> ${order.product_name || "—"}</p>
+        <p style="margin: 0;"><strong>Total:</strong> $${Number(order.total || 0).toFixed(2)}</p>
       </div>
 
       <p style="margin-top: 20px;">
@@ -118,8 +120,7 @@ function buildDeliveredEmailHtml(order, trackingUrl) {
 
 async function sendStatusEmail(req, order, status) {
   if (!resend) return;
-
-  if (!order.customer_email) return;
+  if (!order?.customer_email) return;
 
   const trackingToken = await ensureTrackingToken(order.id, order.tracking_token);
   const baseUrl = getBaseUrl(req);
@@ -131,11 +132,13 @@ async function sendStatusEmail(req, order, status) {
 
   if (status === "shipped") {
     await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || "EnVision Direct <orders@envisiondirect.net>",
+      from:
+        process.env.RESEND_FROM_EMAIL ||
+        "EnVision Direct <orders@envisiondirect.net>",
       to: order.customer_email,
       subject: `Your order ${order.order_number || ""} has shipped`,
       html: buildShippedEmailHtml(
-        { ...order, tracking_token: trackingToken, status: "shipped" },
+        { ...order, status: "shipped", tracking_token: trackingToken },
         trackingUrl,
         carrierLink
       ),
@@ -144,11 +147,13 @@ async function sendStatusEmail(req, order, status) {
 
   if (status === "delivered") {
     await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || "EnVision Direct <orders@envisiondirect.net>",
+      from:
+        process.env.RESEND_FROM_EMAIL ||
+        "EnVision Direct <orders@envisiondirect.net>",
       to: order.customer_email,
       subject: `Your order ${order.order_number || ""} was delivered`,
       html: buildDeliveredEmailHtml(
-        { ...order, tracking_token: trackingToken, status: "delivered" },
+        { ...order, status: "delivered", tracking_token: trackingToken },
         trackingUrl
       ),
     });
@@ -161,8 +166,14 @@ export async function PUT(req, { params }) {
     const body = await req.json();
 
     const status = (body?.status || "").toLowerCase().trim();
-    const tracking_number = body?.tracking_number?.trim() || null;
-    const tracking_carrier = body?.tracking_carrier?.trim() || null;
+    const tracking_number =
+      typeof body?.tracking_number === "string" && body.tracking_number.trim()
+        ? body.tracking_number.trim()
+        : null;
+    const tracking_carrier =
+      typeof body?.tracking_carrier === "string" && body.tracking_carrier.trim()
+        ? body.tracking_carrier.trim()
+        : null;
 
     if (!id) {
       return NextResponse.json({ error: "Missing order ID." }, { status: 400 });
