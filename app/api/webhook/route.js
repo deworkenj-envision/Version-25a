@@ -1,228 +1,198 @@
-import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { randomBytes } from "crypto";
 import { Resend } from "resend";
-import { supabaseAdmin } from "../../../lib/supabaseAdmin";
-import { buildOrderConfirmationEmail } from "../../../lib/emailTemplates";
+import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const EMAIL_FROM =
-  process.env.RESEND_FROM || "EnVision Direct <orders@envisiondirect.net>";
-
-async function sendEmail({ to, subject, html }) {
-  if (!resend) {
-    return { success: false, error: "RESEND_API_KEY is missing." };
-  }
-
-  try {
-    await resend.emails.send({
-      from: EMAIL_FROM,
-      to,
-      subject,
-      html,
-    });
-
-    return { success: true };
-  } catch (error) {
-    return { success: false, error: error.message || "Email send failed." };
-  }
+function generateTrackingToken() {
+  return randomBytes(24).toString("hex");
 }
 
-function toNumber(value, fallback = 0) {
-  const num = Number(value);
-  return Number.isFinite(num) ? num : fallback;
+function getBaseUrl(req) {
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.SITE_URL ||
+    new URL(req.url).origin
+  ).replace(/\/$/, "");
 }
 
-async function generateOrderNumber() {
-  const { data, error } = await supabaseAdmin
+async function ensureTrackingToken(orderId, existingToken) {
+  if (existingToken) return existingToken;
+
+  const newToken = generateTrackingToken();
+
+  const { error } = await supabaseAdmin
     .from("orders")
-    .select("order_number")
-    .not("order_number", "is", null);
+    .update({ tracking_token: newToken })
+    .eq("id", orderId);
 
   if (error) {
-    throw new Error(error.message || "Failed to generate order number.");
+    throw new Error(error.message || "Failed to create tracking token.");
   }
 
-  let maxNumber = 10000;
+  return newToken;
+}
 
-  for (const row of data || []) {
-    const match = String(row.order_number || "").match(/EV-(\d+)/i);
-    if (match) {
-      const num = Number(match[1]);
-      if (num > maxNumber) maxNumber = num;
-    }
-  }
+function buildOrderConfirmationEmailHtml(order, trackingUrl) {
+  return `
+    <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
+      <h2 style="margin-bottom: 8px;">Thank you for your order</h2>
+      <p>Hello ${order.customer_name || "Customer"},</p>
+      <p>We received your order <strong>${order.order_number || ""}</strong> and payment has been confirmed.</p>
 
-  return `EV-${maxNumber + 1}`;
+      <div style="margin: 20px 0; padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px;">
+        <p style="margin: 0 0 8px;"><strong>Order Number:</strong> ${order.order_number || "—"}</p>
+        <p style="margin: 0 0 8px;"><strong>Product:</strong> ${order.product_name || "—"}</p>
+        <p style="margin: 0 0 8px;"><strong>Quantity:</strong> ${order.quantity || "—"}</p>
+        <p style="margin: 0 0 8px;"><strong>Status:</strong> ${order.status || "paid"}</p>
+        <p style="margin: 0;"><strong>Total:</strong> $${Number(order.total || 0).toFixed(2)}</p>
+      </div>
+
+      <p style="margin-top: 20px;">
+        <a href="${trackingUrl}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 700;">
+          Track Your Order
+        </a>
+      </p>
+
+      <p style="margin-top: 18px;">
+        You can use the secure tracking link above anytime to check your order status.
+      </p>
+
+      <p>Thank you for choosing EnVision Direct.</p>
+    </div>
+  `;
+}
+
+async function sendOrderConfirmationEmail(req, order) {
+  if (!resend) return;
+  if (!order?.customer_email) return;
+
+  const trackingToken = await ensureTrackingToken(order.id, order.tracking_token);
+  const baseUrl = getBaseUrl(req);
+  const trackingUrl = `${baseUrl}/track?token=${trackingToken}`;
+
+  await resend.emails.send({
+    from:
+      process.env.RESEND_FROM_EMAIL ||
+      "EnVision Direct <orders@envisiondirect.net>",
+    to: order.customer_email,
+    subject: `Order Confirmation ${order.order_number || ""}`,
+    html: buildOrderConfirmationEmailHtml(
+      { ...order, tracking_token: trackingToken },
+      trackingUrl
+    ),
+  });
 }
 
 export async function POST(req) {
+  const signature = req.headers.get("stripe-signature");
+
+  if (!signature) {
+    return new Response("Missing Stripe signature", { status: 400 });
+  }
+
+  let event;
+
   try {
     const body = await req.text();
-    const signature = req.headers.get("stripe-signature");
 
-    if (!signature) {
-      return NextResponse.json(
-        { error: "Missing stripe signature." },
-        { status: 400 }
-      );
-    }
-
-    const event = stripe.webhooks.constructEvent(
+    event = stripe.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
+  } catch (err) {
+    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+  }
 
+  try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
+
+      const sessionId = session.id;
       const metadata = session.metadata || {};
-      const customerDetails = session.customer_details || {};
-      const shippingDetails = session.shipping_details || {};
-      const shippingAddress = shippingDetails.address || customerDetails.address || {};
-
-      const stripeSessionId = session.id;
-
-      const customerName =
-        metadata.customerName || customerDetails.name || shippingDetails.name || "";
-
       const customerEmail =
-        metadata.customerEmail || customerDetails.email || "";
+        session.customer_details?.email ||
+        metadata.customerEmail ||
+        null;
+      const customerName =
+        session.customer_details?.name ||
+        metadata.customerName ||
+        null;
 
-      const customerPhone =
-        metadata.customerPhone || customerDetails.phone || "";
-
-      const productName = metadata.productName || "";
-      const size = metadata.size || "";
-      const paper = metadata.paper || "";
-      const finish = metadata.finish || "";
-      const sides = metadata.sides || "";
-      const quantity = toNumber(metadata.quantity, 0);
-      const subtotal = toNumber(metadata.subtotal, 0);
-      const shipping = toNumber(metadata.shipping, 0);
-      const total = toNumber(metadata.total, 0);
-      const notes = metadata.notes || "";
-      const fileName = metadata.fileName || "";
-      const artworkUrl = metadata.artworkUrl || "";
-
-      const shippingName = shippingDetails.name || customerName || "";
-      const shippingAddressLine1 = shippingAddress.line1 || "";
-      const shippingAddressLine2 = shippingAddress.line2 || "";
-      const shippingCity = shippingAddress.city || "";
-      const shippingState = shippingAddress.state || "";
-      const shippingPostalCode = shippingAddress.postal_code || "";
-      const shippingCountry = shippingAddress.country || "";
-
-      const orderPayload = {
+      const updates = {
         status: "paid",
-        customer_name: customerName,
-        customer_email: customerEmail,
-        customer_phone: customerPhone,
-        product_name: productName,
-        size,
-        paper,
-        finish,
-        sides,
-        quantity,
-        subtotal,
-        shipping,
-        total,
-        file_name: fileName,
-        artwork_url: artworkUrl,
-        notes,
-
-        shipping_name: shippingName,
-        shipping_address_line1: shippingAddressLine1,
-        shipping_address_line2: shippingAddressLine2,
-        shipping_city: shippingCity,
-        shipping_state: shippingState,
-        shipping_postal_code: shippingPostalCode,
-        shipping_country: shippingCountry,
-
-        updated_at: new Date().toISOString(),
       };
 
-      const { data: existingOrder, error: existingOrderError } = await supabaseAdmin
-        .from("orders")
-        .select("*")
-        .eq("stripe_session_id", stripeSessionId)
-        .maybeSingle();
+      if (customerEmail) updates.customer_email = customerEmail;
+      if (customerName) updates.customer_name = customerName;
+      if (sessionId) updates.stripe_session_id = sessionId;
 
-      if (existingOrderError) {
-        throw new Error(
-          existingOrderError.message || "Failed to check for existing order."
-        );
+      let updatedOrder = null;
+
+      if (sessionId) {
+        const { data, error } = await supabaseAdmin
+          .from("orders")
+          .update(updates)
+          .eq("stripe_session_id", sessionId)
+          .select("*")
+          .maybeSingle();
+
+        if (error) {
+          console.error("Order update by stripe_session_id failed:", error.message);
+        } else {
+          updatedOrder = data;
+        }
       }
 
-      let orderRecord = null;
-
-      if (existingOrder) {
-        const { data: updatedOrder, error: updateError } = await supabaseAdmin
+      if (!updatedOrder && metadata.orderId) {
+        const { data, error } = await supabaseAdmin
           .from("orders")
-          .update(orderPayload)
-          .eq("id", existingOrder.id)
+          .update(updates)
+          .eq("id", metadata.orderId)
           .select("*")
-          .single();
+          .maybeSingle();
 
-        if (updateError) {
-          throw new Error(updateError.message || "Failed to update order.");
+        if (error) {
+          console.error("Order update by metadata.orderId failed:", error.message);
+        } else {
+          updatedOrder = data;
         }
+      }
 
-        orderRecord = updatedOrder;
+      if (!updatedOrder && metadata.orderNumber) {
+        const { data, error } = await supabaseAdmin
+          .from("orders")
+          .update(updates)
+          .ilike("order_number", metadata.orderNumber)
+          .select("*")
+          .maybeSingle();
+
+        if (error) {
+          console.error("Order update by metadata.orderNumber failed:", error.message);
+        } else {
+          updatedOrder = data;
+        }
+      }
+
+      if (updatedOrder) {
+        try {
+          await sendOrderConfirmationEmail(req, updatedOrder);
+        } catch (emailError) {
+          console.error("Confirmation email failed:", emailError.message);
+        }
       } else {
-        const orderNumber = await generateOrderNumber();
-
-        const { data: insertedOrder, error: insertError } = await supabaseAdmin
-          .from("orders")
-          .insert({
-            order_number: orderNumber,
-            stripe_session_id: stripeSessionId,
-            ...orderPayload,
-          })
-          .select("*")
-          .single();
-
-        if (insertError) {
-          throw new Error(insertError.message || "Failed to insert order.");
-        }
-
-        orderRecord = insertedOrder;
-      }
-
-      if (orderRecord?.customer_email) {
-        const confirmationEmail = buildOrderConfirmationEmail({
-          orderNumber: orderRecord.order_number || orderRecord.id,
-          customerName: orderRecord.customer_name,
-          productName: orderRecord.product_name,
-          size: orderRecord.size,
-          paper: orderRecord.paper,
-          finish: orderRecord.finish,
-          sides: orderRecord.sides,
-          quantity: orderRecord.quantity,
-          subtotal: orderRecord.subtotal ?? orderRecord.total ?? 0,
-          shipping: orderRecord.shipping ?? 0,
-          total: orderRecord.total ?? 0,
-          fileName: orderRecord.file_name,
-        });
-
-        await sendEmail({
-          to: orderRecord.customer_email,
-          subject: confirmationEmail.subject,
-          html: confirmationEmail.html,
-        });
+        console.error("No matching order found for completed checkout session:", sessionId);
       }
     }
 
-    return NextResponse.json({ received: true });
-  } catch (error) {
-    console.error("Stripe webhook error:", error);
-
-    return NextResponse.json(
-      { error: error.message || "Webhook error." },
-      { status: 400 }
-    );
+    return new Response("ok", { status: 200 });
+  } catch (err) {
+    console.error("Webhook processing failed:", err);
+    return new Response("Webhook handler failed", { status: 500 });
   }
 }
