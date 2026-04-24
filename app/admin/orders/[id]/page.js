@@ -73,6 +73,7 @@ export default function AdminOrderDetailPage() {
   const id = params?.id;
 
   const [order, setOrder] = useState(null);
+  const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -82,6 +83,24 @@ export default function AdminOrderDetailPage() {
   const [status, setStatus] = useState("pending");
   const [trackingCarrier, setTrackingCarrier] = useState("");
   const [trackingNumber, setTrackingNumber] = useState("");
+
+  async function loadActivity(orderId) {
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}/activity`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        setActivity([]);
+        return;
+      }
+
+      const data = await res.json();
+      setActivity(Array.isArray(data?.activity) ? data.activity : []);
+    } catch {
+      setActivity([]);
+    }
+  }
 
   async function loadOrder() {
     if (!id) return;
@@ -107,6 +126,8 @@ export default function AdminOrderDetailPage() {
       setStatus(nextOrder?.status || "pending");
       setTrackingCarrier(nextOrder?.tracking_carrier || "");
       setTrackingNumber(nextOrder?.tracking_number || "");
+
+      await loadActivity(id);
     } catch (err) {
       setError(err.message || "Failed to load order");
     } finally {
@@ -266,7 +287,7 @@ export default function AdminOrderDetailPage() {
               </Link>
 
               <button
-                onClick={() => router.refresh()}
+                onClick={() => loadOrder()}
                 className="rounded-xl border border-white/15 bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
               >
                 Refresh
@@ -303,53 +324,20 @@ export default function AdminOrderDetailPage() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <InfoCard label="Order Number">
-                {order.order_number || "—"}
-              </InfoCard>
-
-              <InfoCard label="Status">
-                <StatusBadge status={order.status} />
-              </InfoCard>
-
-              <InfoCard label="Customer">
-                {order.customer_name || "—"}
-              </InfoCard>
-
+              <InfoCard label="Order Number">{order.order_number || "—"}</InfoCard>
+              <InfoCard label="Status"><StatusBadge status={order.status} /></InfoCard>
+              <InfoCard label="Customer">{order.customer_name || "—"}</InfoCard>
               <InfoCard label="Email">
                 <span className="break-all">{order.customer_email || "—"}</span>
               </InfoCard>
-
-              <InfoCard label="Product">
-                {order.product_name || "—"}
-              </InfoCard>
-
-              <InfoCard label="Quantity">
-                {order.quantity || "—"}
-              </InfoCard>
-
-              <InfoCard label="Size">
-                {order.size || "—"}
-              </InfoCard>
-
-              <InfoCard label="Sides">
-                {order.sides || "—"}
-              </InfoCard>
-
-              <InfoCard label="Paper">
-                {order.paper || "—"}
-              </InfoCard>
-
-              <InfoCard label="Finish">
-                {order.finish || "—"}
-              </InfoCard>
-
-              <InfoCard label="Subtotal">
-                {money(order.subtotal)}
-              </InfoCard>
-
-              <InfoCard label="Shipping">
-                {money(order.shipping)}
-              </InfoCard>
+              <InfoCard label="Product">{order.product_name || "—"}</InfoCard>
+              <InfoCard label="Quantity">{order.quantity || "—"}</InfoCard>
+              <InfoCard label="Size">{order.size || "—"}</InfoCard>
+              <InfoCard label="Sides">{order.sides || "—"}</InfoCard>
+              <InfoCard label="Paper">{order.paper || "—"}</InfoCard>
+              <InfoCard label="Finish">{order.finish || "—"}</InfoCard>
+              <InfoCard label="Subtotal">{money(order.subtotal)}</InfoCard>
+              <InfoCard label="Shipping">{money(order.shipping)}</InfoCard>
 
               <div className="sm:col-span-2 rounded-2xl border border-emerald-400/20 bg-slate-800 p-5 shadow-[0_8px_24px_rgba(0,0,0,0.22)]">
                 <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300/70">
@@ -426,7 +414,7 @@ export default function AdminOrderDetailPage() {
 
                 {(status || "").toLowerCase() === "shipped" ? (
                   <div className="rounded-2xl border border-sky-400/20 bg-sky-500/10 p-4 text-sm text-sky-100">
-                    To mark this order as shipped, both tracking carrier and tracking number are required. The shipped email will include the secure tracking link.
+                    To mark this order as shipped, both tracking carrier and tracking number are required.
                   </div>
                 ) : null}
 
@@ -487,6 +475,56 @@ export default function AdminOrderDetailPage() {
             </section>
           </aside>
         </div>
+
+        <section className="mt-6 rounded-[28px] border border-white/10 bg-slate-900 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">
+                Fulfillment History
+              </h2>
+              <p className="mt-1 text-sm text-slate-300">
+                Activity log for status, tracking, artwork, and fulfillment changes.
+              </p>
+            </div>
+
+            <Link
+              href={`/admin/orders/${order.id}/activity`}
+              className="rounded-xl border border-white/15 bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+            >
+              Open Full Activity Page
+            </Link>
+          </div>
+
+          {activity.length === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-slate-800 p-5 text-sm text-slate-300">
+              No activity has been logged yet. Change the order status once, then refresh this page.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {activity.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-2xl border border-white/10 bg-slate-800 p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-base font-semibold text-white">
+                        {item.title || "Activity"}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-300">
+                        {item.description || "—"}
+                      </p>
+                    </div>
+
+                    <div className="text-sm text-slate-400">
+                      {formatDate(item.created_at)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </main>
   );
