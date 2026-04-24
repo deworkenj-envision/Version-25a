@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 function money(value) {
   const num = Number(value || 0);
@@ -11,10 +11,18 @@ function money(value) {
 
 function formatDate(value) {
   if (!value) return "—";
+
   try {
-    return new Date(value).toLocaleString("en-US", {
+    return new Intl.DateTimeFormat("en-US", {
       timeZone: "America/Los_Angeles",
-    });
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+      timeZoneName: "short",
+    }).format(new Date(value));
   } catch {
     return value;
   }
@@ -48,7 +56,11 @@ function StatusBadge({ status }) {
   };
 
   return (
-    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${styles[normalized] || "bg-white/10 text-white border-white/20"}`}>
+    <span
+      className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${
+        styles[normalized] || "bg-white/10 text-white border-white/20"
+      }`}
+    >
       {status || "—"}
     </span>
   );
@@ -56,8 +68,10 @@ function StatusBadge({ status }) {
 
 function InfoCard({ label, children }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-800 p-4">
-      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300/70">{label}</p>
+    <div className="rounded-2xl border border-white/10 bg-slate-800 p-4 shadow-[0_8px_24px_rgba(0,0,0,0.22)]">
+      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300/70">
+        {label}
+      </p>
       <div className="mt-3 text-base font-semibold text-white">{children}</div>
     </div>
   );
@@ -65,63 +79,397 @@ function InfoCard({ label, children }) {
 
 export default function AdminOrderDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params?.id;
 
   const [order, setOrder] = useState(null);
   const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [warning, setWarning] = useState("");
+
+  const [status, setStatus] = useState("pending");
+  const [trackingCarrier, setTrackingCarrier] = useState("");
+  const [trackingNumber, setTrackingNumber] = useState("");
+
+  async function loadActivity(orderId) {
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}/activity`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        setActivity([]);
+        return;
+      }
+
+      const data = await res.json();
+      setActivity(Array.isArray(data?.activity) ? data.activity : []);
+    } catch {
+      setActivity([]);
+    }
+  }
 
   async function loadOrder() {
     if (!id) return;
 
-    const res = await fetch(`/api/orders/${id}`);
-    const data = await res.json();
+    try {
+      setLoading(true);
+      setError("");
+      setSuccess("");
+      setWarning("");
 
-    const orderData = data?.order || null;
-    setOrder(orderData);
+      const res = await fetch(`/api/orders/${id}`, {
+        cache: "no-store",
+      });
 
-    const activityRes = await fetch(`/api/admin/orders/${id}/activity`);
-    const activityData = await activityRes.json();
+      const data = await res.json();
 
-    setActivity(activityData?.activity || []);
-    setLoading(false);
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to load order");
+      }
+
+      const nextOrder = data?.order || null;
+
+      setOrder(nextOrder);
+      setStatus(nextOrder?.status || "pending");
+      setTrackingCarrier(nextOrder?.tracking_carrier || nextOrder?.carrier || "");
+      setTrackingNumber(nextOrder?.tracking_number || "");
+
+      await loadActivity(id);
+    } catch (err) {
+      setError(err.message || "Failed to load order");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
     loadOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  if (loading) return <div className="p-10 text-white">Loading...</div>;
+  async function saveOrderUpdates() {
+    if (!id) return;
+
+    const normalizedStatus = (status || "").toLowerCase().trim();
+    const trimmedCarrier = trackingCarrier.trim();
+    const trimmedTracking = trackingNumber.trim();
+
+    if (normalizedStatus === "shipped" && (!trimmedCarrier || !trimmedTracking)) {
+      setError("Tracking carrier and tracking number are required before marking an order as shipped.");
+      setSuccess("");
+      setWarning("");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError("");
+      setSuccess("");
+      setWarning("");
+
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: normalizedStatus,
+          tracking_carrier: trimmedCarrier,
+          tracking_number: trimmedTracking,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to save order");
+      }
+
+      if (data?.warning) {
+        setWarning(data.warning);
+      } else {
+        setSuccess("Order updated successfully.");
+      }
+
+      await loadOrder();
+    } catch (err) {
+      setError(err.message || "Failed to save order");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const trackingLink = useMemo(() => {
+    return getTrackingLink(trackingCarrier, trackingNumber);
+  }, [trackingCarrier, trackingNumber]);
+
+  const shippedNeedsTracking =
+    (status || "").toLowerCase() === "shipped" &&
+    (!trackingCarrier.trim() || !trackingNumber.trim());
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-slate-950 text-white">
+        <div className="mx-auto max-w-7xl px-6 py-10">
+          <div className="rounded-3xl border border-white/10 bg-slate-900 p-8">
+            <p className="text-sm text-slate-300">Loading order...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!order) {
+    return (
+      <main className="min-h-screen bg-slate-950 text-white">
+        <div className="mx-auto max-w-7xl px-6 py-10">
+          <Link
+            href="/admin/orders"
+            className="rounded-xl border border-white/15 bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+          >
+            Back to Orders
+          </Link>
+
+          <div className="mt-6 rounded-3xl border border-white/10 bg-slate-900 p-6">
+            <p className="text-sm text-slate-300">{error || "Order not found."}</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-10">
-      <h1 className="text-3xl font-bold mb-6">
-        {order.order_number}
-      </h1>
-
-      <p className="mb-4 text-slate-300">
-        Created: {formatDate(order.created_at)}
-      </p>
-
-      {/* Activity Section */}
-      <section className="mt-6 border border-white/10 p-6 rounded-xl">
-        <h2 className="text-xl font-semibold mb-4">Fulfillment History</h2>
-
-        {activity.length === 0 ? (
-          <p>No activity yet</p>
-        ) : (
-          activity.map((item) => (
-            <div key={item.id} className="mb-4 border-b border-white/10 pb-3">
-              <p className="font-semibold">{item.title}</p>
-              <p className="text-sm text-slate-300">{item.description}</p>
-              <p className="text-xs text-slate-400">
-                {formatDate(item.created_at)}
+    <main className="min-h-screen bg-slate-950 text-white">
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        <div className="mb-8 rounded-[28px] border border-white/10 bg-slate-900 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="mb-2 text-sm uppercase tracking-[0.28em] text-cyan-300">
+                Admin Order View
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-4xl font-bold tracking-tight text-white">
+                  {order.order_number || "Order"}
+                </h1>
+                <StatusBadge status={order.status} />
+              </div>
+              <p className="mt-3 text-sm text-slate-300">
+                Created {formatDate(order.created_at)}
               </p>
             </div>
-          ))
-        )}
-      </section>
+
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/admin/orders"
+                className="rounded-xl border border-white/15 bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+              >
+                Back to Orders
+              </Link>
+
+              <button
+                onClick={loadOrder}
+                className="rounded-xl border border-white/15 bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {error ? (
+          <div className="mb-6 rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">
+            {error}
+          </div>
+        ) : null}
+
+        {warning ? (
+          <div className="mb-6 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 text-sm text-amber-100">
+            {warning}
+          </div>
+        ) : null}
+
+        {success ? (
+          <div className="mb-6 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+            {success}
+          </div>
+        ) : null}
+
+        <div className="grid gap-6 xl:grid-cols-[1.65fr_0.85fr]">
+          <section className="rounded-[28px] border border-white/10 bg-slate-900 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
+            <div className="mb-5">
+              <h2 className="text-2xl font-semibold text-white">Order Information</h2>
+              <p className="mt-1 text-sm text-slate-300">
+                Full order summary and production details
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <InfoCard label="Order Number">{order.order_number || "—"}</InfoCard>
+              <InfoCard label="Status"><StatusBadge status={order.status} /></InfoCard>
+              <InfoCard label="Customer">{order.customer_name || "—"}</InfoCard>
+              <InfoCard label="Email"><span className="break-all">{order.customer_email || "—"}</span></InfoCard>
+              <InfoCard label="Product">{order.product_name || "—"}</InfoCard>
+              <InfoCard label="Quantity">{order.quantity || "—"}</InfoCard>
+              <InfoCard label="Size">{order.size || "—"}</InfoCard>
+              <InfoCard label="Sides">{order.sides || "—"}</InfoCard>
+              <InfoCard label="Paper">{order.paper || "—"}</InfoCard>
+              <InfoCard label="Finish">{order.finish || "—"}</InfoCard>
+              <InfoCard label="Subtotal">{money(order.subtotal)}</InfoCard>
+              <InfoCard label="Shipping">{money(order.shipping)}</InfoCard>
+
+              <div className="sm:col-span-2 rounded-2xl border border-emerald-400/20 bg-slate-800 p-5">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300/70">
+                  Total
+                </p>
+                <p className="mt-2 text-3xl font-bold text-white">{money(order.total)}</p>
+              </div>
+
+              <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-slate-800 p-5">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300/70">
+                  Notes
+                </p>
+                <p className="mt-3 min-h-[56px] whitespace-pre-wrap text-base font-medium text-white">
+                  {order.notes || "—"}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <aside className="space-y-6">
+            <section className="rounded-[28px] border border-white/10 bg-slate-900 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
+              <h2 className="mb-1 text-2xl font-semibold text-white">Update Order</h2>
+              <p className="mb-5 text-sm text-slate-300">
+                Manage status and shipment details
+              </p>
+
+              <div className="space-y-4">
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm text-white"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                  <option value="printing">Printing</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                </select>
+
+                <select
+                  value={trackingCarrier}
+                  onChange={(e) => setTrackingCarrier(e.target.value)}
+                  className="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm text-white"
+                >
+                  <option value="">Select carrier</option>
+                  <option value="UPS">UPS</option>
+                  <option value="USPS">USPS</option>
+                  <option value="FedEx">FedEx</option>
+                </select>
+
+                <input
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value)}
+                  placeholder="Enter tracking number"
+                  className="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm text-white placeholder:text-slate-400"
+                />
+
+                {trackingLink ? (
+                  <a
+                    href={trackingLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-black"
+                  >
+                    Open Tracking Link
+                  </a>
+                ) : null}
+
+                <button
+                  onClick={saveOrderUpdates}
+                  disabled={saving || shippedNeedsTracking}
+                  className="w-full rounded-xl bg-white px-4 py-3 text-sm font-semibold text-black disabled:opacity-60"
+                >
+                  {saving
+                    ? "Saving..."
+                    : shippedNeedsTracking
+                    ? "Tracking Required for Shipped"
+                    : "Save Changes"}
+                </button>
+              </div>
+            </section>
+
+            <section className="rounded-[28px] border border-white/10 bg-slate-900 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
+              <h2 className="mb-1 text-2xl font-semibold text-white">Artwork</h2>
+              <p className="mb-5 text-sm text-slate-300">
+                Production file attached to this order
+              </p>
+
+              {order.artwork_url ? (
+                <a
+                  href={order.artwork_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black"
+                >
+                  Download Artwork
+                </a>
+              ) : (
+                <p className="text-sm text-slate-300">No artwork uploaded.</p>
+              )}
+            </section>
+          </aside>
+        </div>
+
+        <section className="mt-6 rounded-[28px] border border-white/10 bg-slate-900 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">
+                Fulfillment History
+              </h2>
+              <p className="mt-1 text-sm text-slate-300">
+                Activity log shown in Pacific Time.
+              </p>
+            </div>
+
+            <Link
+              href={`/admin/orders/${order.id}/activity`}
+              className="rounded-xl border border-white/15 bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+            >
+              Open Full Activity Page
+            </Link>
+          </div>
+
+          {activity.length === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-slate-800 p-5 text-sm text-slate-300">
+              No activity has been logged yet.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {activity.map((item) => (
+                <div key={item.id} className="rounded-2xl border border-white/10 bg-slate-800 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-base font-semibold text-white">
+                        {item.title || "Activity"}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-300">
+                        {item.description || "—"}
+                      </p>
+                    </div>
+
+                    <div className="text-sm text-slate-400">
+                      {formatDate(item.created_at)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </main>
   );
 }

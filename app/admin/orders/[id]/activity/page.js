@@ -4,8 +4,18 @@ import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 
 function formatDate(value) {
   if (!value) return "—";
+
   try {
-    return new Date(value).toLocaleString();
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Los_Angeles",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+      timeZoneName: "short",
+    }).format(new Date(value));
   } catch {
     return value;
   }
@@ -61,12 +71,17 @@ export default async function OrderActivityPage({ params }) {
       <div className="mx-auto max-w-5xl px-6 py-8">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">Fulfillment History</p>
+            <p className="text-sm font-medium text-gray-500">
+              Fulfillment History
+            </p>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">
               {order.order_number || "Order"} Activity Log
             </h1>
             <p className="mt-1 text-sm text-gray-600">
               Customer: {order.customer_name || "—"} · {order.customer_email || "—"}
+            </p>
+            <p className="mt-1 text-xs font-medium text-gray-500">
+              All times shown in Pacific Time.
             </p>
           </div>
 
@@ -126,11 +141,13 @@ export default async function OrderActivityPage({ params }) {
         </div>
 
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-6 text-xl font-bold text-gray-900">Activity Timeline</h2>
+          <h2 className="mb-6 text-xl font-bold text-gray-900">
+            Activity Timeline
+          </h2>
 
           {activity.length === 0 ? (
             <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center text-sm text-gray-600">
-              No activity has been logged yet for this order. Try changing the order status once, then refresh this page.
+              No activity has been logged yet for this order.
             </div>
           ) : (
             <div className="space-y-5">
@@ -158,7 +175,7 @@ export default async function OrderActivityPage({ params }) {
                         </span>
                       </div>
 
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm font-medium text-gray-500">
                         {formatDate(item.created_at)}
                       </div>
                     </div>
