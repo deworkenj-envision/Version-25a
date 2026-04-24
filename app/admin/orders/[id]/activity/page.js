@@ -29,23 +29,32 @@ function eventBadgeClasses(eventType) {
 }
 
 export default async function OrderActivityPage({ params }) {
-  const orderId = params?.id;
+  const resolvedParams = await params;
+  const orderId = resolvedParams?.id;
+
+  if (!orderId) {
+    notFound();
+  }
 
   const { data: order, error: orderError } = await supabaseAdmin
     .from("orders")
     .select("*")
     .eq("id", orderId)
-    .single();
+    .maybeSingle();
 
   if (orderError || !order) {
     notFound();
   }
 
-  const { data: activity = [] } = await supabaseAdmin
+  const { data: activity = [], error: activityError } = await supabaseAdmin
     .from("order_activity")
     .select("*")
     .eq("order_id", orderId)
     .order("created_at", { ascending: false });
+
+  if (activityError) {
+    console.error("Activity load error:", activityError);
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -74,14 +83,6 @@ export default async function OrderActivityPage({ params }) {
               className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
             >
               Open Order
-            </Link>
-
-            <Link
-              href={`/track/${order.tracking_token || ""}`}
-              target="_blank"
-              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              Customer Tracking Page
             </Link>
           </div>
         </div>
@@ -129,13 +130,14 @@ export default async function OrderActivityPage({ params }) {
 
           {activity.length === 0 ? (
             <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center text-sm text-gray-600">
-              No activity has been logged yet for this order.
+              No activity has been logged yet for this order. Try changing the order status once, then refresh this page.
             </div>
           ) : (
             <div className="space-y-5">
               {activity.map((item, index) => (
                 <div key={item.id} className="relative pl-8">
                   <div className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-black" />
+
                   {index !== activity.length - 1 ? (
                     <div className="absolute left-[5px] top-5 h-[calc(100%+12px)] w-px bg-gray-300" />
                   ) : null}
@@ -150,6 +152,7 @@ export default async function OrderActivityPage({ params }) {
                         >
                           {item.event_type || "activity"}
                         </span>
+
                         <span className="text-base font-bold text-gray-900">
                           {item.title || "Activity"}
                         </span>
@@ -163,22 +166,6 @@ export default async function OrderActivityPage({ params }) {
                     <p className="text-sm text-gray-700">
                       {item.description || "—"}
                     </p>
-
-                    {item.metadata && Object.keys(item.metadata).length > 0 ? (
-                      <div className="mt-3 rounded-xl border border-gray-200 bg-white p-3">
-                        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          Details
-                        </div>
-                        <div className="space-y-1 text-sm text-gray-700">
-                          {Object.entries(item.metadata).map(([key, value]) => (
-                            <div key={key}>
-                              <span className="font-semibold text-gray-900">{key}:</span>{" "}
-                              <span>{value === null ? "—" : String(value)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
                   </div>
                 </div>
               ))}
