@@ -152,7 +152,7 @@ export default function AdminOrdersPage() {
               Orders
             </h1>
             <p className="mt-1 text-sm text-gray-600">
-              Manage orders, update statuses, and print packing slips.
+              Manage orders, update statuses, print packing slips, and review activity.
             </p>
           </div>
 
@@ -294,6 +294,13 @@ export default function AdminOrdersPage() {
                             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100"
                           >
                             Open
+                          </a>
+
+                          <a
+                            href={`/admin/orders/${order.id}/activity`}
+                            className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-700"
+                          >
+                            Activity
                           </a>
 
                           <a
