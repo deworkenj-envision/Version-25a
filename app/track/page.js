@@ -1,374 +1,45 @@
-"use client";
+import Link from "next/link";
 
-import { useEffect, useState } from "react";
-
-function normalizeStatus(status) {
-  return (status || "pending").toLowerCase();
-}
-
-function getTimeline(status) {
-  const current = normalizeStatus(status);
-
-  const steps = [
-    { key: "paid", label: "Order Received" },
-    { key: "printing", label: "In Production" },
-    { key: "shipped", label: "Shipped" },
-    { key: "delivered", label: "Delivered" },
-  ];
-
-  const order = ["paid", "printing", "shipped", "delivered"];
-  const currentIndex = order.indexOf(current);
-
-  return steps.map((step, index) => {
-    let state = "upcoming";
-    if (currentIndex > index) state = "complete";
-    if (currentIndex === index) state = "current";
-
-    return {
-      ...step,
-      state,
-    };
-  });
-}
-
-function buildTrackingLink(carrier, trackingNumber) {
-  if (!trackingNumber) return "";
-
-  const num = encodeURIComponent(trackingNumber.trim());
-  const c = (carrier || "").toLowerCase();
-
-  if (c === "ups") return `https://www.ups.com/track?tracknum=${num}`;
-  if (c === "usps") return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${num}`;
-  if (c === "fedex") return `https://www.fedex.com/fedextrack/?trknbr=${num}`;
-
-  return "";
-}
-
-export default function TrackPage() {
-  const [orderNumber, setOrderNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [searched, setSearched] = useState(false);
-  const [loadedFromToken, setLoadedFromToken] = useState(false);
-
-  async function fetchOrder({ token = "", orderNumber = "", email = "" }) {
-    try {
-      setLoading(true);
-      setError("");
-      setOrder(null);
-
-      const params = new URLSearchParams();
-
-      if (token) {
-        params.set("token", token);
-      } else {
-        params.set("orderNumber", orderNumber.trim().toUpperCase());
-        params.set("email", email.trim().toLowerCase());
-      }
-
-      const res = await fetch(`/api/orders/track?${params.toString()}`, {
-        cache: "no-store",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data?.error || "Order not found.");
-      }
-
-      if (!data?.order) {
-        throw new Error("Order not found.");
-      }
-
-      setOrder(data.order);
-    } catch (err) {
-      setOrder(null);
-      setError(err.message || "Unable to find that order.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = (params.get("token") || "").trim();
-
-    if (token) {
-      setLoadedFromToken(true);
-      setSearched(true);
-      fetchOrder({ token });
-    }
-  }, []);
-
-  async function handleManualLookup(e) {
-    e.preventDefault();
-
-    const cleanedOrder = orderNumber.trim().toUpperCase();
-    const cleanedEmail = email.trim().toLowerCase();
-
-    if (!cleanedOrder || !cleanedEmail) {
-      setError("Please enter both your order number and email address.");
-      setOrder(null);
-      setSearched(true);
-      return;
-    }
-
-    setLoadedFromToken(false);
-    setSearched(true);
-    await fetchOrder({
-      orderNumber: cleanedOrder,
-      email: cleanedEmail,
-    });
-  }
-
-  const timeline = getTimeline(order?.status);
-  const carrierTrackingLink = buildTrackingLink(
-    order?.tracking_carrier,
-    order?.tracking_number
-  );
-
+export default function TrackOrderPage() {
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
-      <section className="bg-[#1452ad] px-6 py-14 text-white">
-        <div className="mx-auto max-w-5xl">
-          <h1 className="text-center text-4xl font-bold tracking-tight">
-            Track Your Order
-          </h1>
-          <p className="mt-3 text-center text-base text-white/85">
-            Use your secure email link, or enter your order number and email.
-          </p>
+    <main className="min-h-screen bg-slate-950 text-white">
+      <div className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-6 py-12">
+        <div className="w-full rounded-[32px] border border-white/10 bg-slate-900 p-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-2xl font-black text-slate-950">
+              EV
+            </div>
 
-          <form
-            onSubmit={handleManualLookup}
-            className="mx-auto mt-8 grid max-w-4xl gap-4 rounded-[28px] bg-white p-4 shadow-lg md:grid-cols-[1fr_1fr_auto]"
-          >
-            <input
-              type="text"
-              value={orderNumber}
-              onChange={(e) => setOrderNumber(e.target.value)}
-              placeholder="Order number (example: EV-10114)"
-              className="rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-base font-medium text-slate-900 outline-none focus:border-blue-500"
-            />
+            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300">
+              EnVision Direct
+            </p>
 
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email used on the order"
-              className="rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-base font-medium text-slate-900 outline-none focus:border-blue-500"
-            />
+            <h1 className="mt-3 text-4xl font-bold tracking-tight">
+              Track Your Order
+            </h1>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-2xl bg-[#2563eb] px-8 py-4 text-base font-semibold text-white transition hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-70"
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-300">
+              Use the secure tracking link from your email to view real-time order
+              status, shipping information, and fulfillment progress.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-slate-800 p-6 text-center">
+            <h2 className="text-xl font-semibold">Secure Tracking Link Required</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
+              For privacy, each order has its own secure tracking link. Please open
+              the tracking link from your order, shipped, or delivered email.
+            </p>
+
+            <Link
+              href="/"
+              className="mt-6 inline-flex rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:opacity-90"
             >
-              {loading ? "Tracking..." : "Track Order"}
-            </button>
-          </form>
-
-          {loadedFromToken ? (
-            <div className="mx-auto mt-4 max-w-4xl rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              Secure tracking link used.
-            </div>
-          ) : null}
-
-          {error ? (
-            <div className="mx-auto mt-4 max-w-4xl rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
+              Back to Home
+            </Link>
+          </div>
         </div>
-      </section>
-
-      <section className="px-6 py-10">
-        <div className="mx-auto max-w-6xl">
-          {!order && !loading && searched ? (
-            <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
-              <p className="text-sm text-slate-500">No matching order found.</p>
-            </div>
-          ) : null}
-
-          {!order && !loading && !searched ? (
-            <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
-              <p className="text-sm text-slate-500">
-                Use your secure email link or enter your order number and email above.
-              </p>
-            </div>
-          ) : null}
-
-          {order ? (
-            <div className="space-y-6">
-              <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-                <div className="grid gap-0 md:grid-cols-5">
-                  <div className="bg-[#06163f] px-6 py-5 text-white">
-                    <p className="text-xs uppercase tracking-wide text-white/70">
-                      Order Number
-                    </p>
-                    <p className="mt-2 text-2xl font-bold">
-                      {order.order_number || "—"}
-                    </p>
-                  </div>
-
-                  <div className="bg-[#06163f] px-6 py-5 text-white">
-                    <p className="text-xs uppercase tracking-wide text-white/70">
-                      Status
-                    </p>
-                    <p className="mt-2 text-2xl font-bold uppercase">
-                      {order.status || "—"}
-                    </p>
-                  </div>
-
-                  <div className="bg-[#06163f] px-6 py-5 text-white">
-                    <p className="text-xs uppercase tracking-wide text-white/70">
-                      Product
-                    </p>
-                    <p className="mt-2 text-2xl font-bold">
-                      {order.product_name || "—"}
-                    </p>
-                  </div>
-
-                  <div className="bg-[#06163f] px-6 py-5 text-white">
-                    <p className="text-xs uppercase tracking-wide text-white/70">
-                      Quantity
-                    </p>
-                    <p className="mt-2 text-2xl font-bold">
-                      {order.quantity || "—"}
-                    </p>
-                  </div>
-
-                  <div className="bg-[#06163f] px-6 py-5 text-white">
-                    <p className="text-xs uppercase tracking-wide text-white/70">
-                      Order Date
-                    </p>
-                    <p className="mt-2 text-lg font-bold">
-                      {order.created_at
-                        ? new Date(order.created_at).toLocaleString()
-                        : "—"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-2xl font-bold text-slate-900">Order Progress</h2>
-                <p className="mt-2 text-sm text-slate-500">
-                  Current status for order {order.order_number}
-                </p>
-
-                <div className="mt-8 grid gap-4 md:grid-cols-4">
-                  {timeline.map((step, index) => {
-                    const isComplete = step.state === "complete";
-                    const isCurrent = step.state === "current";
-
-                    return (
-                      <div
-                        key={step.key}
-                        className={`rounded-2xl border p-5 ${
-                          isComplete
-                            ? "border-emerald-200 bg-emerald-50"
-                            : isCurrent
-                            ? "border-blue-200 bg-blue-50"
-                            : "border-slate-200 bg-slate-50"
-                        }`}
-                      >
-                        <div
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
-                            isComplete
-                              ? "bg-emerald-600 text-white"
-                              : isCurrent
-                              ? "bg-blue-600 text-white"
-                              : "bg-slate-300 text-slate-700"
-                          }`}
-                        >
-                          {isComplete ? "Complete" : isCurrent ? "In Progress" : "Pending"}
-                        </div>
-
-                        <p className="mt-4 text-lg font-semibold text-slate-900">
-                          {index + 1}. {step.label}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-                  <h3 className="text-xl font-bold text-slate-900">Shipping Details</h3>
-
-                  <div className="mt-5 space-y-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">
-                        Carrier
-                      </p>
-                      <p className="mt-1 text-base font-semibold text-slate-900">
-                        {order.tracking_carrier || "Not assigned yet"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">
-                        Tracking Number
-                      </p>
-                      <p className="mt-1 break-all text-base font-semibold text-slate-900">
-                        {order.tracking_number || "Not available yet"}
-                      </p>
-                    </div>
-
-                    {carrierTrackingLink ? (
-                      <a
-                        href={carrierTrackingLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex rounded-2xl bg-[#2563eb] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1d4ed8]"
-                      >
-                        Open Carrier Tracking
-                      </a>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-                  <h3 className="text-xl font-bold text-slate-900">Order Details</h3>
-
-                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Size</p>
-                      <p className="mt-1 text-base font-semibold text-slate-900">
-                        {order.size || "—"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Sides</p>
-                      <p className="mt-1 text-base font-semibold text-slate-900">
-                        {order.sides || "—"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Paper</p>
-                      <p className="mt-1 text-base font-semibold text-slate-900">
-                        {order.paper || "—"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Finish</p>
-                      <p className="mt-1 text-base font-semibold text-slate-900">
-                        {order.finish || "—"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </section>
+      </div>
     </main>
   );
 }
