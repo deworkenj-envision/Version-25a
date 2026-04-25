@@ -61,17 +61,17 @@ function OrderSuccessContent() {
 
   return (
     <main style={styles.page}>
-    <section style={styles.hero}>
-  <div style={styles.logoWrap}>
-    <Image
-      src="/images/logo-hero.png"
-      alt="EnVision Direct"
-      width={290}
-      height={110}
-      priority
-      style={styles.logo}
-    />
-  </div>
+      <section style={styles.hero}>
+        <div style={styles.logoWrap}>
+          <Image
+            src="/images/logo-hero.png"
+            alt="EnVision Direct"
+            width={290}
+            height={110}
+            priority
+            style={styles.logo}
+          />
+        </div>
 
         <div style={styles.checkIcon}>✓</div>
 
@@ -174,12 +174,16 @@ const styles = {
     textAlign: "center",
     boxShadow: "0 18px 45px rgba(15, 43, 82, 0.10)",
   },
+  logoWrap: {
+    display: "flex",
+    justifyContent: "center",
+    marginBottom: 24,
+  },
   logo: {
     width: "290px",
     height: "auto",
     objectFit: "contain",
     borderRadius: 8,
-    marginBottom: 24,
   },
   checkIcon: {
     width: 62,
