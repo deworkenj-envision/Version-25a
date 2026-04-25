@@ -441,7 +441,7 @@ export default function OrderPage() {
       <section className="bg-gradient-to-r from-[#2457f5] via-[#1f63f4] to-[#0e98ff] text-white">
         <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
           <div className="mb-6 flex items-center justify-between">
-            <div />premium
+            <div />
 
             <a
               href="/track"
