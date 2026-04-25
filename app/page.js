@@ -93,8 +93,7 @@ export default async function HomePage() {
 
               <p className="mt-8 max-w-xl text-base leading-8 text-blue-100 md:text-lg">
                 Upload your print-ready artwork, get instant pricing, and place
-                your order in minutes. No design tools, no confusion — just
-                fast, high-quality printing.
+                your order in minutes. No confusion — just fast, high-quality printing.
               </p>
 
               <p className="mt-4 text-base font-bold text-white">
