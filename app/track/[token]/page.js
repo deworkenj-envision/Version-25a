@@ -36,16 +36,18 @@ function stepState(currentStatus, step) {
 }
 
 export default async function SecureTrackingPage({ params }) {
-  const token = params?.token;
+  const resolvedParams = await params;
+  const token = resolvedParams?.token;
+
   if (!token) notFound();
 
-  const { data: order } = await supabaseAdmin
-    .from("orders")
-    .select("*")
-    .eq("tracking_token", token)
-    .maybeSingle();
+const { data: order, error } = await supabaseAdmin
+  .from("orders")
+  .select("*")
+  .eq("tracking_token", token)
+  .maybeSingle();
 
-  if (!order) notFound();
+if (error || !order) notFound();
 
   const carrier = order.tracking_carrier || "";
   const trackingNumber = order.tracking_number || "";
