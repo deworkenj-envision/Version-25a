@@ -14,8 +14,6 @@ function OrderSuccessContent() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const logoPath = "/images/logo-hero.png";
-
   useEffect(() => {
     async function loadOrder() {
       try {
@@ -44,8 +42,7 @@ function OrderSuccessContent() {
           }
         }
 
-        const resolvedOrder = data?.order || data || null;
-        setOrder(resolvedOrder);
+        setOrder(data?.order || data || null);
       } catch (err) {
         console.error("Order success load error:", err);
         setOrder(null);
@@ -65,20 +62,19 @@ function OrderSuccessContent() {
   return (
     <main style={styles.page}>
       <section style={styles.hero}>
-        <div style={styles.logoWrap}>
-          <Image
-            src={logoPath}
-            alt="EnVision Direct"
-            width={290}
-            height={110}
-            priority
-            style={styles.logo}
-          />
-        </div>
+        <Image
+          src="/images/logo-hero.png"
+          alt="EnVision Direct"
+          width={290}
+          height={110}
+          priority
+          style={styles.logo}
+        />
 
         <div style={styles.checkIcon}>✓</div>
 
         <h1 style={styles.title}>Order Received</h1>
+
         <p style={styles.subtitle}>
           Thank you for your order. We received your details and your artwork.
         </p>
@@ -160,16 +156,15 @@ export default function OrderSuccessPage() {
 const styles = {
   page: {
     minHeight: "100vh",
-    background:
-      "linear-gradient(180deg, #f8fbff 0%, #eef4fb 45%, #ffffff 100%)",
+    background: "linear-gradient(180deg, #f8fbff 0%, #eef4fb 45%, #ffffff 100%)",
     padding: "32px 18px 70px",
     fontFamily:
       'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     color: "#071b3a",
   },
   hero: {
-    maxWidth: 1100,
-    margin: "0 auto 26px",
+    maxWidth: 1180,
+    margin: "0 auto 32px",
     background: "#ffffff",
     border: "1px solid #dbe6f3",
     borderRadius: 24,
@@ -177,16 +172,12 @@ const styles = {
     textAlign: "center",
     boxShadow: "0 18px 45px rgba(15, 43, 82, 0.10)",
   },
-  logoWrap: {
-    display: "flex",
-    justifyContent: "center",
-    marginBottom: 24,
-  },
   logo: {
     width: "290px",
     height: "auto",
     objectFit: "contain",
     borderRadius: 8,
+    marginBottom: 24,
   },
   checkIcon: {
     width: 62,
@@ -210,7 +201,7 @@ const styles = {
   },
   subtitle: {
     margin: "14px auto 0",
-    maxWidth: 720,
+    maxWidth: 760,
     color: "#486381",
     fontSize: 18,
     lineHeight: 1.6,
@@ -254,9 +245,6 @@ const styles = {
     color: "#071b3a",
   },
   statusBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
     padding: "9px 14px",
     borderRadius: 999,
     background: "#dcfce7",
@@ -264,7 +252,6 @@ const styles = {
     fontSize: 13,
     fontWeight: 900,
     textTransform: "capitalize",
-    whiteSpace: "nowrap",
   },
   grid: {
     display: "grid",
@@ -298,9 +285,6 @@ const styles = {
     marginTop: 28,
   },
   primaryBtn: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
     minHeight: 48,
     padding: "0 20px",
     borderRadius: 14,
@@ -308,12 +292,10 @@ const styles = {
     color: "#ffffff",
     textDecoration: "none",
     fontWeight: 900,
-    boxShadow: "0 12px 24px rgba(11, 92, 255, 0.22)",
-  },
-  secondaryBtn: {
     display: "inline-flex",
     alignItems: "center",
-    justifyContent: "center",
+  },
+  secondaryBtn: {
     minHeight: 48,
     padding: "0 20px",
     borderRadius: 14,
@@ -322,6 +304,8 @@ const styles = {
     textDecoration: "none",
     fontWeight: 900,
     border: "1px solid #cfe0ff",
+    display: "inline-flex",
+    alignItems: "center",
   },
   note: {
     margin: "22px 0 0",
