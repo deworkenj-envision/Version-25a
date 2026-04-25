@@ -102,20 +102,25 @@ export default async function HomePage() {
             {/* HERO CONTENT */}
             <div className="max-w-2xl">
               <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight md:text-5xl xl:text-[4rem]">
-                <span className="block">Top Quality Printing.</span>
+                <span className="block">Professional Printing Made Simple.</span>
                 <span className="mt-2 block">Fast Turnaround.</span>
-                <span className="mt-2 block">The Best Prices.</span>
+                <span className="mt-2 block">Best Prices Online.</span>
               </h1>
 
               <p className="mt-8 max-w-xl text-base leading-8 text-blue-100 md:text-lg">
-                Professional online printing with easy artwork upload, secure
-                checkout, and order tracking built in.
+                Upload your print-ready artwork, get instant pricing, and place
+                your order in minutes. No design tools, no confusion — just
+                fast, high-quality printing.
+              </p>
+
+              <p className="mt-4 text-sm font-semibold text-blue-200">
+                ✔ Premium Quality &nbsp; ✔ Fast Production &nbsp; ✔ Secure Checkout
               </p>
 
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                 <Link
                   href="/order"
-                  className="inline-flex items-center justify-center rounded-2xl bg-white px-8 py-4 text-lg font-bold text-blue-700 shadow-lg transition hover:bg-slate-100"
+                  className="inline-flex items-center justify-center rounded-2xl bg-white px-10 py-5 text-xl font-extrabold text-blue-700 shadow-xl transition hover:scale-[1.02] hover:bg-slate-100"
                 >
                   Start Your Order
                 </Link>
