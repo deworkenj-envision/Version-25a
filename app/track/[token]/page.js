@@ -14,14 +14,12 @@ function formatDate(value) {
 
 function getTrackingLink(carrier, trackingNumber) {
   if (!trackingNumber) return "";
-
   const num = encodeURIComponent(trackingNumber.trim());
   const c = (carrier || "").toLowerCase();
 
   if (c === "ups") return `https://www.ups.com/track?tracknum=${num}`;
   if (c === "usps") return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${num}`;
   if (c === "fedex") return `https://www.fedex.com/fedextrack/?trknbr=${num}`;
-
   return "";
 }
 
@@ -38,7 +36,6 @@ function stepState(currentStatus, step) {
 export default async function SecureTrackingPage({ params }) {
   const resolvedParams = await params;
   const token = resolvedParams?.token;
-
   if (!token) notFound();
 
   const { data: order, error } = await supabaseAdmin
@@ -67,64 +64,64 @@ export default async function SecureTrackingPage({ params }) {
 
         {/* HEADER */}
         <div style={styles.hero}>
-          <div style={styles.logoWrap}>
-            <Image
-              src="/images/logo-hero.png"
-              alt="EnVision Direct"
-              width={290}
-              height={110}
-              style={styles.logo}
-            />
-          </div>
-
+          <Image
+            src="/images/logo-hero.png"
+            alt="EnVision Direct"
+            width={260}
+            height={100}
+          />
           <h1 style={styles.title}>{order.order_number}</h1>
           <p style={styles.subtitle}>
             Current Status: <strong>{status}</strong>
           </p>
         </div>
 
-        {/* TIMELINE */}
-        <div style={styles.timeline}>
-          {steps.map(([step, label], index) => {
-            const state = stepState(status, step);
+        {/* TOP 2-COLUMN SECTION */}
+        <div style={styles.topGrid}>
 
-            return (
-              <div key={step} style={styles.timelineRow}>
-                <div style={styles.timelineLeft}>
-                  <div
-                    style={{
-                      ...styles.circle,
-                      background:
-                        state === "complete"
-                          ? "#16a34a"
-                          : state === "current"
-                          ? "#0b5cff"
-                          : "#d1d5db",
-                    }}
-                  />
-                  {index !== steps.length - 1 && <div style={styles.line} />}
-                </div>
+          {/* LEFT: TIMELINE */}
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>Order Progress</h2>
 
-                <div>
-                  <div style={styles.stepTitle}>{label}</div>
-                  <div style={styles.stepStatus}>
-                    {state === "complete"
-                      ? "Complete"
-                      : state === "current"
-                      ? "In Progress"
-                      : "Pending"}
+            {steps.map(([step, label], index) => {
+              const state = stepState(status, step);
+
+              return (
+                <div key={step} style={styles.timelineRow}>
+                  <div style={styles.timelineLeft}>
+                    <div
+                      style={{
+                        ...styles.circle,
+                        background:
+                          state === "complete"
+                            ? "#16a34a"
+                            : state === "current"
+                            ? "#0b5cff"
+                            : "#d1d5db",
+                      }}
+                    />
+                    {index !== steps.length - 1 && <div style={styles.line} />}
+                  </div>
+
+                  <div>
+                    <div style={styles.stepTitle}>{label}</div>
+                    <div style={styles.stepStatus}>
+                      {state === "complete"
+                        ? "Complete"
+                        : state === "current"
+                        ? "In Progress"
+                        : "Pending"}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
 
-        {/* DETAILS GRID */}
-        <div style={styles.grid}>
-
+          {/* RIGHT: SHIPPING (PRIORITY INFO) */}
           <div style={styles.card}>
             <h2 style={styles.cardTitle}>Shipping</h2>
+
             <p><strong>Carrier:</strong> {carrier || "Pending"}</p>
             <p><strong>Tracking:</strong> {trackingNumber || "Pending"}</p>
 
@@ -135,15 +132,20 @@ export default async function SecureTrackingPage({ params }) {
             )}
           </div>
 
+        </div>
+
+        {/* BOTTOM GRID */}
+        <div style={styles.bottomGrid}>
+
           <div style={styles.card}>
-            <h2 style={styles.cardTitle}>Customer</h2>
+            <h3 style={styles.cardTitle}>Customer</h3>
             <p>{order.customer_name}</p>
             <p>{order.customer_email}</p>
             <p>{order.customer_phone}</p>
           </div>
 
           <div style={styles.card}>
-            <h2 style={styles.cardTitle}>Shipping Address</h2>
+            <h3 style={styles.cardTitle}>Shipping Address</h3>
             <p>{order.shipping_name}</p>
             <p>{order.shipping_address_line1}</p>
             {order.shipping_address_line2 && <p>{order.shipping_address_line2}</p>}
@@ -151,7 +153,7 @@ export default async function SecureTrackingPage({ params }) {
           </div>
 
           <div style={styles.card}>
-            <h2 style={styles.cardTitle}>Order Details</h2>
+            <h3 style={styles.cardTitle}>Order Details</h3>
             <p>{order.product_name}</p>
             <p>Qty: {order.quantity}</p>
             <p>{formatDate(order.created_at)}</p>
@@ -178,78 +180,80 @@ const styles = {
     fontFamily: "Inter, sans-serif",
   },
   container: {
-    maxWidth: "900px",
+    maxWidth: "1100px",
     margin: "0 auto",
   },
   hero: {
-    background: "#fff",
-    borderRadius: "24px",
-    padding: "30px",
     textAlign: "center",
     marginBottom: "24px",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
-  },
-  logoWrap: {
-    display: "flex",
-    justifyContent: "center",
-    marginBottom: "20px",
   },
   title: {
-    fontSize: "34px",
+    fontSize: "32px",
     fontWeight: "900",
+    marginTop: "10px",
   },
   subtitle: {
-    marginTop: "8px",
     color: "#64748b",
   },
-  timeline: {
-    background: "#fff",
-    borderRadius: "24px",
-    padding: "24px",
-    marginBottom: "24px",
-  },
-  timelineRow: {
-    display: "flex",
-    gap: "16px",
-    marginBottom: "18px",
-  },
-  timelineLeft: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  circle: {
-    width: "14px",
-    height: "14px",
-    borderRadius: "50%",
-  },
-  line: {
-    width: "2px",
-    height: "30px",
-    background: "#e5e7eb",
-    marginTop: "4px",
-  },
-  stepTitle: {
-    fontWeight: "700",
-  },
-  stepStatus: {
-    fontSize: "13px",
-    color: "#64748b",
-  },
-  grid: {
+
+  topGrid: {
     display: "grid",
-    gap: "18px",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "20px",
+    marginBottom: "20px",
   },
+
+  bottomGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: "20px",
+  },
+
   card: {
     background: "#fff",
     padding: "20px",
     borderRadius: "20px",
     boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
   },
+
   cardTitle: {
-    marginBottom: "10px",
+    marginBottom: "12px",
     fontWeight: "800",
   },
+
+  timelineRow: {
+    display: "flex",
+    gap: "12px",
+    marginBottom: "14px",
+  },
+
+  timelineLeft: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  },
+
+  circle: {
+    width: "12px",
+    height: "12px",
+    borderRadius: "50%",
+  },
+
+  line: {
+    width: "2px",
+    height: "26px",
+    background: "#e5e7eb",
+  },
+
+  stepTitle: {
+    fontWeight: "700",
+  },
+
+  stepStatus: {
+    fontSize: "12px",
+    color: "#64748b",
+  },
+
   button: {
     display: "inline-block",
     marginTop: "12px",
@@ -260,10 +264,12 @@ const styles = {
     textDecoration: "none",
     fontWeight: "700",
   },
+
   footer: {
     textAlign: "center",
     marginTop: "20px",
   },
+
   link: {
     color: "#0b5cff",
     fontWeight: "bold",
