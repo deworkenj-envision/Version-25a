@@ -51,13 +51,10 @@ const PRODUCT_ALIASES = {
   businesscards: "business-cards",
   "biz cards": "business-cards",
   bizcards: "business-cards",
-
   flyers: "flyers",
   flyer: "flyers",
-
   postcards: "postcards",
   postcard: "postcards",
-
   banners: "banners",
   banner: "banners",
 };
@@ -142,9 +139,7 @@ export default function OrderPage() {
         setLoadError("");
 
         const res = await fetch("/api/pricing", { cache: "no-store" });
-        if (!res.ok) {
-          throw new Error("Unable to load pricing.");
-        }
+        if (!res.ok) throw new Error("Unable to load pricing.");
 
         const data = await res.json();
 
@@ -226,9 +221,7 @@ export default function OrderPage() {
       setSize("");
       return;
     }
-    if (!sizeOptions.includes(size)) {
-      setSize(sizeOptions[0]);
-    }
+    if (!sizeOptions.includes(size)) setSize(sizeOptions[0]);
   }, [sizeOptions, size]);
 
   const rowsForSize = useMemo(() => {
@@ -245,9 +238,7 @@ export default function OrderPage() {
       setPaper("");
       return;
     }
-    if (!paperOptions.includes(paper)) {
-      setPaper(paperOptions[0]);
-    }
+    if (!paperOptions.includes(paper)) setPaper(paperOptions[0]);
   }, [paperOptions, paper]);
 
   const rowsForPaper = useMemo(() => {
@@ -264,9 +255,7 @@ export default function OrderPage() {
       setFinish("");
       return;
     }
-    if (!finishOptions.includes(finish)) {
-      setFinish(finishOptions[0]);
-    }
+    if (!finishOptions.includes(finish)) setFinish(finishOptions[0]);
   }, [finishOptions, finish]);
 
   const rowsForFinish = useMemo(() => {
@@ -283,9 +272,7 @@ export default function OrderPage() {
       setSides("");
       return;
     }
-    if (!sidesOptions.includes(sides)) {
-      setSides(sidesOptions[0]);
-    }
+    if (!sidesOptions.includes(sides)) setSides(sidesOptions[0]);
   }, [sidesOptions, sides]);
 
   const rowsForSides = useMemo(() => {
@@ -304,9 +291,7 @@ export default function OrderPage() {
       setQuantity("");
       return;
     }
-    if (!quantityOptions.includes(quantity)) {
-      setQuantity(quantityOptions[0]);
-    }
+    if (!quantityOptions.includes(quantity)) setQuantity(quantityOptions[0]);
   }, [quantityOptions, quantity]);
 
   const selectedRow = useMemo(() => {
@@ -757,41 +742,29 @@ export default function OrderPage() {
                 )}
 
                 <div className="mt-5 rounded-[24px] bg-gradient-to-br from-[#2457f5] to-[#0e98ff] p-5 text-white shadow-lg">
-  <div className="text-sm font-medium text-blue-100">
-    Estimated Total
-  </div>
-
-  <div className="mt-1 text-4xl font-extrabold">
-    {subtotal ? formatMoney(subtotal + shippingPreview) : "—"}
-  </div>
-
-  <div className="mt-3 space-y-1 text-sm text-blue-100">
-    <div className="flex justify-between">
-      <span>Print Price</span>
-      <span>{subtotal ? formatMoney(subtotal) : "—"}</span>
-    </div>
-    <div className="flex justify-between">
-      <span>Shipping</span>
-      <span>{formatMoney(shippingPreview)}</span>
-    </div>
-  </div>
-
-  <div className="mt-4 border-t border-white/20 pt-3 text-xs text-blue-100">
-    ✔ Secure Checkout  
-    ✔ High Quality Printing  
-    ✔ Fast Turnaround
-  </div>
-</div>
-                  <SummaryRow label="Print Price" value={subtotal ? formatMoney(subtotal) : "—"} noBorder />
-                  <div className="mt-3 flex items-center justify-between text-sm text-slate-600">
-                    <span>Shipping</span>
-                    <span>{formatMoney(shippingPreview)}</span>
+                  <div className="text-sm font-medium text-blue-100">
+                    Estimated Total
                   </div>
-                  <div className="mt-4 border-t border-slate-200 pt-4">
-                    <div className="flex items-center justify-between text-xl font-extrabold text-slate-900">
-                      <span>Estimated Total</span>
-                      <span>{subtotal ? formatMoney(subtotal + shippingPreview) : "—"}</span>
+
+                  <div className="mt-1 text-4xl font-extrabold">
+                    {subtotal ? formatMoney(subtotal + shippingPreview) : "—"}
+                  </div>
+
+                  <div className="mt-3 space-y-1 text-sm text-blue-100">
+                    <div className="flex justify-between">
+                      <span>Print Price</span>
+                      <span>{subtotal ? formatMoney(subtotal) : "—"}</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span>Shipping</span>
+                      <span>{formatMoney(shippingPreview)}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 border-t border-white/20 pt-3 text-xs text-blue-100">
+                    <div>✓ Secure Checkout</div>
+                    <div>✓ High Quality Printing</div>
+                    <div>✓ Fast Turnaround</div>
                   </div>
                 </div>
 
