@@ -11,10 +11,34 @@ function money(value) {
 function formatDate(value) {
   if (!value) return "—";
   try {
-    return new Date(value).toLocaleString();
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Los_Angeles",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+      timeZoneName: "short",
+    }).format(new Date(value));
   } catch {
     return value;
   }
+}
+
+function DetailItem({ label, value, large = false }) {
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p
+        className={`mt-1 font-semibold text-slate-900 ${
+          large ? "text-lg" : "text-base"
+        }`}
+      >
+        {value || "—"}
+      </p>
+    </div>
+  );
 }
 
 export default function OrderSuccessPage() {
@@ -116,6 +140,7 @@ export default function OrderSuccessPage() {
         <div className="mx-auto max-w-4xl rounded-[28px] border border-slate-200 bg-white p-10 shadow-sm">
           <h1 className="text-3xl font-bold">Thank you for your order</h1>
           <p className="mt-4 text-red-600">{error}</p>
+
           <div className="mt-6">
             <Link
               href="/track"
@@ -136,7 +161,9 @@ export default function OrderSuccessPage() {
           <div className="inline-flex rounded-full bg-emerald-100 px-4 py-1 text-sm font-semibold text-emerald-700">
             Payment Confirmed
           </div>
+
           <h1 className="mt-4 text-4xl font-bold">Thank you for your order</h1>
+
           <p className="mt-3 text-slate-600">
             Your order has been received and is now in our system.
           </p>
@@ -145,74 +172,69 @@ export default function OrderSuccessPage() {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
             <h2 className="text-2xl font-bold">Order Summary</h2>
+
             <div className="mt-6 space-y-4">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Order Number</p>
-                <p className="mt-1 text-lg font-semibold">{order?.order_number || "—"}</p>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Customer</p>
-                <p className="mt-1 text-lg font-semibold">{order?.customer_name || "—"}</p>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Email</p>
-                <p className="mt-1 text-lg font-semibold break-all">
-                  {order?.customer_email || "—"}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Created</p>
-                <p className="mt-1 text-lg font-semibold">
-                  {formatDate(order?.created_at)}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Status</p>
-                <p className="mt-1 text-lg font-semibold uppercase">
-                  {order?.status || "—"}
-                </p>
-              </div>
+              <DetailItem label="Order Number" value={order?.order_number} large />
+              <DetailItem label="Created" value={formatDate(order?.created_at)} large />
+              <DetailItem label="Status" value={(order?.status || "—").toUpperCase()} large />
+              <DetailItem label="Total" value={money(order?.total)} large />
             </div>
           </div>
 
           <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
             <h2 className="text-2xl font-bold">Product Details</h2>
+
             <div className="mt-6 space-y-4">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Product</p>
-                <p className="mt-1 text-lg font-semibold">{order?.product_name || "—"}</p>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Quantity</p>
-                <p className="mt-1 text-lg font-semibold">{order?.quantity || "—"}</p>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Size</p>
-                <p className="mt-1 text-lg font-semibold">{order?.size || "—"}</p>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Paper</p>
-                <p className="mt-1 text-lg font-semibold">{order?.paper || "—"}</p>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Finish</p>
-                <p className="mt-1 text-lg font-semibold">{order?.finish || "—"}</p>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Total</p>
-                <p className="mt-1 text-2xl font-bold">{money(order?.total)}</p>
-              </div>
+              <DetailItem label="Product" value={order?.product_name} large />
+              <DetailItem label="Quantity" value={order?.quantity} large />
+              <DetailItem label="Size" value={order?.size} large />
+              <DetailItem label="Paper" value={order?.paper} large />
+              <DetailItem label="Finish" value={order?.finish} large />
+              <DetailItem label="Sides" value={order?.sides} large />
             </div>
           </div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
+            <h2 className="text-2xl font-bold">Customer Information</h2>
+
+            <div className="mt-6 space-y-4">
+              <DetailItem label="Customer Name" value={order?.customer_name} large />
+              <DetailItem label="Email" value={order?.customer_email} large />
+              <DetailItem label="Phone" value={order?.customer_phone} large />
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
+            <h2 className="text-2xl font-bold">Shipping Information</h2>
+
+            <div className="mt-6 space-y-4">
+              <DetailItem label="Ship To" value={order?.shipping_name} large />
+              <DetailItem label="Address" value={order?.shipping_address_line1} large />
+              <DetailItem label="Apt / Suite / Unit" value={order?.shipping_address_line2 || "—"} large />
+              <DetailItem
+                label="City, State ZIP"
+                value={[
+                  order?.shipping_city,
+                  order?.shipping_state,
+                  order?.shipping_postal_code,
+                ]
+                  .filter(Boolean)
+                  .join(", ")
+                  .replace(", ", ", ")}
+                large
+              />
+              <DetailItem label="Country" value={order?.shipping_country} large />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
+          <h2 className="text-2xl font-bold">Order Notes</h2>
+          <p className="mt-4 whitespace-pre-wrap rounded-2xl bg-slate-50 p-5 font-medium text-slate-800">
+            {order?.notes || "—"}
+          </p>
         </div>
 
         <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">

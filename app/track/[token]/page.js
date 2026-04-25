@@ -45,8 +45,7 @@ function stepState(currentStatus, step) {
 }
 
 export default async function SecureTrackingPage({ params }) {
-  const resolvedParams = await params;
-  const token = resolvedParams?.token;
+  const token = params?.token;
 
   if (!token) notFound();
 
@@ -75,6 +74,8 @@ export default async function SecureTrackingPage({ params }) {
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       <div className="mx-auto max-w-6xl px-6 py-10">
+        
+        {/* HEADER */}
         <section className="mb-8 rounded-[32px] border border-white/10 bg-slate-900 p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300">
             EnVision Direct
@@ -91,6 +92,8 @@ export default async function SecureTrackingPage({ params }) {
         </section>
 
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          
+          {/* LEFT: TIMELINE */}
           <section className="rounded-[32px] border border-white/10 bg-slate-900 p-6">
             <h2 className="mb-5 text-2xl font-bold">Order Progress</h2>
 
@@ -103,10 +106,10 @@ export default async function SecureTrackingPage({ params }) {
                     key={step}
                     className="rounded-2xl border border-white/10 bg-slate-800 p-5"
                   >
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-bold">{label}</h3>
-                        <p className="mt-1 text-sm text-slate-300">{state}</p>
+                        <p className="text-sm text-slate-300">{state}</p>
                       </div>
 
                       <span
@@ -127,43 +130,75 @@ export default async function SecureTrackingPage({ params }) {
             </div>
           </section>
 
+          {/* RIGHT SIDE */}
           <aside className="space-y-6">
+            
+            {/* SHIPPING */}
             <section className="rounded-[32px] border border-white/10 bg-slate-900 p-6">
               <h2 className="text-2xl font-bold">Shipping Details</h2>
 
-              <div className="mt-5 space-y-4">
-                <p>
-                  <span className="text-slate-400">Carrier:</span>{" "}
-                  <strong>{carrier || "Not available yet"}</strong>
-                </p>
+              <div className="mt-5 space-y-3 text-sm">
+                <p><strong>Carrier:</strong> {carrier || "Not available yet"}</p>
+                <p><strong>Tracking:</strong> {trackingNumber || "Not available yet"}</p>
 
-                <p className="break-all">
-                  <span className="text-slate-400">Tracking Number:</span>{" "}
-                  <strong>{trackingNumber || "Not available yet"}</strong>
-                </p>
-
-                {trackingUrl ? (
+                {trackingUrl && (
                   <a
                     href={trackingUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex w-full justify-center rounded-xl bg-cyan-400 px-5 py-3 text-sm font-black text-slate-950"
+                    className="inline-flex w-full justify-center rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-slate-950 mt-3"
                   >
                     Open Carrier Tracking
                   </a>
-                ) : null}
+                )}
               </div>
             </section>
 
+            {/* CUSTOMER INFO */}
             <section className="rounded-[32px] border border-white/10 bg-slate-900 p-6">
-              <h2 className="text-2xl font-bold">Order Summary</h2>
+              <h2 className="text-2xl font-bold">Customer</h2>
 
-              <div className="mt-5 space-y-3 text-sm">
-                <p>Product: {order.product_name || "—"}</p>
-                <p>Size: {order.size || "—"}</p>
-                <p>Quantity: {order.quantity || "—"}</p>
+              <div className="mt-4 space-y-2 text-sm">
+                <p><strong>Name:</strong> {order.customer_name || "—"}</p>
+                <p><strong>Email:</strong> {order.customer_email || "—"}</p>
+                <p><strong>Phone:</strong> {order.customer_phone || "—"}</p>
+              </div>
+            </section>
+
+            {/* SHIPPING ADDRESS */}
+            <section className="rounded-[32px] border border-white/10 bg-slate-900 p-6">
+              <h2 className="text-2xl font-bold">Shipping Address</h2>
+
+              <div className="mt-4 space-y-2 text-sm">
+                <p>{order.shipping_name}</p>
+                <p>{order.shipping_address_line1}</p>
+                {order.shipping_address_line2 && <p>{order.shipping_address_line2}</p>}
+                <p>
+                  {order.shipping_city}, {order.shipping_state} {order.shipping_postal_code}
+                </p>
+                <p>{order.shipping_country}</p>
+              </div>
+            </section>
+
+            {/* ORDER DETAILS */}
+            <section className="rounded-[32px] border border-white/10 bg-slate-900 p-6">
+              <h2 className="text-2xl font-bold">Order Details</h2>
+
+              <div className="mt-4 space-y-2 text-sm">
+                <p>Product: {order.product_name}</p>
+                <p>Quantity: {order.quantity}</p>
+                <p>Size: {order.size}</p>
                 <p>Created: {formatDate(order.created_at)}</p>
               </div>
+            </section>
+
+            {/* NOTES */}
+            <section className="rounded-[32px] border border-white/10 bg-slate-900 p-6">
+              <h2 className="text-2xl font-bold">Order Notes</h2>
+
+              <p className="mt-4 text-sm whitespace-pre-wrap">
+                {order.notes || "—"}
+              </p>
             </section>
           </aside>
         </div>
