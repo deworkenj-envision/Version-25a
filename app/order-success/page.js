@@ -267,10 +267,10 @@ const styles = {
     textTransform: "capitalize",
   },
   grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-    gap: 14,
-  },
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+  gap: 16,
+},
   infoBox: {
     border: "1px solid #e1e9f3",
     borderRadius: 16,
