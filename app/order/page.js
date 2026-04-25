@@ -441,16 +441,7 @@ export default function OrderPage() {
       <section className="bg-gradient-to-r from-[#2457f5] via-[#1f63f4] to-[#0e98ff] text-white">
         <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
           <div className="mb-6 flex items-center justify-between">
-            <a href="/" className="flex items-center gap-3">
-              <img
-                src={LOGO_SRC}
-                alt="EnVision Direct"
-                className="h-12 w-auto object-contain"
-              />
-              <span className="text-xl font-bold tracking-tight text-white">
-                EnVision Direct
-              </span>
-            </a>
+            <div />premium
 
             <a
               href="/track"
@@ -463,10 +454,7 @@ export default function OrderPage() {
 
         <div className="mx-auto grid max-w-7xl gap-10 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-8 lg:pb-16">
           <div className="flex flex-col justify-center">
-            <div className="mb-5 inline-flex w-fit rounded-full border border-white/20 bg-white/10 px-4 py-1 text-sm">
-              EnVision Direct Premium Estimator
-            </div>
-
+            
             <h1 className="max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl">
               Build Your Order.
               <br />
