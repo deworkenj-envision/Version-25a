@@ -45,7 +45,8 @@ function stepState(currentStatus, step) {
 }
 
 export default async function SecureTrackingPage({ params }) {
-  const token = params?.token;
+  const resolvedParams = await params;
+  const token = resolvedParams?.token;
 
   if (!token) notFound();
 
