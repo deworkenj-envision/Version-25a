@@ -1,21 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
 function formatDate(value) {
   if (!value) return "—";
-
   try {
-    return new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Los_Angeles",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-      timeZoneName: "short",
-    }).format(new Date(value));
+    return new Date(value).toLocaleString();
   } catch {
     return value;
   }
@@ -39,29 +30,26 @@ function stepState(currentStatus, step) {
   const currentIndex = order.indexOf((currentStatus || "").toLowerCase());
   const stepIndex = order.indexOf(step);
 
-  if (currentIndex > stepIndex) return "Complete";
-  if (currentIndex === stepIndex) return "In Progress";
-  return "Pending";
+  if (currentIndex > stepIndex) return "complete";
+  if (currentIndex === stepIndex) return "current";
+  return "upcoming";
 }
 
 export default async function SecureTrackingPage({ params }) {
-  const resolvedParams = await params;
-  const token = resolvedParams?.token;
-
+  const token = params?.token;
   if (!token) notFound();
 
-  const { data: order, error } = await supabaseAdmin
+  const { data: order } = await supabaseAdmin
     .from("orders")
     .select("*")
     .eq("tracking_token", token)
     .maybeSingle();
 
-  if (error || !order) notFound();
+  if (!order) notFound();
 
-  const carrier = order.tracking_carrier || order.carrier || "";
+  const carrier = order.tracking_carrier || "";
   const trackingNumber = order.tracking_number || "";
-  const trackingUrl =
-    order.tracking_url || getTrackingLink(carrier, trackingNumber);
+  const trackingUrl = getTrackingLink(carrier, trackingNumber);
 
   const status = (order.status || "pending").toLowerCase();
 
@@ -73,143 +61,189 @@ export default async function SecureTrackingPage({ params }) {
   ];
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        
-        {/* HEADER */}
-        <section className="mb-8 rounded-[32px] border border-white/10 bg-slate-900 p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300">
-            EnVision Direct
-          </p>
+    <main style={styles.page}>
+      <div style={styles.container}>
 
-          <h1 className="mt-3 text-4xl font-bold">
+        {/* HEADER */}
+        <div style={styles.hero}>
+          <Image
+            src="/images/logo-hero.png"
+            alt="EnVision Direct"
+            width={290}
+            height={110}
+            style={styles.logo}
+          />
+
+          <h1 style={styles.title}>
             {order.order_number || "Your Order"}
           </h1>
 
-          <p className="mt-3 text-slate-300">
-            Current status:{" "}
-            <span className="font-bold capitalize text-white">{status}</span>
+          <p style={styles.subtitle}>
+            Current Status: <strong>{status}</strong>
           </p>
-        </section>
-
-        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          
-          {/* LEFT: TIMELINE */}
-          <section className="rounded-[32px] border border-white/10 bg-slate-900 p-6">
-            <h2 className="mb-5 text-2xl font-bold">Order Progress</h2>
-
-            <div className="space-y-4">
-              {steps.map(([step, label]) => {
-                const state = stepState(status, step);
-
-                return (
-                  <div
-                    key={step}
-                    className="rounded-2xl border border-white/10 bg-slate-800 p-5"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold">{label}</h3>
-                        <p className="text-sm text-slate-300">{state}</p>
-                      </div>
-
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-bold ${
-                          state === "Complete"
-                            ? "bg-emerald-400 text-slate-950"
-                            : state === "In Progress"
-                            ? "bg-cyan-300 text-slate-950"
-                            : "bg-slate-700 text-slate-300"
-                        }`}
-                      >
-                        {state}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* RIGHT SIDE */}
-          <aside className="space-y-6">
-            
-            {/* SHIPPING */}
-            <section className="rounded-[32px] border border-white/10 bg-slate-900 p-6">
-              <h2 className="text-2xl font-bold">Shipping Details</h2>
-
-              <div className="mt-5 space-y-3 text-sm">
-                <p><strong>Carrier:</strong> {carrier || "Not available yet"}</p>
-                <p><strong>Tracking:</strong> {trackingNumber || "Not available yet"}</p>
-
-                {trackingUrl && (
-                  <a
-                    href={trackingUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex w-full justify-center rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-slate-950 mt-3"
-                  >
-                    Open Carrier Tracking
-                  </a>
-                )}
-              </div>
-            </section>
-
-            {/* CUSTOMER INFO */}
-            <section className="rounded-[32px] border border-white/10 bg-slate-900 p-6">
-              <h2 className="text-2xl font-bold">Customer</h2>
-
-              <div className="mt-4 space-y-2 text-sm">
-                <p><strong>Name:</strong> {order.customer_name || "—"}</p>
-                <p><strong>Email:</strong> {order.customer_email || "—"}</p>
-                <p><strong>Phone:</strong> {order.customer_phone || "—"}</p>
-              </div>
-            </section>
-
-            {/* SHIPPING ADDRESS */}
-            <section className="rounded-[32px] border border-white/10 bg-slate-900 p-6">
-              <h2 className="text-2xl font-bold">Shipping Address</h2>
-
-              <div className="mt-4 space-y-2 text-sm">
-                <p>{order.shipping_name}</p>
-                <p>{order.shipping_address_line1}</p>
-                {order.shipping_address_line2 && <p>{order.shipping_address_line2}</p>}
-                <p>
-                  {order.shipping_city}, {order.shipping_state} {order.shipping_postal_code}
-                </p>
-                <p>{order.shipping_country}</p>
-              </div>
-            </section>
-
-            {/* ORDER DETAILS */}
-            <section className="rounded-[32px] border border-white/10 bg-slate-900 p-6">
-              <h2 className="text-2xl font-bold">Order Details</h2>
-
-              <div className="mt-4 space-y-2 text-sm">
-                <p>Product: {order.product_name}</p>
-                <p>Quantity: {order.quantity}</p>
-                <p>Size: {order.size}</p>
-                <p>Created: {formatDate(order.created_at)}</p>
-              </div>
-            </section>
-
-            {/* NOTES */}
-            <section className="rounded-[32px] border border-white/10 bg-slate-900 p-6">
-              <h2 className="text-2xl font-bold">Order Notes</h2>
-
-              <p className="mt-4 text-sm whitespace-pre-wrap">
-                {order.notes || "—"}
-              </p>
-            </section>
-          </aside>
         </div>
 
-        <div className="mt-8 text-center">
-          <Link href="/" className="text-sm font-semibold text-cyan-300">
-            Back to EnVision Direct
+        {/* TIMELINE */}
+        <div style={styles.timeline}>
+          {steps.map(([step, label]) => {
+            const state = stepState(status, step);
+
+            return (
+              <div key={step} style={styles.step}>
+                <div
+                  style={{
+                    ...styles.circle,
+                    background:
+                      state === "complete"
+                        ? "#16a34a"
+                        : state === "current"
+                        ? "#0b5cff"
+                        : "#cbd5e1",
+                  }}
+                />
+
+                <div>
+                  <div style={styles.stepTitle}>{label}</div>
+                  <div style={styles.stepStatus}>
+                    {state === "complete"
+                      ? "Complete"
+                      : state === "current"
+                      ? "In Progress"
+                      : "Pending"}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* DETAILS */}
+        <div style={styles.grid}>
+
+          <div style={styles.card}>
+            <h2>Shipping</h2>
+            <p><strong>Carrier:</strong> {carrier || "Pending"}</p>
+            <p><strong>Tracking:</strong> {trackingNumber || "Pending"}</p>
+
+            {trackingUrl && (
+              <a href={trackingUrl} target="_blank" style={styles.button}>
+                Open Carrier Tracking
+              </a>
+            )}
+          </div>
+
+          <div style={styles.card}>
+            <h2>Customer</h2>
+            <p>{order.customer_name}</p>
+            <p>{order.customer_email}</p>
+            <p>{order.customer_phone}</p>
+          </div>
+
+          <div style={styles.card}>
+            <h2>Shipping Address</h2>
+            <p>{order.shipping_name}</p>
+            <p>{order.shipping_address_line1}</p>
+            {order.shipping_address_line2 && <p>{order.shipping_address_line2}</p>}
+            <p>{order.shipping_city}, {order.shipping_state}</p>
+          </div>
+
+          <div style={styles.card}>
+            <h2>Order Details</h2>
+            <p>{order.product_name}</p>
+            <p>Qty: {order.quantity}</p>
+            <p>{formatDate(order.created_at)}</p>
+          </div>
+
+        </div>
+
+        <div style={styles.footer}>
+          <Link href="/" style={styles.link}>
+            Back to Home
           </Link>
         </div>
+
       </div>
     </main>
   );
 }
+
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background: "linear-gradient(180deg, #f8fbff, #ffffff)",
+    padding: "30px",
+    fontFamily: "Arial",
+  },
+  container: {
+    maxWidth: "1000px",
+    margin: "0 auto",
+  },
+  hero: {
+    textAlign: "center",
+    background: "#fff",
+    padding: "30px",
+    borderRadius: "20px",
+    marginBottom: "20px",
+  },
+  logo: {
+    display: "block",
+    margin: "0 auto 20px",
+  },
+  title: {
+    fontSize: "36px",
+    fontWeight: "900",
+  },
+  subtitle: {
+    color: "#64748b",
+  },
+  timeline: {
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "20px",
+    marginBottom: "20px",
+  },
+  step: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    marginBottom: "12px",
+  },
+  circle: {
+    width: "14px",
+    height: "14px",
+    borderRadius: "50%",
+  },
+  stepTitle: {
+    fontWeight: "700",
+  },
+  stepStatus: {
+    fontSize: "12px",
+    color: "#64748b",
+  },
+  grid: {
+    display: "grid",
+    gap: "15px",
+  },
+  card: {
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "16px",
+  },
+  button: {
+    display: "inline-block",
+    marginTop: "10px",
+    background: "#0b5cff",
+    color: "#fff",
+    padding: "10px 16px",
+    borderRadius: "10px",
+    textDecoration: "none",
+  },
+  footer: {
+    textAlign: "center",
+    marginTop: "20px",
+  },
+  link: {
+    color: "#0b5cff",
+    fontWeight: "bold",
+  },
+};

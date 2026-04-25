@@ -114,9 +114,16 @@ function OrderSuccessContent() {
             </div>
 
             <div style={styles.actions}>
-              <Link href="/track" style={styles.primaryBtn}>
-                Track Your Order
-              </Link>
+             <Link
+  href={
+    order?.tracking_token
+      ? `/track/${order.tracking_token}`
+      : "/track"
+  }
+  style={styles.primaryBtn}
+>
+  Track Your Order
+</Link>
 
               <Link href="/" style={styles.secondaryBtn}>
                 Back to Home
