@@ -37,7 +37,9 @@ async function ensureTrackingToken(orderId, existingToken) {
   return token;
 }
 
-function buildOrderConfirmationEmailHtml(order, trackingUrl) {
+function buildOrderConfirmationEmailHtml(order, trackingUrl, baseUrl) {
+  const logoUrl = `${baseUrl}/images/logo-hero.png`;
+
   const shippingLine2 = order.shipping_address_line2
     ? `<div>${order.shipping_address_line2}</div>`
     : "";
@@ -45,17 +47,20 @@ function buildOrderConfirmationEmailHtml(order, trackingUrl) {
   return `
     <div style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;color:#0f172a;">
       <div style="max-width:680px;margin:0 auto;padding:28px 18px;">
-        <div style="background:#0f172a;border-radius:22px;padding:28px;text-align:center;color:white;">
-          <div style="display:inline-block;background:white;color:#0f172a;border-radius:14px;padding:12px 16px;font-weight:900;font-size:20px;letter-spacing:-1px;">
-            EV
-          </div>
-          <div style="margin-top:16px;color:#22d3ee;font-size:12px;font-weight:700;letter-spacing:4px;text-transform:uppercase;">
-            EnVision Direct
-          </div>
-          <h1 style="margin:14px 0 0;font-size:30px;line-height:1.2;">
+
+        <div style="background:#0f172a;border-radius:22px;padding:30px 24px;text-align:center;color:white;">
+          <img
+            src="${logoUrl}"
+            alt="EnVision Direct"
+            width="290"
+            style="display:block;margin:0 auto 18px;max-width:290px;width:100%;height:auto;border-radius:8px;"
+          />
+
+          <h1 style="margin:8px 0 0;font-size:30px;line-height:1.2;color:#ffffff;">
             Order Confirmed
           </h1>
-          <p style="margin:12px 0 0;color:#cbd5e1;font-size:15px;">
+
+          <p style="margin:12px 0 0;color:#cbd5e1;font-size:15px;line-height:1.6;">
             Thank you, ${order.customer_name || "Customer"}. We received your order and payment.
           </p>
         </div>
@@ -101,7 +106,7 @@ function buildOrderConfirmationEmailHtml(order, trackingUrl) {
           </div>
         </div>
 
-        <div style="margin-top:18px;display:block;background:white;border:1px solid #e2e8f0;border-radius:22px;padding:24px;">
+        <div style="margin-top:18px;background:white;border:1px solid #e2e8f0;border-radius:22px;padding:24px;">
           <h2 style="margin:0 0 16px;font-size:22px;">Customer Information</h2>
           <div style="font-size:15px;line-height:1.7;">
             <div><strong>Name:</strong> ${order.customer_name || "—"}</div>
@@ -110,7 +115,7 @@ function buildOrderConfirmationEmailHtml(order, trackingUrl) {
           </div>
         </div>
 
-        <div style="margin-top:18px;display:block;background:white;border:1px solid #e2e8f0;border-radius:22px;padding:24px;">
+        <div style="margin-top:18px;background:white;border:1px solid #e2e8f0;border-radius:22px;padding:24px;">
           <h2 style="margin:0 0 16px;font-size:22px;">Shipping Information</h2>
           <div style="font-size:15px;line-height:1.7;">
             <div><strong>Ship To:</strong> ${order.shipping_name || "—"}</div>
@@ -142,8 +147,9 @@ function buildOrderConfirmationEmailHtml(order, trackingUrl) {
 async function sendOrderConfirmationEmail(req, order) {
   if (!resend || !order?.customer_email) return;
 
+  const baseUrl = getBaseUrl(req);
   const token = await ensureTrackingToken(order.id, order.tracking_token);
-  const trackingUrl = `${getBaseUrl(req)}/track?token=${token}`;
+  const trackingUrl = `${baseUrl}/track?token=${token}`;
 
   await resend.emails.send({
     from:
@@ -151,7 +157,7 @@ async function sendOrderConfirmationEmail(req, order) {
       "EnVision Direct <orders@envisiondirect.net>",
     to: order.customer_email,
     subject: `Order Confirmation ${order.order_number || ""}`,
-    html: buildOrderConfirmationEmailHtml(order, trackingUrl),
+    html: buildOrderConfirmationEmailHtml(order, trackingUrl, baseUrl),
   });
 }
 
