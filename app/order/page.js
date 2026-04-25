@@ -756,7 +756,32 @@ export default function OrderPage() {
                   </div>
                 )}
 
-                <div className="mt-5 rounded-[22px] bg-slate-50 p-4">
+                <div className="mt-5 rounded-[24px] bg-gradient-to-br from-[#2457f5] to-[#0e98ff] p-5 text-white shadow-lg">
+  <div className="text-sm font-medium text-blue-100">
+    Estimated Total
+  </div>
+
+  <div className="mt-1 text-4xl font-extrabold">
+    {subtotal ? formatMoney(subtotal + shippingPreview) : "—"}
+  </div>
+
+  <div className="mt-3 space-y-1 text-sm text-blue-100">
+    <div className="flex justify-between">
+      <span>Print Price</span>
+      <span>{subtotal ? formatMoney(subtotal) : "—"}</span>
+    </div>
+    <div className="flex justify-between">
+      <span>Shipping</span>
+      <span>{formatMoney(shippingPreview)}</span>
+    </div>
+  </div>
+
+  <div className="mt-4 border-t border-white/20 pt-3 text-xs text-blue-100">
+    ✔ Secure Checkout  
+    ✔ High Quality Printing  
+    ✔ Fast Turnaround
+  </div>
+</div>
                   <SummaryRow label="Print Price" value={subtotal ? formatMoney(subtotal) : "—"} noBorder />
                   <div className="mt-3 flex items-center justify-between text-sm text-slate-600">
                     <span>Shipping</span>
