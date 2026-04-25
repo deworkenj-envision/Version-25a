@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 function toNumber(value) {
@@ -47,6 +47,7 @@ function CheckoutInner() {
   const [customerPhone, setCustomerPhone] = useState("");
 
   const [shippingName, setShippingName] = useState("");
+  const [shippingNameEdited, setShippingNameEdited] = useState(false);
   const [shippingAddressLine1, setShippingAddressLine1] = useState("");
   const [shippingAddressLine2, setShippingAddressLine2] = useState("");
   const [shippingCity, setShippingCity] = useState("");
@@ -55,9 +56,14 @@ function CheckoutInner() {
   const [shippingCountry, setShippingCountry] = useState("US");
 
   const [notes, setNotes] = useState(initialNotes);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!shippingNameEdited) {
+      setShippingName(customerName);
+    }
+  }, [customerName, shippingNameEdited]);
 
   const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(fileName || "");
   const isPdf = /\.pdf$/i.test(fileName || "");
@@ -79,7 +85,7 @@ function CheckoutInner() {
     if (!customerName.trim()) return setError("Please enter your full name.");
     if (!isValidEmail(customerEmail)) return setError("Please enter a valid email address.");
     if (!customerPhone.trim()) return setError("Please enter your phone number.");
-    if (!shippingName.trim()) return setError("Please enter the shipping recipient name.");
+    if (!shippingName.trim()) return setError("Please enter the ship-to name.");
     if (!shippingAddressLine1.trim()) return setError("Please enter the shipping address.");
     if (!shippingCity.trim()) return setError("Please enter the shipping city.");
     if (!shippingState.trim()) return setError("Please enter the shipping state.");
@@ -125,13 +131,8 @@ function CheckoutInner() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data?.error || "Checkout failed.");
-      }
-
-      if (!data?.url) {
-        throw new Error("Stripe checkout URL was not returned.");
-      }
+      if (!res.ok) throw new Error(data?.error || "Checkout failed.");
+      if (!data?.url) throw new Error("Stripe checkout URL was not returned.");
 
       window.location.href = data.url;
     } catch (err) {
@@ -157,10 +158,19 @@ function CheckoutInner() {
             </p>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <Input label="Full Name *" value={customerName} onChange={setCustomerName} />
+              <Input label="Contact Name *" value={customerName} onChange={setCustomerName} />
               <Input label="Email Address *" type="email" value={customerEmail} onChange={setCustomerEmail} />
               <Input label="Phone Number *" type="tel" value={customerPhone} onChange={setCustomerPhone} />
-              <Input label="Shipping Recipient Name *" value={shippingName} onChange={setShippingName} />
+
+              <Input
+                label="Ship To Name *"
+                helpText="Auto-filled from contact name. Change only if shipping to someone else."
+                value={shippingName}
+                onChange={(value) => {
+                  setShippingNameEdited(true);
+                  setShippingName(value);
+                }}
+              />
 
               <div className="sm:col-span-2">
                 <Input label="Shipping Address *" value={shippingAddressLine1} onChange={setShippingAddressLine1} />
@@ -318,7 +328,7 @@ function CheckoutInner() {
   );
 }
 
-function Input({ label, value, onChange, type = "text" }) {
+function Input({ label, value, onChange, type = "text", helpText = "" }) {
   return (
     <label className="block">
       <span className="mb-1 block text-sm font-semibold text-slate-700">
@@ -330,6 +340,9 @@ function Input({ label, value, onChange, type = "text" }) {
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
       />
+      {helpText ? (
+        <span className="mt-1 block text-xs text-slate-500">{helpText}</span>
+      ) : null}
     </label>
   );
 }
