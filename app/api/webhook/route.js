@@ -25,41 +25,26 @@ async function ensureTrackingToken(orderId, existingToken) {
 
   const token = generateTrackingToken();
 
-  const { error } = await supabaseAdmin
+  await supabaseAdmin
     .from("orders")
     .update({ tracking_token: token })
     .eq("id", orderId);
-
-  if (error) {
-    throw new Error(error.message || "Failed to create tracking token.");
-  }
 
   return token;
 }
 
 function buildOrderConfirmationEmailHtml(order, trackingUrl) {
   return `
-    <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
-      <h2 style="margin-bottom: 8px;">Thank you for your order</h2>
+    <div style="font-family: Arial, sans-serif;">
+      <h2>Thank you for your order</h2>
       <p>Hello ${order.customer_name || "Customer"},</p>
-      <p>We received your order <strong>${order.order_number || ""}</strong> and your payment has been confirmed.</p>
+      <p>Your order <strong>${order.order_number}</strong> has been received.</p>
 
-      <div style="margin: 20px 0; padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px;">
-        <p style="margin: 0 0 8px;"><strong>Order Number:</strong> ${order.order_number || "—"}</p>
-        <p style="margin: 0 0 8px;"><strong>Product:</strong> ${order.product_name || "—"}</p>
-        <p style="margin: 0 0 8px;"><strong>Quantity:</strong> ${order.quantity || "—"}</p>
-        <p style="margin: 0 0 8px;"><strong>Status:</strong> ${order.status || "paid"}</p>
-        <p style="margin: 0;"><strong>Total:</strong> $${Number(order.total || 0).toFixed(2)}</p>
-      </div>
-
-      <p style="margin-top: 20px;">
-        <a href="${trackingUrl}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 700;">
+      <p>
+        <a href="${trackingUrl}" style="background:#2563eb;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;">
           Track Your Order
         </a>
       </p>
-
-      <p style="margin-top: 18px;">You can use the secure tracking link above anytime to check your order status.</p>
-      <p>Thank you for choosing EnVision Direct.</p>
     </div>
   `;
 }
@@ -67,19 +52,14 @@ function buildOrderConfirmationEmailHtml(order, trackingUrl) {
 async function sendOrderConfirmationEmail(req, order) {
   if (!resend || !order?.customer_email) return;
 
-  const trackingToken = await ensureTrackingToken(order.id, order.tracking_token);
-  const trackingUrl = `${getBaseUrl(req)}/track?token=${trackingToken}`;
+  const token = await ensureTrackingToken(order.id, order.tracking_token);
+  const trackingUrl = `${getBaseUrl(req)}/track?token=${token}`;
 
   await resend.emails.send({
-    from:
-      process.env.RESEND_FROM_EMAIL ||
-      "EnVision Direct <orders@envisiondirect.net>",
+    from: "EnVision Direct <orders@envisiondirect.net>",
     to: order.customer_email,
-    subject: `Order Confirmation ${order.order_number || ""}`,
-    html: buildOrderConfirmationEmailHtml(
-      { ...order, tracking_token: trackingToken, status: "paid" },
-      trackingUrl
-    ),
+    subject: `Order Confirmation ${order.order_number}`,
+    html: buildOrderConfirmationEmailHtml(order, trackingUrl),
   });
 }
 
@@ -87,55 +67,36 @@ async function findAndUpdateOrder(session) {
   const updates = {
     status: "paid",
     stripe_session_id: session.id,
+
+    // ✅ KEEP YOUR ORIGINAL DATA (do NOT overwrite)
     customer_email:
-      session.customer_details?.email ||
       session.metadata?.customerEmail ||
-      null,
-    customer_name:
-      session.customer_details?.name ||
-      session.metadata?.customerName ||
+      session.customer_details?.email ||
       null,
   };
 
   let order = null;
 
   if (session.metadata?.orderId) {
-    const { data, error } = await supabaseAdmin
+    const { data } = await supabaseAdmin
       .from("orders")
       .update(updates)
       .eq("id", session.metadata.orderId)
       .select("*")
       .maybeSingle();
 
-    if (!error && data) {
-      order = data;
-    }
+    if (data) order = data;
   }
 
   if (!order) {
-    const { data, error } = await supabaseAdmin
+    const { data } = await supabaseAdmin
       .from("orders")
       .update(updates)
       .eq("stripe_session_id", session.id)
       .select("*")
       .maybeSingle();
 
-    if (!error && data) {
-      order = data;
-    }
-  }
-
-  if (!order && session.metadata?.orderNumber) {
-    const { data, error } = await supabaseAdmin
-      .from("orders")
-      .update(updates)
-      .ilike("order_number", session.metadata.orderNumber)
-      .select("*")
-      .maybeSingle();
-
-    if (!error && data) {
-      order = data;
-    }
+    if (data) order = data;
   }
 
   return order;
@@ -162,25 +123,15 @@ export async function POST(req) {
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  try {
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
-      const order = await findAndUpdateOrder(session);
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
 
-      if (order) {
-        try {
-          await sendOrderConfirmationEmail(req, order);
-        } catch (emailError) {
-          console.error("Confirmation email failed:", emailError.message);
-        }
-      } else {
-        console.error("No matching order found for Stripe session:", session.id);
-      }
+    const order = await findAndUpdateOrder(session);
+
+    if (order) {
+      await sendOrderConfirmationEmail(req, order);
     }
-
-    return new Response("ok", { status: 200 });
-  } catch (err) {
-    console.error("Webhook processing failed:", err);
-    return new Response("Webhook handler failed", { status: 500 });
   }
+
+  return new Response("ok", { status: 200 });
 }
