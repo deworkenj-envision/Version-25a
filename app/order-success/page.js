@@ -95,9 +95,7 @@ function OrderSuccessContent() {
                 </h2>
               </div>
 
-              <span style={styles.statusBadge}>
-                {order?.status || "Paid"}
-              </span>
+              <span style={styles.statusBadge}>{order?.status || "Paid"}</span>
             </div>
 
             <div style={styles.grid}>
@@ -114,16 +112,12 @@ function OrderSuccessContent() {
             </div>
 
             <div style={styles.actions}>
-             <Link
-  href={
-    order?.tracking_token
-      ? `/track/${order.tracking_token}`
-      : "/track"
-  }
-  style={styles.primaryBtn}
->
-  Track Your Order
-</Link>
+              <Link
+                href={order?.tracking_token ? `/track/${order.tracking_token}` : "/track"}
+                style={styles.primaryBtn}
+              >
+                Track Your Order
+              </Link>
 
               <Link href="/" style={styles.secondaryBtn}>
                 Back to Home
@@ -267,15 +261,16 @@ const styles = {
     textTransform: "capitalize",
   },
   grid: {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-  gap: 16,
-},
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: 16,
+  },
   infoBox: {
     border: "1px solid #e1e9f3",
-    borderRadius: 16,
-    padding: "15px 16px",
-    background: "#f8fbff",
+    borderRadius: 18,
+    padding: "16px 18px",
+    background: "#ffffff",
+    boxShadow: "0 6px 16px rgba(15, 43, 82, 0.06)",
   },
   infoLabel: {
     color: "#64748b",
@@ -287,8 +282,8 @@ const styles = {
   },
   infoValue: {
     color: "#071b3a",
-    fontSize: 16,
-    fontWeight: 800,
+    fontSize: 17,
+    fontWeight: 900,
     wordBreak: "break-word",
   },
   actions: {
