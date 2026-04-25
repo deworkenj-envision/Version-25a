@@ -135,34 +135,65 @@ function CheckoutInner() {
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10">
       <div className="mx-auto max-w-5xl">
+        <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col items-center text-center">
+            <img
+              src="/images/logo-hero.png"
+              alt="EnVision Direct"
+              className="h-24 w-auto object-contain"
+            />
+            <h1 className="mt-4 text-4xl font-bold text-slate-900">
+              Secure Checkout
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-500">
+              Complete your contact, shipping, artwork, and payment details to place your order.
+            </p>
+          </div>
+        </div>
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-
-          {/* LEFT SIDE (unchanged) */}
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            {/* ...UNCHANGED CONTENT... */}
+            <h2 className="text-2xl font-semibold text-slate-900">
+              Contact & Shipping Information
+            </h2>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Required before payment so we can process and ship your order.
+            </p>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <Input label="Name / Company Name *" value={customerName} onChange={setCustomerName} />
+              <Input label="Email Address *" type="email" value={customerEmail} onChange={setCustomerEmail} />
+              <Input label="Phone Number *" type="tel" value={customerPhone} onChange={setCustomerPhone} />
+              <div className="sm:col-span-2">
+                <Input label="Shipping Address *" value={shippingAddressLine1} onChange={setShippingAddressLine1} />
+              </div>
+              <div className="sm:col-span-2">
+                <Input label="Apartment, Suite, Unit" value={shippingAddressLine2} onChange={setShippingAddressLine2} />
+              </div>
+              <Input label="City *" value={shippingCity} onChange={setShippingCity} />
+              <Input label="State *" value={shippingState} onChange={setShippingState} />
+              <Input label="ZIP / Postal Code *" value={shippingPostalCode} onChange={setShippingPostalCode} />
+              <Input label="Country *" value={shippingCountry} onChange={setShippingCountry} />
+            </div>
+
+            {error ? <p className="mt-4 text-sm font-semibold text-red-600">{error}</p> : null}
           </section>
 
-          {/* RIGHT SIDE (FIXED SUMMARY ONLY) */}
           <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-
             <div className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-2xl font-semibold text-slate-900">Order Summary</h2>
+              <h2 className="text-2xl font-semibold text-slate-900">Summary</h2>
 
               <div className="mt-6 space-y-4">
                 <SummaryRow label="Subtotal" value={formatMoney(subtotal)} />
                 <SummaryRow label="Shipping" value={formatMoney(shipping)} />
 
-                <div className="rounded-xl bg-gradient-to-br from-[#2457f5] to-[#0e98ff] p-5 text-white">
-                  <div className="text-sm text-blue-100">Total</div>
-                  <div className="mt-1 text-3xl font-extrabold">
-                    ${formatMoney(total)}
-                  </div>
-
-                  <div className="mt-3 text-xs text-blue-100 space-y-1">
-                    <div>✓ Secure Stripe Checkout</div>
-                    <div>✓ Professional Print Quality</div>
-                    <div>✓ Fast Turnaround</div>
+                <div className="border-t border-slate-200 pt-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-base font-semibold text-slate-900">Total</span>
+                    <span className="text-2xl font-bold text-slate-900">
+                      ${formatMoney(total)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -171,7 +202,7 @@ function CheckoutInner() {
                 type="button"
                 onClick={handleCheckout}
                 disabled={loading || !requiredComplete}
-                className="mt-6 block w-full rounded-xl bg-[#2457f5] px-4 py-4 text-center text-base font-semibold text-white transition hover:bg-[#1848db] disabled:cursor-not-allowed disabled:bg-slate-400"
+                className="mt-6 block w-full rounded-xl bg-blue-600 px-4 py-4 text-center text-base font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
               >
                 {loading ? "Redirecting..." : "Pay Securely"}
               </button>
@@ -189,11 +220,35 @@ function CheckoutInner() {
                 Back to Order
               </a>
             </div>
-
           </aside>
         </div>
       </div>
     </main>
+  );
+}
+
+function Input({ label, value, onChange, type = "text" }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-sm font-semibold text-slate-700">
+        {label}
+      </span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      />
+    </label>
+  );
+}
+
+function SummaryRow({ label, value }) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-slate-500">{label}</span>
+      <span className="font-medium text-slate-900">${value}</span>
+    </div>
   );
 }
 
