@@ -152,7 +152,6 @@ export default async function HomePage() {
       {/* PRODUCT SECTION */}
       <section className="bg-[#f5f5f7]">
         <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
-          
           <div className="mb-10 text-center">
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
               Choose Your Product
