@@ -152,15 +152,7 @@ export default async function HomePage() {
       {/* PRODUCT SECTION */}
       <section className="bg-[#f5f5f7]">
         <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
-          <div className="mb-10 text-center">
-            <h2 className="text-3xl font-extrabold text-slate-900 md:text-4xl">
-              Upload. Print. Delivered.
-            </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600 md:text-lg">
-              No design tools. No confusion. Just fast, professional printing.
-            </p>
-          </div>
-
+          
           <div className="mb-10 text-center">
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
               Choose Your Product
