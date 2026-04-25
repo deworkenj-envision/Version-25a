@@ -61,15 +61,17 @@ function OrderSuccessContent() {
 
   return (
     <main style={styles.page}>
-      <section style={styles.hero}>
-        <Image
-          src="/images/logo-hero.png"
-          alt="EnVision Direct"
-          width={290}
-          height={110}
-          priority
-          style={styles.logo}
-        />
+    <section style={styles.hero}>
+  <div style={styles.logoWrap}>
+    <Image
+      src="/images/logo-hero.png"
+      alt="EnVision Direct"
+      width={290}
+      height={110}
+      priority
+      style={styles.logo}
+    />
+  </div>
 
         <div style={styles.checkIcon}>✓</div>
 
