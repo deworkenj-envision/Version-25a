@@ -130,7 +130,9 @@ async function sendStatusEmail(req, order, status) {
 
   const trackingToken = await ensureTrackingToken(order);
   const baseUrl = getBaseUrl(req);
-  const trackingUrl = `${baseUrl}/track?token=${trackingToken}`;
+
+  const trackingUrl = `${baseUrl}/track/${encodeURIComponent(trackingToken)}`;
+
   const carrierLink = getCarrierTrackingLink(
     order.tracking_carrier,
     order.tracking_number
@@ -232,7 +234,10 @@ export async function PUT(req, context) {
 
     if (status === "shipped" && (!tracking_number || !tracking_carrier)) {
       return NextResponse.json(
-        { error: "Tracking carrier and tracking number are required before marking an order as shipped." },
+        {
+          error:
+            "Tracking carrier and tracking number are required before marking an order as shipped.",
+        },
         { status: 400 }
       );
     }
@@ -273,15 +278,22 @@ export async function PUT(req, context) {
     }
 
     const trackingChanged =
-      (beforeOrder?.tracking_number || "") !== (updatedOrder?.tracking_number || "") ||
-      (beforeOrder?.tracking_carrier || "") !== (updatedOrder?.tracking_carrier || "");
+      (beforeOrder?.tracking_number || "") !==
+        (updatedOrder?.tracking_number || "") ||
+      (beforeOrder?.tracking_carrier || "") !==
+        (updatedOrder?.tracking_carrier || "");
 
-    if (trackingChanged && (updatedOrder?.tracking_number || updatedOrder?.tracking_carrier)) {
+    if (
+      trackingChanged &&
+      (updatedOrder?.tracking_number || updatedOrder?.tracking_carrier)
+    ) {
       await addOrderEvent(
         id,
         "tracking_update",
         "Tracking information updated",
-        `${updatedOrder?.tracking_carrier || "Carrier"} ${updatedOrder?.tracking_number || ""}`.trim()
+        `${updatedOrder?.tracking_carrier || "Carrier"} ${
+          updatedOrder?.tracking_number || ""
+        }`.trim()
       );
     }
 
