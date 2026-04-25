@@ -442,13 +442,7 @@ export default function OrderPage() {
         <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
           <div className="mb-6 flex items-center justify-between">
             <div />
-
-            <a
-              href="/track"
-              className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
-            >
-              Track Order
-            </a>
+            
           </div>
         </div>
 
@@ -511,12 +505,28 @@ export default function OrderPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 p-4">
-              <MiniStat label="Print Price" value={heroPrice ? formatMoney(heroPrice) : "—"} />
-              <MiniStat label="Per Piece" value={heroUnit ? formatMoney(heroUnit) : "—"} />
-              <MiniStat label="Shipping" value={formatMoney(shippingPreview)} />
-              <MiniStat label="Selected Qty" value={heroQty || "—"} />
-            </div>
+            <div className="p-4 space-y-2 text-sm text-slate-700">
+  <div className="flex justify-between">
+    <span>Print Price</span>
+    <span className="font-semibold">{heroPrice ? formatMoney(heroPrice) : "—"}</span>
+  </div>
+
+  <div className="flex justify-between">
+    <span>Per Piece</span>
+    <span className="font-semibold">{heroUnit ? formatMoney(heroUnit) : "—"}</span>
+  </div>
+
+  <div className="flex justify-between">
+    <span>Shipping</span>
+    <span className="font-semibold">{formatMoney(shippingPreview)}</span>
+  </div>
+
+  <div className="flex justify-between">
+    <span>Quantity</span>
+    <span className="font-semibold">{heroQty || "—"}</span>
+  </div>
+
+</div>
 
             <div className="px-4 pb-4">
               <div className="rounded-[22px] bg-[#2457f5] p-5 text-white">
