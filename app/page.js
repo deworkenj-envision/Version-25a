@@ -97,8 +97,9 @@ export default async function HomePage() {
                 fast, high-quality printing.
               </p>
 
-              <p className="mt-4 text-sm font-semibold text-blue-200">
-                ✔ Premium Quality &nbsp; ✔ Fast Production &nbsp; ✔ Secure Checkout
+              <p className="mt-4 text-base font-bold text-white">
+                ✔ PREMIUM QUALITY &nbsp;&nbsp; ✔ FAST TURNAROUND &nbsp;&nbsp; ✔
+                SECURE CHECKOUT &nbsp;&nbsp; ✔ ORDER TRACKING
               </p>
 
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -143,49 +144,6 @@ export default async function HomePage() {
                     priority
                   />
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* TRUST STRIP */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-6 md:px-10">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
-              <div className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-                Premium Quality
-              </div>
-              <div className="mt-1 text-sm text-slate-600">
-                Clean, professional print results for business and marketing.
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
-              <div className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-                Fast Turnaround
-              </div>
-              <div className="mt-1 text-sm text-slate-600">
-                Get your order moving quickly with a simple online workflow.
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
-              <div className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-                Secure Checkout
-              </div>
-              <div className="mt-1 text-sm text-slate-600">
-                Upload artwork, review pricing, and place orders securely.
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
-              <div className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-                Order Tracking
-              </div>
-              <div className="mt-1 text-sm text-slate-600">
-                Track progress and shipment updates from your order page.
               </div>
             </div>
           </div>
