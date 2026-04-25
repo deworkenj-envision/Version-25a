@@ -41,18 +41,17 @@ export default async function SecureTrackingPage({ params }) {
 
   if (!token) notFound();
 
-const { data: order, error } = await supabaseAdmin
-  .from("orders")
-  .select("*")
-  .eq("tracking_token", token)
-  .maybeSingle();
+  const { data: order, error } = await supabaseAdmin
+    .from("orders")
+    .select("*")
+    .eq("tracking_token", token)
+    .maybeSingle();
 
-if (error || !order) notFound();
+  if (error || !order) notFound();
 
   const carrier = order.tracking_carrier || "";
   const trackingNumber = order.tracking_number || "";
   const trackingUrl = getTrackingLink(carrier, trackingNumber);
-
   const status = (order.status || "pending").toLowerCase();
 
   const steps = [
@@ -68,18 +67,17 @@ if (error || !order) notFound();
 
         {/* HEADER */}
         <div style={styles.hero}>
-          <Image
-            src="/images/logo-hero.png"
-            alt="EnVision Direct"
-            width={290}
-            height={110}
-            style={styles.logo}
-          />
+          <div style={styles.logoWrap}>
+            <Image
+              src="/images/logo-hero.png"
+              alt="EnVision Direct"
+              width={290}
+              height={110}
+              style={styles.logo}
+            />
+          </div>
 
-          <h1 style={styles.title}>
-            {order.order_number || "Your Order"}
-          </h1>
-
+          <h1 style={styles.title}>{order.order_number}</h1>
           <p style={styles.subtitle}>
             Current Status: <strong>{status}</strong>
           </p>
@@ -87,22 +85,25 @@ if (error || !order) notFound();
 
         {/* TIMELINE */}
         <div style={styles.timeline}>
-          {steps.map(([step, label]) => {
+          {steps.map(([step, label], index) => {
             const state = stepState(status, step);
 
             return (
-              <div key={step} style={styles.step}>
-                <div
-                  style={{
-                    ...styles.circle,
-                    background:
-                      state === "complete"
-                        ? "#16a34a"
-                        : state === "current"
-                        ? "#0b5cff"
-                        : "#cbd5e1",
-                  }}
-                />
+              <div key={step} style={styles.timelineRow}>
+                <div style={styles.timelineLeft}>
+                  <div
+                    style={{
+                      ...styles.circle,
+                      background:
+                        state === "complete"
+                          ? "#16a34a"
+                          : state === "current"
+                          ? "#0b5cff"
+                          : "#d1d5db",
+                    }}
+                  />
+                  {index !== steps.length - 1 && <div style={styles.line} />}
+                </div>
 
                 <div>
                   <div style={styles.stepTitle}>{label}</div>
@@ -119,11 +120,11 @@ if (error || !order) notFound();
           })}
         </div>
 
-        {/* DETAILS */}
+        {/* DETAILS GRID */}
         <div style={styles.grid}>
 
           <div style={styles.card}>
-            <h2>Shipping</h2>
+            <h2 style={styles.cardTitle}>Shipping</h2>
             <p><strong>Carrier:</strong> {carrier || "Pending"}</p>
             <p><strong>Tracking:</strong> {trackingNumber || "Pending"}</p>
 
@@ -135,14 +136,14 @@ if (error || !order) notFound();
           </div>
 
           <div style={styles.card}>
-            <h2>Customer</h2>
+            <h2 style={styles.cardTitle}>Customer</h2>
             <p>{order.customer_name}</p>
             <p>{order.customer_email}</p>
             <p>{order.customer_phone}</p>
           </div>
 
           <div style={styles.card}>
-            <h2>Shipping Address</h2>
+            <h2 style={styles.cardTitle}>Shipping Address</h2>
             <p>{order.shipping_name}</p>
             <p>{order.shipping_address_line1}</p>
             {order.shipping_address_line2 && <p>{order.shipping_address_line2}</p>}
@@ -150,7 +151,7 @@ if (error || !order) notFound();
           </div>
 
           <div style={styles.card}>
-            <h2>Order Details</h2>
+            <h2 style={styles.cardTitle}>Order Details</h2>
             <p>{order.product_name}</p>
             <p>Qty: {order.quantity}</p>
             <p>{formatDate(order.created_at)}</p>
@@ -172,73 +173,92 @@ if (error || !order) notFound();
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "linear-gradient(180deg, #f8fbff, #ffffff)",
-    padding: "30px",
-    fontFamily: "Arial",
+    background: "linear-gradient(180deg,#f8fbff,#ffffff)",
+    padding: "40px 20px",
+    fontFamily: "Inter, sans-serif",
   },
   container: {
-    maxWidth: "1000px",
+    maxWidth: "900px",
     margin: "0 auto",
   },
   hero: {
-    textAlign: "center",
     background: "#fff",
+    borderRadius: "24px",
     padding: "30px",
-    borderRadius: "20px",
+    textAlign: "center",
+    marginBottom: "24px",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
+  },
+  logoWrap: {
+    display: "flex",
+    justifyContent: "center",
     marginBottom: "20px",
   },
-  logo: {
-    display: "block",
-    margin: "0 auto 20px",
-  },
   title: {
-    fontSize: "36px",
+    fontSize: "34px",
     fontWeight: "900",
   },
   subtitle: {
+    marginTop: "8px",
     color: "#64748b",
   },
   timeline: {
     background: "#fff",
-    padding: "20px",
-    borderRadius: "20px",
-    marginBottom: "20px",
+    borderRadius: "24px",
+    padding: "24px",
+    marginBottom: "24px",
   },
-  step: {
+  timelineRow: {
     display: "flex",
+    gap: "16px",
+    marginBottom: "18px",
+  },
+  timelineLeft: {
+    display: "flex",
+    flexDirection: "column",
     alignItems: "center",
-    gap: "12px",
-    marginBottom: "12px",
   },
   circle: {
     width: "14px",
     height: "14px",
     borderRadius: "50%",
   },
+  line: {
+    width: "2px",
+    height: "30px",
+    background: "#e5e7eb",
+    marginTop: "4px",
+  },
   stepTitle: {
     fontWeight: "700",
   },
   stepStatus: {
-    fontSize: "12px",
+    fontSize: "13px",
     color: "#64748b",
   },
   grid: {
     display: "grid",
-    gap: "15px",
+    gap: "18px",
   },
   card: {
     background: "#fff",
     padding: "20px",
-    borderRadius: "16px",
+    borderRadius: "20px",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
+  },
+  cardTitle: {
+    marginBottom: "10px",
+    fontWeight: "800",
   },
   button: {
     display: "inline-block",
-    marginTop: "10px",
+    marginTop: "12px",
     background: "#0b5cff",
     color: "#fff",
     padding: "10px 16px",
     borderRadius: "10px",
     textDecoration: "none",
+    fontWeight: "700",
   },
   footer: {
     textAlign: "center",
