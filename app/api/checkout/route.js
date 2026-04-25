@@ -102,10 +102,16 @@ export async function POST(req) {
     }
 
     if (!shipping_name) {
-      return NextResponse.json({ error: "Shipping recipient name is required." }, { status: 400 });
+      return NextResponse.json({ error: "Ship-to name is required." }, { status: 400 });
     }
 
-    if (!shipping_address_line1 || !shipping_city || !shipping_state || !shipping_postal_code || !shipping_country) {
+    if (
+      !shipping_address_line1 ||
+      !shipping_city ||
+      !shipping_state ||
+      !shipping_postal_code ||
+      !shipping_country
+    ) {
       return NextResponse.json({ error: "Complete shipping address is required." }, { status: 400 });
     }
 
@@ -197,12 +203,6 @@ export async function POST(req) {
       cancel_url: cancelUrl,
       customer_email,
       billing_address_collection: "auto",
-      phone_number_collection: {
-        enabled: true,
-      },
-      shipping_address_collection: {
-        allowed_countries: ["US"],
-      },
       line_items: [
         {
           quantity: 1,
