@@ -483,7 +483,60 @@ export default function OrderPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[28px] bg-white/95 text-slate-900 shadow-2xl backdrop-blur">
+          <div className="flex items-center gap-4 rounded-[28px] bg-white/95 p-4 text-slate-900 shadow-2xl backdrop-blur">
+
+  {/* LEFT: IMAGE */}
+  <div className="w-28 h-28 overflow-hidden rounded-[18px] bg-slate-100 flex-shrink-0">
+    {productImage ? (
+      <img
+        src={productImage}
+        alt={productName || "Selected product"}
+        className="w-full h-full object-cover"
+      />
+    ) : (
+      <div className="flex h-full items-center justify-center text-xs text-slate-500">
+        Preview
+      </div>
+    )}
+  </div>
+
+  {/* MIDDLE: DETAILS */}
+  <div className="flex-1 text-sm">
+    <div className="font-bold text-lg">{productName || "Product"}</div>
+    <div className="text-slate-500 text-xs mb-2">{productDescription}</div>
+
+    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+      <div className="flex justify-between">
+        <span>Price</span>
+        <span className="font-semibold">{heroPrice ? formatMoney(heroPrice) : "—"}</span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Per</span>
+        <span className="font-semibold">{heroUnit ? formatMoney(heroUnit) : "—"}</span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Ship</span>
+        <span className="font-semibold">{formatMoney(shippingPreview)}</span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Qty</span>
+        <span className="font-semibold">{heroQty || "—"}</span>
+      </div>
+    </div>
+  </div>
+
+  {/* RIGHT: TOTAL */}
+  <div className="bg-[#2457f5] text-white rounded-[20px] px-5 py-4 text-center min-w-[140px]">
+    <div className="text-xs text-blue-100">Total</div>
+    <div className="text-2xl font-extrabold">
+      {estimatedTotal ? formatMoney(estimatedTotal) : "—"}
+    </div>
+  </div>
+
+</div>
             <div className="relative">
               {productImage ? (
                 <img
