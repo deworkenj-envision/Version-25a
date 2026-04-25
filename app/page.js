@@ -82,23 +82,7 @@ export default async function HomePage() {
       {/* HERO */}
       <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
         <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-12">
-          <div className="grid items-center gap-10 lg:grid-cols-[520px_1fr]">
-            {/* SINGLE HERO COLLAGE */}
-            <div className="mx-auto w-full max-w-[520px]">
-              <div className="rounded-[28px] bg-[#2347d8]/40 p-4 shadow-2xl md:p-6">
-                <div className="overflow-hidden rounded-[22px]">
-                  <Image
-                    src="/images/hero-collage-logo.png"
-                    alt="EnVision Direct Products"
-                    width={600}
-                    height={700}
-                    className="h-auto w-full object-contain"
-                    priority
-                  />
-                </div>
-              </div>
-            </div>
-
+          <div className="grid items-center gap-10 lg:grid-cols-[1fr_520px]">
             {/* HERO CONTENT */}
             <div className="max-w-2xl">
               <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight md:text-5xl xl:text-[4rem]">
@@ -143,6 +127,22 @@ export default async function HomePage() {
                     {product.name}
                   </Link>
                 ))}
+              </div>
+            </div>
+
+            {/* SINGLE HERO COLLAGE */}
+            <div className="mx-auto w-full max-w-[520px]">
+              <div className="rounded-[28px] bg-[#2347d8]/40 p-4 shadow-2xl md:p-6">
+                <div className="overflow-hidden rounded-[22px]">
+                  <Image
+                    src="/images/hero-collage-logo.png"
+                    alt="EnVision Direct Products"
+                    width={600}
+                    height={700}
+                    className="h-auto w-full object-contain"
+                    priority
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -195,6 +195,15 @@ export default async function HomePage() {
       {/* PRODUCT SECTION */}
       <section className="bg-[#f5f5f7]">
         <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-extrabold text-slate-900 md:text-4xl">
+              Upload. Print. Delivered.
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600 md:text-lg">
+              No design tools. No confusion. Just fast, professional printing.
+            </p>
+          </div>
+
           <div className="mb-10 text-center">
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
               Choose Your Product
