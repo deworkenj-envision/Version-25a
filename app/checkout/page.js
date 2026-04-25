@@ -133,9 +133,23 @@ function CheckoutInner() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-12">
+    <main className="min-h-screen bg-slate-50 px-6 py-10">
       <div className="mx-auto max-w-5xl">
-        <h1 className="mb-6 text-4xl font-bold text-slate-900">Checkout</h1>
+        <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col items-center text-center">
+            <img
+              src="/images/logo-hero.png"
+              alt="EnVision Direct"
+              className="h-24 w-auto object-contain"
+            />
+            <h1 className="mt-4 text-4xl font-bold text-slate-900">
+              Secure Checkout
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-500">
+              Complete your contact, shipping, artwork, and payment details to place your order.
+            </p>
+          </div>
+        </div>
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
