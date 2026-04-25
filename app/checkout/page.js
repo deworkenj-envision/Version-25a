@@ -30,7 +30,7 @@ function CheckoutInner() {
   const finish = searchParams.get("finish") || "Matte";
   const sides = searchParams.get("sides") || "Front Only";
 
-  const notes = searchParams.get("notes") || "";
+  const initialNotes = searchParams.get("notes") || "";
   const artworkUrl = searchParams.get("artworkUrl") || "";
   const fileName =
     searchParams.get("artworkFileName") ||
@@ -54,6 +54,8 @@ function CheckoutInner() {
   const [shippingPostalCode, setShippingPostalCode] = useState("");
   const [shippingCountry, setShippingCountry] = useState("US");
 
+  const [notes, setNotes] = useState(initialNotes);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -74,60 +76,17 @@ function CheckoutInner() {
     subtotal > 0;
 
   async function handleCheckout() {
-    if (!customerName.trim()) {
-      setError("Please enter your full name.");
-      return;
-    }
-
-    if (!isValidEmail(customerEmail)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-
-    if (!customerPhone.trim()) {
-      setError("Please enter your phone number.");
-      return;
-    }
-
-    if (!shippingName.trim()) {
-      setError("Please enter the shipping recipient name.");
-      return;
-    }
-
-    if (!shippingAddressLine1.trim()) {
-      setError("Please enter the shipping address.");
-      return;
-    }
-
-    if (!shippingCity.trim()) {
-      setError("Please enter the shipping city.");
-      return;
-    }
-
-    if (!shippingState.trim()) {
-      setError("Please enter the shipping state.");
-      return;
-    }
-
-    if (!shippingPostalCode.trim()) {
-      setError("Please enter the shipping ZIP/postal code.");
-      return;
-    }
-
-    if (!shippingCountry.trim()) {
-      setError("Please enter the shipping country.");
-      return;
-    }
-
-    if (!artworkUrl) {
-      setError("Artwork upload is required before checkout.");
-      return;
-    }
-
-    if (subtotal <= 0) {
-      setError("Subtotal is missing or invalid. Please go back and rebuild the order.");
-      return;
-    }
+    if (!customerName.trim()) return setError("Please enter your full name.");
+    if (!isValidEmail(customerEmail)) return setError("Please enter a valid email address.");
+    if (!customerPhone.trim()) return setError("Please enter your phone number.");
+    if (!shippingName.trim()) return setError("Please enter the shipping recipient name.");
+    if (!shippingAddressLine1.trim()) return setError("Please enter the shipping address.");
+    if (!shippingCity.trim()) return setError("Please enter the shipping city.");
+    if (!shippingState.trim()) return setError("Please enter the shipping state.");
+    if (!shippingPostalCode.trim()) return setError("Please enter the shipping ZIP/postal code.");
+    if (!shippingCountry.trim()) return setError("Please enter the shipping country.");
+    if (!artworkUrl) return setError("Artwork upload is required before checkout.");
+    if (subtotal <= 0) return setError("Subtotal is missing or invalid. Please go back and rebuild the order.");
 
     try {
       setLoading(true);
@@ -192,6 +151,7 @@ function CheckoutInner() {
             <h2 className="text-2xl font-semibold text-slate-900">
               Contact & Shipping Information
             </h2>
+
             <p className="mt-2 text-sm text-slate-500">
               Required before payment so we can process and ship your order.
             </p>
@@ -216,14 +176,20 @@ function CheckoutInner() {
               <Input label="Country *" value={shippingCountry} onChange={setShippingCountry} />
             </div>
 
-            {error ? <p className="mt-4 text-sm font-semibold text-red-600">{error}</p> : null}
+            {error ? (
+              <p className="mt-4 text-sm font-semibold text-red-600">{error}</p>
+            ) : null}
 
             <div className="mt-8 border-t border-slate-200 pt-8">
               <h2 className="text-2xl font-semibold text-slate-900">Order Details</h2>
 
               {productImage ? (
                 <div className="mt-6 overflow-hidden rounded-xl">
-                  <img src={productImage} alt={productName} className="h-40 w-full object-cover" />
+                  <img
+                    src={productImage}
+                    alt={productName}
+                    className="h-40 w-full object-cover"
+                  />
                 </div>
               ) : null}
 
@@ -242,7 +208,12 @@ function CheckoutInner() {
                   </p>
 
                   {artworkUrl ? (
-                    <a href={artworkUrl} target="_blank" rel="noreferrer" className="mt-3 inline-block font-semibold text-blue-600 hover:underline">
+                    <a
+                      href={artworkUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-3 inline-block font-semibold text-blue-600 hover:underline"
+                    >
                       View Uploaded File
                     </a>
                   ) : (
@@ -250,9 +221,19 @@ function CheckoutInner() {
                   )}
                 </div>
 
-                <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
-                  <p className="text-sm text-slate-500">Notes</p>
-                  <p className="mt-1 font-semibold text-slate-900">{notes || "—"}</p>
+                <div className="sm:col-span-2">
+                  <label className="block rounded-xl border border-slate-200 bg-white p-4">
+                    <span className="block text-sm font-semibold text-slate-700">
+                      Order Notes / Special Instructions
+                    </span>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      rows={5}
+                      placeholder="Enter any special instructions for your order..."
+                      className="mt-3 w-full resize-y rounded-xl border border-slate-300 bg-white p-3 text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </label>
                 </div>
               </div>
             </div>
@@ -291,7 +272,10 @@ function CheckoutInner() {
                 </p>
               ) : null}
 
-              <a href="/order" className="mt-4 block w-full rounded-xl border border-slate-300 px-4 py-4 text-center text-base font-semibold text-slate-700 transition hover:bg-slate-50">
+              <a
+                href="/order"
+                className="mt-4 block w-full rounded-xl border border-slate-300 px-4 py-4 text-center text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
                 Back to Order
               </a>
             </div>
@@ -302,14 +286,27 @@ function CheckoutInner() {
                 <p className="mt-1 text-sm text-slate-500">{fileName || "Uploaded artwork"}</p>
 
                 {isImage ? (
-                  <img src={artworkUrl} alt="Uploaded artwork preview" className="mt-4 max-h-[500px] w-full rounded-xl border border-slate-200 bg-white object-contain" />
+                  <img
+                    src={artworkUrl}
+                    alt="Uploaded artwork preview"
+                    className="mt-4 max-h-[500px] w-full rounded-xl border border-slate-200 bg-white object-contain"
+                  />
                 ) : null}
 
                 {isPdf ? (
-                  <iframe src={artworkUrl} title="Uploaded PDF Preview" className="mt-4 h-[650px] w-full rounded-xl border border-slate-200 bg-white" />
+                  <iframe
+                    src={artworkUrl}
+                    title="Uploaded PDF Preview"
+                    className="mt-4 h-[650px] w-full rounded-xl border border-slate-200 bg-white"
+                  />
                 ) : null}
 
-                <a href={artworkUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block font-semibold text-blue-600 hover:underline">
+                <a
+                  href={artworkUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 inline-block font-semibold text-blue-600 hover:underline"
+                >
                   View Uploaded File
                 </a>
               </div>
@@ -324,12 +321,14 @@ function CheckoutInner() {
 function Input({ label, value, onChange, type = "text" }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-semibold text-slate-700">{label}</span>
+      <span className="mb-1 block text-sm font-semibold text-slate-700">
+        {label}
+      </span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
       />
     </label>
   );
@@ -355,7 +354,13 @@ function SummaryRow({ label, value }) {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<main className="min-h-screen bg-slate-50 px-6 py-12"><div className="mx-auto max-w-5xl">Loading checkout...</div></main>}>
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-50 px-6 py-12">
+          <div className="mx-auto max-w-5xl">Loading checkout...</div>
+        </main>
+      }
+    >
       <CheckoutInner />
     </Suspense>
   );
