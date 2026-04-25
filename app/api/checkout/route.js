@@ -26,6 +26,10 @@ function generateTrackingToken() {
   return randomBytes(24).toString("hex");
 }
 
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
 async function generateNextOrderNumber() {
   const { data, error } = await supabaseAdmin
     .from("orders")
@@ -56,12 +60,22 @@ async function generateNextOrderNumber() {
 export async function POST(req) {
   try {
     const body = await req.json();
-
     const baseUrl = getBaseUrl(req);
 
     const orderId = clean(body.orderId);
+
     const customer_name = clean(body.customerName || body.customer_name);
     const customer_email = clean(body.customerEmail || body.customer_email).toLowerCase();
+    const customer_phone = clean(body.customerPhone || body.customer_phone);
+
+    const shipping_name = clean(body.shippingName || body.shipping_name);
+    const shipping_address_line1 = clean(body.shippingAddressLine1 || body.shipping_address_line1);
+    const shipping_address_line2 = clean(body.shippingAddressLine2 || body.shipping_address_line2);
+    const shipping_city = clean(body.shippingCity || body.shipping_city);
+    const shipping_state = clean(body.shippingState || body.shipping_state);
+    const shipping_postal_code = clean(body.shippingPostalCode || body.shipping_postal_code);
+    const shipping_country = clean(body.shippingCountry || body.shipping_country || "US");
+
     const product_name = clean(body.productName || body.product_name);
     const size = clean(body.size);
     const paper = clean(body.paper);
@@ -75,49 +89,69 @@ export async function POST(req) {
     const file_name = clean(body.fileName || body.file_name);
     const artwork_url = clean(body.artworkUrl || body.artwork_url);
 
-    if (!customer_name || !customer_email) {
-      return NextResponse.json(
-        { error: "Customer name and email are required." },
-        { status: 400 }
-      );
+    if (!customer_name) {
+      return NextResponse.json({ error: "Customer name is required." }, { status: 400 });
+    }
+
+    if (!isValidEmail(customer_email)) {
+      return NextResponse.json({ error: "A valid customer email is required." }, { status: 400 });
+    }
+
+    if (!customer_phone) {
+      return NextResponse.json({ error: "Customer phone number is required." }, { status: 400 });
+    }
+
+    if (!shipping_name) {
+      return NextResponse.json({ error: "Shipping recipient name is required." }, { status: 400 });
+    }
+
+    if (!shipping_address_line1 || !shipping_city || !shipping_state || !shipping_postal_code || !shipping_country) {
+      return NextResponse.json({ error: "Complete shipping address is required." }, { status: 400 });
     }
 
     if (!product_name) {
-      return NextResponse.json(
-        { error: "Product name is required." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Product name is required." }, { status: 400 });
     }
 
     if (!quantity || total <= 0) {
-      return NextResponse.json(
-        { error: "Quantity and total must be valid." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Quantity and total must be valid." }, { status: 400 });
     }
+
+    if (!artwork_url) {
+      return NextResponse.json({ error: "Artwork upload is required before checkout." }, { status: 400 });
+    }
+
+    const orderPayload = {
+      customer_name,
+      customer_email,
+      customer_phone,
+      shipping_name,
+      shipping_address_line1,
+      shipping_address_line2,
+      shipping_city,
+      shipping_state,
+      shipping_postal_code,
+      shipping_country,
+      product_name,
+      size,
+      paper,
+      finish,
+      sides,
+      quantity,
+      subtotal,
+      shipping,
+      total,
+      notes,
+      file_name,
+      artwork_url,
+    };
 
     let order = null;
 
     if (orderId) {
       const { data, error } = await supabaseAdmin
         .from("orders")
-        .update({
-          customer_name,
-          customer_email,
-          product_name,
-          size,
-          paper,
-          finish,
-          sides,
-          quantity,
-          subtotal,
-          shipping,
-          total,
-          notes,
-          file_name,
-          artwork_url,
-          tracking_token: undefined,
-        })
+        .update(orderPayload)
         .eq("id", orderId)
         .select("*")
         .single();
@@ -137,20 +171,7 @@ export async function POST(req) {
         .from("orders")
         .insert({
           order_number,
-          customer_name,
-          customer_email,
-          product_name,
-          size,
-          paper,
-          finish,
-          sides,
-          quantity,
-          subtotal,
-          shipping,
-          total,
-          notes,
-          file_name,
-          artwork_url,
+          ...orderPayload,
           status: "pending",
           tracking_token: generateTrackingToken(),
         })
@@ -176,6 +197,12 @@ export async function POST(req) {
       cancel_url: cancelUrl,
       customer_email,
       billing_address_collection: "auto",
+      phone_number_collection: {
+        enabled: true,
+      },
+      shipping_address_collection: {
+        allowed_countries: ["US"],
+      },
       line_items: [
         {
           quantity: 1,
@@ -202,6 +229,14 @@ export async function POST(req) {
         orderNumber: order.order_number || "",
         customerName: customer_name,
         customerEmail: customer_email,
+        customerPhone: customer_phone,
+        shippingName: shipping_name,
+        shippingAddressLine1: shipping_address_line1,
+        shippingAddressLine2: shipping_address_line2,
+        shippingCity: shipping_city,
+        shippingState: shipping_state,
+        shippingPostalCode: shipping_postal_code,
+        shippingCountry: shipping_country,
         productName: product_name,
         quantity: String(quantity),
         total: String(total),
