@@ -442,13 +442,11 @@ export default function OrderPage() {
         <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
           <div className="mb-6 flex items-center justify-between">
             <div />
-            
           </div>
         </div>
 
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-8 lg:pb-16">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:px-8 lg:pb-16">
           <div className="flex flex-col justify-center">
-            
             <h1 className="max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl">
               Build Your Order.
               <br />
@@ -484,112 +482,57 @@ export default function OrderPage() {
           </div>
 
           <div className="flex items-center gap-4 rounded-[28px] bg-white/95 p-4 text-slate-900 shadow-2xl backdrop-blur">
-
-  {/* LEFT: IMAGE */}
-  <div className="w-28 h-28 overflow-hidden rounded-[18px] bg-slate-100 flex-shrink-0">
-    {productImage ? (
-      <img
-        src={productImage}
-        alt={productName || "Selected product"}
-        className="w-full h-full object-cover"
-      />
-    ) : (
-      <div className="flex h-full items-center justify-center text-xs text-slate-500">
-        Preview
-      </div>
-    )}
-  </div>
-
-  {/* MIDDLE: DETAILS */}
-  <div className="flex-1 text-sm">
-    <div className="font-bold text-lg">{productName || "Product"}</div>
-    <div className="text-slate-500 text-xs mb-2">{productDescription}</div>
-
-    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-      <div className="flex justify-between">
-        <span>Price</span>
-        <span className="font-semibold">{heroPrice ? formatMoney(heroPrice) : "—"}</span>
-      </div>
-
-      <div className="flex justify-between">
-        <span>Per</span>
-        <span className="font-semibold">{heroUnit ? formatMoney(heroUnit) : "—"}</span>
-      </div>
-
-      <div className="flex justify-between">
-        <span>Ship</span>
-        <span className="font-semibold">{formatMoney(shippingPreview)}</span>
-      </div>
-
-      <div className="flex justify-between">
-        <span>Qty</span>
-        <span className="font-semibold">{heroQty || "—"}</span>
-      </div>
-    </div>
-  </div>
-
-  {/* RIGHT: TOTAL */}
-  <div className="bg-[#2457f5] text-white rounded-[20px] px-5 py-4 text-center min-w-[140px]">
-    <div className="text-xs text-blue-100">Total</div>
-    <div className="text-2xl font-extrabold">
-      {estimatedTotal ? formatMoney(estimatedTotal) : "—"}
-    </div>
-  </div>
-
-</div>
-            <div className="relative">
+            <div className="h-28 w-28 flex-shrink-0 overflow-hidden rounded-[18px] bg-slate-100">
               {productImage ? (
                 <img
                   src={productImage}
                   alt={productName || "Selected product"}
-                  className="h-44 w-full object-cover"
+                  className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-44 items-center justify-center bg-slate-100 text-sm text-slate-500">
-                  Product preview
+                <div className="flex h-full items-center justify-center text-xs text-slate-500">
+                  Preview
                 </div>
               )}
+            </div>
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4 text-white">
-                <div className="text-xs font-semibold uppercase tracking-[0.2em]">Live Estimate</div>
-                <div className="mt-1 text-3xl font-bold">{productName || "Product"}</div>
-                <div className="mt-1 text-sm text-white/90">{productDescription}</div>
+            <div className="min-w-0 flex-1 text-sm">
+              <div className="truncate text-lg font-bold">{productName || "Product"}</div>
+              <div className="mb-2 line-clamp-2 text-xs text-slate-500">
+                {productDescription}
+              </div>
+
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                <div className="flex justify-between gap-2">
+                  <span className="text-slate-500">Price</span>
+                  <span className="font-semibold">
+                    {heroPrice ? formatMoney(heroPrice) : "—"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between gap-2">
+                  <span className="text-slate-500">Per</span>
+                  <span className="font-semibold">
+                    {heroUnit ? formatMoney(heroUnit) : "—"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between gap-2">
+                  <span className="text-slate-500">Ship</span>
+                  <span className="font-semibold">{formatMoney(shippingPreview)}</span>
+                </div>
+
+                <div className="flex justify-between gap-2">
+                  <span className="text-slate-500">Qty</span>
+                  <span className="font-semibold">{heroQty || "—"}</span>
+                </div>
               </div>
             </div>
 
-            <div className="p-4 space-y-2 text-sm text-slate-700">
-  <div className="flex justify-between">
-    <span>Print Price</span>
-    <span className="font-semibold">{heroPrice ? formatMoney(heroPrice) : "—"}</span>
-  </div>
-
-  <div className="flex justify-between">
-    <span>Per Piece</span>
-    <span className="font-semibold">{heroUnit ? formatMoney(heroUnit) : "—"}</span>
-  </div>
-
-  <div className="flex justify-between">
-    <span>Shipping</span>
-    <span className="font-semibold">{formatMoney(shippingPreview)}</span>
-  </div>
-
-  <div className="flex justify-between">
-    <span>Quantity</span>
-    <span className="font-semibold">{heroQty || "—"}</span>
-  </div>
-
-</div>
-
-            <div className="px-4 pb-4">
-              <div className="rounded-[22px] bg-[#2457f5] p-5 text-white">
-                <div className="text-sm font-medium text-blue-100">Estimated Total</div>
-                <div className="mt-1 text-4xl font-extrabold">
-                  {estimatedTotal ? formatMoney(estimatedTotal) : "—"}
-                </div>
-                <div className="mt-2 text-sm text-blue-100">
-                  {bestValue?.quantity ? `Best value quantity: ${bestValue.quantity}` : "Choose options below"}
-                </div>
+            <div className="min-w-[140px] rounded-[20px] bg-[#2457f5] px-5 py-4 text-center text-white">
+              <div className="text-xs text-blue-100">Total</div>
+              <div className="text-2xl font-extrabold">
+                {estimatedTotal ? formatMoney(estimatedTotal) : "—"}
               </div>
             </div>
           </div>
