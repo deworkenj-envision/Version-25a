@@ -57,107 +57,6 @@ async function generateNextOrderNumber() {
   return `EV-${maxNumber + 1}`;
 }
 
-  const trackUrl = order?.tracking_token
-    ? `${baseUrl}/track/${order.tracking_token}`
-    : `${baseUrl}/track`;
-
-  const total = Number(order?.total || 0);
-  const formattedTotal = Number.isFinite(total) ? `$${total.toFixed(2)}` : "Unavailable";
-
-  const html = `
-    <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
-      <div style="max-width:680px;margin:0 auto;padding:28px 16px;">
-        <div style="background:#ffffff;border:1px solid #dbe6f3;border-radius:24px;overflow:hidden;box-shadow:0 16px 40px rgba(15,43,82,0.10);">
-          <div style="background:linear-gradient(135deg,#2457f5,#0e98ff);padding:28px 24px;text-align:center;color:#ffffff;">
-            <h1 style="margin:0;font-size:30px;line-height:1.2;font-weight:900;">Order Confirmed</h1>
-            <p style="margin:10px 0 0;font-size:15px;color:#eaf2ff;">Thank you for your order with EnVision Direct.</p>
-          </div>
-
-          <div style="padding:26px 24px;">
-            <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">
-              Hi ${order.customer_name || "there"},
-            </p>
-
-            <p style="margin:0 0 22px;font-size:16px;line-height:1.6;color:#334155;">
-              We received your order and artwork. Your confirmation number is:
-            </p>
-
-            <div style="border:1px solid #dbe6f3;background:#f8fbff;border-radius:18px;padding:18px;margin-bottom:22px;text-align:center;">
-              <div style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b;">Order Number</div>
-              <div style="margin-top:6px;font-size:28px;font-weight:900;color:#071b3a;">
-                ${order.order_number || "Order Confirmed"}
-              </div>
-            </div>
-
-            <div style="border:1px solid #e2e8f0;border-radius:18px;padding:18px;margin-bottom:18px;">
-              <h2 style="margin:0 0 14px;font-size:18px;color:#071b3a;">Order Details</h2>
-
-              <table style="width:100%;border-collapse:collapse;font-size:14px;">
-                <tr>
-                  <td style="padding:8px 0;color:#64748b;">Product</td>
-                  <td style="padding:8px 0;text-align:right;font-weight:700;color:#0f172a;">${order.product_name || "Unavailable"}</td>
-                </tr>
-                <tr>
-                  <td style="padding:8px 0;color:#64748b;">Size</td>
-                  <td style="padding:8px 0;text-align:right;font-weight:700;color:#0f172a;">${order.size || "Unavailable"}</td>
-                </tr>
-                <tr>
-                  <td style="padding:8px 0;color:#64748b;">Paper</td>
-                  <td style="padding:8px 0;text-align:right;font-weight:700;color:#0f172a;">${order.paper || "Unavailable"}</td>
-                </tr>
-                <tr>
-                  <td style="padding:8px 0;color:#64748b;">Finish</td>
-                  <td style="padding:8px 0;text-align:right;font-weight:700;color:#0f172a;">${order.finish || "Unavailable"}</td>
-                </tr>
-                <tr>
-                  <td style="padding:8px 0;color:#64748b;">Sides</td>
-                  <td style="padding:8px 0;text-align:right;font-weight:700;color:#0f172a;">${order.sides || "Unavailable"}</td>
-                </tr>
-                <tr>
-                  <td style="padding:8px 0;color:#64748b;">Quantity</td>
-                  <td style="padding:8px 0;text-align:right;font-weight:700;color:#0f172a;">${order.quantity || "Unavailable"}</td>
-                </tr>
-                <tr>
-                  <td style="padding:12px 0 0;color:#64748b;border-top:1px solid #e2e8f0;">Total</td>
-                  <td style="padding:12px 0 0;text-align:right;font-weight:900;color:#0f172a;border-top:1px solid #e2e8f0;">${formattedTotal}</td>
-                </tr>
-              </table>
-            </div>
-
-            <div style="border:1px solid #dbeafe;background:#eff6ff;border-radius:18px;padding:18px;margin-bottom:22px;">
-              <h2 style="margin:0 0 10px;font-size:18px;color:#071b3a;">Artwork Received</h2>
-              <p style="margin:0;font-size:14px;line-height:1.6;color:#334155;">
-                ${order.file_name || "Uploaded artwork file"}
-              </p>
-            </div>
-
-            <div style="text-align:center;margin:26px 0;">
-              <a href="${trackUrl}" style="display:inline-block;background:#0b5cff;color:#ffffff;text-decoration:none;font-weight:900;padding:15px 24px;border-radius:14px;font-size:15px;">
-                Track Your Order
-              </a>
-            </div>
-
-            <p style="margin:0;font-size:14px;line-height:1.7;color:#475569;">
-              We will notify you when your order moves into production and again when it ships.
-            </p>
-          </div>
-        </div>
-
-        <p style="text-align:center;margin:18px 0 0;font-size:12px;color:#64748b;">
-          EnVision Direct
-        </p>
-      </div>
-    </div>
-  `;
-
-  await resend.emails.send({
-    from: "EnVision Direct <orders@envisiondirect.net>",
-    to: order.customer_email,
-    subject: `Order Confirmed - ${order.order_number || "EnVision Direct"}`,
-    html,
-  });
-}
-
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -369,7 +268,6 @@ export async function POST(req) {
         { status: 500 }
       );
     }
-
 
     return NextResponse.json({
       url: session.url,
