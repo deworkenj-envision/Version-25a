@@ -673,10 +673,12 @@ export default function OrderPage() {
 
     {/* PDF PREVIEW */}
     {artworkFile.type === "application/pdf" && (
-      <div className="rounded-[18px] border border-slate-200 bg-white p-4 text-sm text-slate-600">
-        PDF uploaded: preview will be available after checkout.
-      </div>
-    )}
+  <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white">
+    <iframe
+      src={URL.createObjectURL(artworkFile)}
+      className="h-64 w-full"
+      title="PDF Preview"
+    />
   </div>
 )}
 
