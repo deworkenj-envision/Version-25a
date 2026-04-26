@@ -65,18 +65,38 @@ function buildShippedEmail(order, trackingUrl, carrierLink, baseUrl) {
           <p><strong>Carrier:</strong> ${order.tracking_carrier || "—"}</p>
           <p><strong>Tracking:</strong> ${order.tracking_number || "—"}</p>
 
-          <div style="display:flex;justify-content:center;gap:10px;margin-top:20px;flex-wrap:wrap;">
-            <a href="${trackingUrl}" style="background:#2563eb;color:white;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:bold;">
+          <div style="text-align:center;margin-top:24px;">
+
+            <a href="${trackingUrl}" style="
+              display:inline-block;
+              background:#2563eb;
+              color:white;
+              padding:12px 20px;
+              border-radius:10px;
+              text-decoration:none;
+              font-weight:bold;
+              margin:6px;
+            ">
               Track Order Progress
             </a>
 
             ${
               carrierLink
-                ? `<a href="${carrierLink}" style="background:#16a34a;color:white;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:bold;">
+                ? `<a href="${carrierLink}" style="
+                    display:inline-block;
+                    background:#16a34a;
+                    color:white;
+                    padding:12px 20px;
+                    border-radius:10px;
+                    text-decoration:none;
+                    font-weight:bold;
+                    margin:6px;
+                  ">
                     Track With Carrier
                   </a>`
                 : ""
             }
+
           </div>
         </div>
       </div>
@@ -102,7 +122,15 @@ function buildDeliveredEmail(order, trackingUrl, baseUrl) {
           <p><strong>Total:</strong> $${Number(order.total || 0).toFixed(2)}</p>
 
           <div style="text-align:center;margin-top:20px;">
-            <a href="${trackingUrl}" style="background:#2563eb;color:white;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:bold;">
+            <a href="${trackingUrl}" style="
+              display:inline-block;
+              background:#2563eb;
+              color:white;
+              padding:12px 18px;
+              border-radius:10px;
+              text-decoration:none;
+              font-weight:bold;
+            ">
               View Order
             </a>
           </div>
