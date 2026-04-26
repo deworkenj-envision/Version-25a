@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { randomBytes } from "crypto";
-import { Resend } from "resend";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 function toNumber(value, fallback = 0) {
   const num = Number(value);
@@ -58,11 +56,6 @@ async function generateNextOrderNumber() {
 
   return `EV-${maxNumber + 1}`;
 }
-
-async function sendOrderConfirmationEmail(order, baseUrl) {
-  if (!process.env.RESEND_API_KEY || !order?.customer_email) {
-    return;
-  }
 
   const trackUrl = order?.tracking_token
     ? `${baseUrl}/track/${order.tracking_token}`
@@ -377,7 +370,6 @@ export async function POST(req) {
       );
     }
 
-    await sendOrderConfirmationEmail(order, baseUrl);
 
     return NextResponse.json({
       url: session.url,
