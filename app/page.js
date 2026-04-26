@@ -207,9 +207,15 @@ export default async function HomePage() {
                       </div>
                     )}
 
-                    <div className="mt-5 inline-flex items-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition group-hover:bg-blue-700">
-                      {product.button}
-                    </div>
+                    <div className="mt-6 flex items-center justify-between">
+  <span className="text-sm font-semibold text-blue-700 group-hover:underline">
+    {product.button}
+  </span>
+
+  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white transition group-hover:bg-blue-700">
+    →
+  </span>
+</div>
                   </div>
                 </Link>
               );
