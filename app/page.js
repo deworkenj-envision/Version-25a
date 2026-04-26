@@ -173,6 +173,12 @@ export default async function HomePage() {
                   className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
                 >
                   <div className="relative overflow-hidden">
+
+  {product.name === "Business Cards" && (
+    <div className="absolute right-4 top-4 z-10 rounded-full bg-blue-600 px-4 py-1 text-xs font-bold text-white shadow">
+      MOST POPULAR
+    </div>
+  )}
                     <Image
                       src={product.image}
                       alt={product.name}
