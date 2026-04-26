@@ -19,27 +19,20 @@ function isValidEmail(value) {
 function CheckoutInner() {
   const searchParams = useSearchParams();
 
-  const productName =
-    searchParams.get("product") ||
-    searchParams.get("productName") ||
-    "Business Cards";
-
+  const productName = searchParams.get("product") || "Business Cards";
   const quantity = searchParams.get("quantity") || "100";
   const size = searchParams.get("size") || "—";
   const paper = searchParams.get("paper") || "Standard";
   const finish = searchParams.get("finish") || "Matte";
   const sides = searchParams.get("sides") || "Front Only";
 
-  const initialNotes = searchParams.get("notes") || "";
   const artworkUrl = searchParams.get("artworkUrl") || "";
-  const fileName =
-    searchParams.get("artworkFileName") ||
-    searchParams.get("fileName") ||
-    "";
+  const fileName = searchParams.get("artworkFileName") || "";
 
   const productImage = searchParams.get("productImage") || "";
+
   const subtotal = toNumber(searchParams.get("subtotal"));
-  const shipping = 1.00;
+  const shipping = 1.0;
   const total = subtotal + shipping;
 
   const [customerName, setCustomerName] = useState("");
@@ -47,43 +40,18 @@ function CheckoutInner() {
   const [customerPhone, setCustomerPhone] = useState("");
 
   const [shippingAddressLine1, setShippingAddressLine1] = useState("");
-  const [shippingAddressLine2, setShippingAddressLine2] = useState("");
   const [shippingCity, setShippingCity] = useState("");
   const [shippingState, setShippingState] = useState("");
   const [shippingPostalCode, setShippingPostalCode] = useState("");
   const [shippingCountry, setShippingCountry] = useState("US");
 
-  const [notes, setNotes] = useState(initialNotes);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(fileName || "");
-  const isPdf = /\.pdf$/i.test(fileName || "");
-
-  const requiredComplete =
-    customerName.trim() &&
-    isValidEmail(customerEmail) &&
-    customerPhone.trim() &&
-    shippingAddressLine1.trim() &&
-    shippingCity.trim() &&
-    shippingState.trim() &&
-    shippingPostalCode.trim() &&
-    shippingCountry.trim() &&
-    artworkUrl &&
-    subtotal > 0;
+  const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(fileName);
+  const isPdf = /\.pdf$/i.test(fileName);
 
   async function handleCheckout() {
-    if (!customerName.trim()) return setError("Please enter your name or company name.");
-    if (!isValidEmail(customerEmail)) return setError("Please enter a valid email address.");
-    if (!customerPhone.trim()) return setError("Please enter your phone number.");
-    if (!shippingAddressLine1.trim()) return setError("Please enter the shipping address.");
-    if (!shippingCity.trim()) return setError("Please enter the shipping city.");
-    if (!shippingState.trim()) return setError("Please enter the shipping state.");
-    if (!shippingPostalCode.trim()) return setError("Please enter the shipping ZIP/postal code.");
-    if (!shippingCountry.trim()) return setError("Please enter the shipping country.");
-    if (!artworkUrl) return setError("Artwork upload is required before checkout.");
-    if (subtotal <= 0) return setError("Subtotal is missing or invalid. Please go back and rebuild the order.");
-
     try {
       setLoading(true);
       setError("");
@@ -97,9 +65,7 @@ function CheckoutInner() {
           customerName,
           customerEmail,
           customerPhone,
-          shippingName: customerName,
           shippingAddressLine1,
-          shippingAddressLine2,
           shippingCity,
           shippingState,
           shippingPostalCode,
@@ -113,7 +79,6 @@ function CheckoutInner() {
           subtotal,
           shipping,
           total,
-          notes,
           fileName,
           artworkUrl,
         }),
@@ -122,11 +87,10 @@ function CheckoutInner() {
       const data = await res.json();
 
       if (!res.ok) throw new Error(data?.error || "Checkout failed.");
-      if (!data?.url) throw new Error("Stripe checkout URL was not returned.");
 
       window.location.href = data.url;
     } catch (err) {
-      setError(err.message || "Checkout failed.");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -134,127 +98,105 @@ function CheckoutInner() {
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col items-center text-center">
-            <img
-              src="/images/logo-hero.png"
-              alt="EnVision Direct"
-              className="h-24 w-auto object-contain"
-            />
-            <h1 className="mt-4 text-4xl font-bold text-slate-900">
-              Secure Checkout
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-slate-500">
-              Complete your contact, shipping, artwork, and payment details to place your order.
-            </p>
+      <div className="mx-auto max-w-6xl grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+
+        {/* LEFT SIDE */}
+        <div className="space-y-6">
+
+          {/* ORDER DETAILS */}
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold">Order Details</h2>
+
+            <div className="mt-4 space-y-2 text-sm">
+              <div><b>Product:</b> {productName}</div>
+              <div><b>Size:</b> {size}</div>
+              <div><b>Paper:</b> {paper}</div>
+              <div><b>Finish:</b> {finish}</div>
+              <div><b>Sides:</b> {sides}</div>
+              <div><b>Quantity:</b> {quantity}</div>
+            </div>
           </div>
+
+          {/* ARTWORK PREVIEW */}
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold">Artwork</h2>
+
+            <div className="mt-4">
+              <div className="text-sm mb-2">
+                File: <b>{fileName || "Uploaded file"}</b>
+              </div>
+
+              {isImage && (
+                <img
+                  src={artworkUrl}
+                  className="max-h-72 w-full object-contain border rounded-lg"
+                />
+              )}
+
+              {isPdf && (
+                <iframe
+                  src={artworkUrl}
+                  className="w-full h-72 border rounded-lg"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* CUSTOMER INFO */}
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold">Shipping Info</h2>
+
+            <div className="grid gap-3 mt-4">
+              <input placeholder="Name" onChange={(e)=>setCustomerName(e.target.value)} className="input"/>
+              <input placeholder="Email" onChange={(e)=>setCustomerEmail(e.target.value)} className="input"/>
+              <input placeholder="Phone" onChange={(e)=>setCustomerPhone(e.target.value)} className="input"/>
+              <input placeholder="Address" onChange={(e)=>setShippingAddressLine1(e.target.value)} className="input"/>
+              <input placeholder="City" onChange={(e)=>setShippingCity(e.target.value)} className="input"/>
+              <input placeholder="State" onChange={(e)=>setShippingState(e.target.value)} className="input"/>
+              <input placeholder="ZIP" onChange={(e)=>setShippingPostalCode(e.target.value)} className="input"/>
+            </div>
+          </div>
+
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold text-slate-900">
-              Contact & Shipping Information
-            </h2>
+        {/* RIGHT SIDE */}
+        <div className="sticky top-6 h-fit rounded-2xl bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-bold">Summary</h2>
 
-            <p className="mt-2 text-sm text-slate-500">
-              Required before payment so we can process and ship your order.
-            </p>
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <Input label="Name / Company Name *" value={customerName} onChange={setCustomerName} />
-              <Input label="Email Address *" type="email" value={customerEmail} onChange={setCustomerEmail} />
-              <Input label="Phone Number *" type="tel" value={customerPhone} onChange={setCustomerPhone} />
-              <div className="sm:col-span-2">
-                <Input label="Shipping Address *" value={shippingAddressLine1} onChange={setShippingAddressLine1} />
-              </div>
-              <div className="sm:col-span-2">
-                <Input label="Apartment, Suite, Unit" value={shippingAddressLine2} onChange={setShippingAddressLine2} />
-              </div>
-              <Input label="City *" value={shippingCity} onChange={setShippingCity} />
-              <Input label="State *" value={shippingState} onChange={setShippingState} />
-              <Input label="ZIP / Postal Code *" value={shippingPostalCode} onChange={setShippingPostalCode} />
-              <Input label="Country *" value={shippingCountry} onChange={setShippingCountry} />
+          <div className="mt-4 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>${formatMoney(subtotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Shipping</span>
+              <span>${formatMoney(shipping)}</span>
             </div>
 
-            {error ? <p className="mt-4 text-sm font-semibold text-red-600">{error}</p> : null}
-          </section>
-
-          <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-            <div className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-2xl font-semibold text-slate-900">Summary</h2>
-
-              <div className="mt-6 space-y-4">
-                <SummaryRow label="Subtotal" value={formatMoney(subtotal)} />
-                <SummaryRow label="Shipping" value={formatMoney(shipping)} />
-
-                <div className="border-t border-slate-200 pt-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-base font-semibold text-slate-900">Total</span>
-                    <span className="text-2xl font-bold text-slate-900">
-                      ${formatMoney(total)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleCheckout}
-                disabled={loading || !requiredComplete}
-                className="mt-6 block w-full rounded-xl bg-blue-600 px-4 py-4 text-center text-base font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
-              >
-                {loading ? "Redirecting..." : "Pay Securely"}
-              </button>
-
-              {!requiredComplete ? (
-                <p className="mt-3 text-center text-xs font-medium text-slate-500">
-                  Complete all required fields before payment.
-                </p>
-              ) : null}
-
-              <a
-                href="/order"
-                className="mt-4 block w-full rounded-xl border border-slate-300 px-4 py-4 text-center text-base font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                Back to Order
-              </a>
+            <div className="border-t pt-3 flex justify-between font-bold text-lg">
+              <span>Total</span>
+              <span>${formatMoney(total)}</span>
             </div>
-          </aside>
+          </div>
+
+          <button
+            onClick={handleCheckout}
+            className="mt-6 w-full bg-blue-600 text-white py-4 rounded-xl font-bold"
+          >
+            {loading ? "Processing..." : "Pay Securely"}
+          </button>
+
+          {error && <p className="text-red-500 mt-3 text-sm">{error}</p>}
         </div>
+
       </div>
     </main>
   );
 }
 
-function Input({ label, value, onChange, type = "text" }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm font-semibold text-slate-700">
-        {label}
-      </span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-      />
-    </label>
-  );
-}
-
-function SummaryRow({ label, value }) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span className="font-medium text-slate-900">${value}</span>
-    </div>
-  );
-}
-
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<div>Loading checkout...</div>}>
+    <Suspense fallback={<div>Loading...</div>}>
       <CheckoutInner />
     </Suspense>
   );
