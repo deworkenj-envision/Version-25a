@@ -47,6 +47,69 @@ async function ensureTrackingToken(order) {
   return token;
 }
 
+function buildShippedEmail(order, trackingUrl, carrierLink, baseUrl) {
+  const logoUrl = `${baseUrl}/images/logo-hero.png`;
+
+  return `
+    <div style="font-family:Arial;background:#f4f7fb;padding:20px;">
+      <div style="max-width:700px;margin:auto;background:white;border-radius:20px;overflow:hidden;">
+
+        <div style="background:#1e40af;color:white;padding:25px;text-align:center;">
+          <img src="${logoUrl}" style="max-width:220px;margin-bottom:10px;" />
+          <h1>Your Order Has Shipped</h1>
+        </div>
+
+        <div style="padding:20px;">
+          <p><strong>Order:</strong> ${order.order_number}</p>
+          <p><strong>Product:</strong> ${order.product_name}</p>
+          <p><strong>Carrier:</strong> ${order.tracking_carrier || "—"}</p>
+          <p><strong>Tracking:</strong> ${order.tracking_number || "—"}</p>
+
+          <div style="text-align:center;margin-top:20px;">
+            <a href="${trackingUrl}" style="background:#2563eb;color:white;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:bold;">
+              Track Your Order
+            </a>
+          </div>
+
+          ${
+            carrierLink
+              ? `<p style="text-align:center;margin-top:10px;"><a href="${carrierLink}">Track with carrier</a></p>`
+              : ""
+          }
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function buildDeliveredEmail(order, trackingUrl, baseUrl) {
+  const logoUrl = `${baseUrl}/images/logo-hero.png`;
+
+  return `
+    <div style="font-family:Arial;background:#f4f7fb;padding:20px;">
+      <div style="max-width:700px;margin:auto;background:white;border-radius:20px;overflow:hidden;">
+
+        <div style="background:#16a34a;color:white;padding:25px;text-align:center;">
+          <img src="${logoUrl}" style="max-width:220px;margin-bottom:10px;" />
+          <h1>Order Delivered</h1>
+        </div>
+
+        <div style="padding:20px;">
+          <p><strong>Order:</strong> ${order.order_number}</p>
+          <p><strong>Product:</strong> ${order.product_name}</p>
+          <p><strong>Total:</strong> $${Number(order.total || 0).toFixed(2)}</p>
+
+          <div style="text-align:center;margin-top:20px;">
+            <a href="${trackingUrl}" style="background:#2563eb;color:white;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:bold;">
+              View Order
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 async function sendEmail(req, order, status) {
   if (!resend || !order?.customer_email) return;
 
@@ -64,16 +127,7 @@ async function sendEmail(req, order, status) {
       from: "EnVision Direct <orders@envisiondirect.net>",
       to: order.customer_email,
       subject: `Your order ${order.order_number} has shipped`,
-      html: `
-        <h2>Your order has shipped</h2>
-        <p>Order: ${order.order_number}</p>
-        <p><a href="${trackingUrl}">Track your order</a></p>
-        ${
-          carrierLink
-            ? `<p><a href="${carrierLink}">Carrier tracking</a></p>`
-            : ""
-        }
-      `,
+      html: buildShippedEmail(order, trackingUrl, carrierLink, baseUrl),
     });
   }
 
@@ -82,11 +136,7 @@ async function sendEmail(req, order, status) {
       from: "EnVision Direct <orders@envisiondirect.net>",
       to: order.customer_email,
       subject: `Your order ${order.order_number} was delivered`,
-      html: `
-        <h2>Your order was delivered</h2>
-        <p>Order: ${order.order_number}</p>
-        <p><a href="${trackingUrl}">View order</a></p>
-      `,
+      html: buildDeliveredEmail(order, trackingUrl, baseUrl),
     });
   }
 }
@@ -107,19 +157,16 @@ export async function POST(req) {
       return NextResponse.json({ error: "Invalid status." }, { status: 400 });
     }
 
-    // Get full order data
     const { data: orders } = await supabaseAdmin
       .from("orders")
       .select("*")
       .in("id", orderIds);
 
-    // Update orders
     await supabaseAdmin
       .from("orders")
       .update({ status })
       .in("id", orderIds);
 
-    // Send emails
     if (status === "shipped" || status === "delivered") {
       for (const order of orders || []) {
         await sendEmail(req, order, status);
