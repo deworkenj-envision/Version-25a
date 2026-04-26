@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
@@ -24,27 +25,85 @@ function money(value) {
   return `$${Number(value || 0).toFixed(2)}`;
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function isPreviewableImage(url) {
+  if (!url) return false;
+  return /\.(png|jpg|jpeg|webp|gif)$/i.test(url.split("?")[0]);
+}
+
 async function ensureTrackingToken(orderId, existingToken) {
   if (existingToken) return existingToken;
 
   const token = generateTrackingToken();
 
-  await supabaseAdmin
+  const { error } = await supabaseAdmin
     .from("orders")
     .update({ tracking_token: token })
     .eq("id", orderId);
 
+  if (error) {
+    throw new Error(error.message || "Failed to create tracking token.");
+  }
+
   return token;
+}
+
+function buildArtworkBlock(order) {
+  const artworkUrl = order.artwork_url || "";
+  const artworkFile = order.file_name || "Uploaded artwork file";
+
+  const imagePreview =
+    artworkUrl && isPreviewableImage(artworkUrl)
+      ? `
+        <div style="margin-top:14px;text-align:center;">
+          <img
+            src="${artworkUrl}"
+            alt="Artwork preview"
+            style="display:block;width:100%;max-width:440px;margin:0 auto;border-radius:16px;border:1px solid #dbeafe;background:white;"
+          />
+        </div>
+      `
+      : "";
+
+  const viewButton = artworkUrl
+    ? `
+      <div style="text-align:center;margin-top:14px;">
+        <a href="${artworkUrl}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:13px 18px;border-radius:12px;font-weight:900;font-size:14px;">
+          View Uploaded Artwork
+        </a>
+      </div>
+    `
+    : "";
+
+  return `
+    <div style="border:1px solid #bfdbfe;background:#eff6ff;border-radius:18px;padding:18px;">
+      <h2 style="margin:0 0 10px;font-size:20px;color:#071b3a;">Artwork Received</h2>
+      <p style="margin:0;color:#334155;font-size:15px;line-height:1.6;">
+        Your uploaded artwork file has been attached to your order.
+      </p>
+      <div style="margin-top:12px;background:white;border:1px solid #dbeafe;border-radius:14px;padding:12px;font-weight:800;color:#0f172a;word-break:break-word;">
+        ${escapeHtml(artworkFile)}
+      </div>
+      ${imagePreview}
+      ${viewButton}
+    </div>
+  `;
 }
 
 function buildOrderConfirmationEmailHtml(order, trackingUrl, baseUrl) {
   const logoUrl = `${baseUrl}/images/logo-hero.png`;
 
   const shippingLine2 = order.shipping_address_line2
-    ? `<div>${order.shipping_address_line2}</div>`
+    ? `<div>${escapeHtml(order.shipping_address_line2)}</div>`
     : "";
-
-  const artworkFile = order.file_name || "Uploaded artwork file";
 
   return `
     <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
@@ -52,12 +111,7 @@ function buildOrderConfirmationEmailHtml(order, trackingUrl, baseUrl) {
         <div style="background:#ffffff;border:1px solid #dbe6f3;border-radius:24px;overflow:hidden;box-shadow:0 16px 40px rgba(15,43,82,0.12);">
 
           <div style="background:linear-gradient(135deg,#2457f5,#0e98ff);padding:30px 24px;text-align:center;color:white;">
-            <img
-              src="${logoUrl}"
-              alt="EnVision Direct"
-              width="290"
-              style="display:block;margin:0 auto 18px;max-width:290px;width:100%;height:auto;border-radius:8px;"
-            />
+            <img src="${logoUrl}" alt="EnVision Direct" width="290" style="display:block;margin:0 auto 18px;max-width:290px;width:100%;height:auto;border-radius:8px;" />
 
             <div style="width:54px;height:54px;margin:0 auto 14px;border-radius:50%;background:#16a34a;color:white;font-size:34px;font-weight:900;line-height:54px;">
               ✓
@@ -68,7 +122,7 @@ function buildOrderConfirmationEmailHtml(order, trackingUrl, baseUrl) {
             </h1>
 
             <p style="margin:12px 0 0;color:#eaf2ff;font-size:15px;line-height:1.6;">
-              Thank you, ${order.customer_name || "Customer"}. We received your payment and artwork.
+              Thank you, ${escapeHtml(order.customer_name || "Customer")}. We received your payment and artwork.
             </p>
           </div>
 
@@ -78,7 +132,7 @@ function buildOrderConfirmationEmailHtml(order, trackingUrl, baseUrl) {
                 Order Number
               </div>
               <div style="margin-top:6px;font-size:28px;font-weight:900;color:#071b3a;">
-                ${order.order_number || "Order Confirmed"}
+                ${escapeHtml(order.order_number || "Order Confirmed")}
               </div>
             </div>
 
@@ -87,30 +141,12 @@ function buildOrderConfirmationEmailHtml(order, trackingUrl, baseUrl) {
                 <h2 style="margin:0 0 14px;font-size:20px;color:#071b3a;">Order Summary</h2>
 
                 <table style="width:100%;border-collapse:collapse;font-size:14px;">
-                  <tr>
-                    <td style="padding:9px 0;color:#64748b;">Product</td>
-                    <td style="padding:9px 0;text-align:right;font-weight:700;">${order.product_name || "—"}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:9px 0;color:#64748b;">Quantity</td>
-                    <td style="padding:9px 0;text-align:right;font-weight:700;">${order.quantity || "—"}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:9px 0;color:#64748b;">Size</td>
-                    <td style="padding:9px 0;text-align:right;font-weight:700;">${order.size || "—"}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:9px 0;color:#64748b;">Paper</td>
-                    <td style="padding:9px 0;text-align:right;font-weight:700;">${order.paper || "—"}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:9px 0;color:#64748b;">Finish</td>
-                    <td style="padding:9px 0;text-align:right;font-weight:700;">${order.finish || "—"}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:9px 0;color:#64748b;">Sides</td>
-                    <td style="padding:9px 0;text-align:right;font-weight:700;">${order.sides || "—"}</td>
-                  </tr>
+                  <tr><td style="padding:9px 0;color:#64748b;">Product</td><td style="padding:9px 0;text-align:right;font-weight:700;">${escapeHtml(order.product_name || "—")}</td></tr>
+                  <tr><td style="padding:9px 0;color:#64748b;">Quantity</td><td style="padding:9px 0;text-align:right;font-weight:700;">${escapeHtml(order.quantity || "—")}</td></tr>
+                  <tr><td style="padding:9px 0;color:#64748b;">Size</td><td style="padding:9px 0;text-align:right;font-weight:700;">${escapeHtml(order.size || "—")}</td></tr>
+                  <tr><td style="padding:9px 0;color:#64748b;">Paper</td><td style="padding:9px 0;text-align:right;font-weight:700;">${escapeHtml(order.paper || "—")}</td></tr>
+                  <tr><td style="padding:9px 0;color:#64748b;">Finish</td><td style="padding:9px 0;text-align:right;font-weight:700;">${escapeHtml(order.finish || "—")}</td></tr>
+                  <tr><td style="padding:9px 0;color:#64748b;">Sides</td><td style="padding:9px 0;text-align:right;font-weight:700;">${escapeHtml(order.sides || "—")}</td></tr>
                   <tr>
                     <td style="padding:14px 0 0;color:#0f172a;font-size:18px;font-weight:800;border-top:1px solid #e2e8f0;">Total</td>
                     <td style="padding:14px 0 0;text-align:right;color:#0f172a;font-size:22px;font-weight:900;border-top:1px solid #e2e8f0;">${money(order.total)}</td>
@@ -118,15 +154,7 @@ function buildOrderConfirmationEmailHtml(order, trackingUrl, baseUrl) {
                 </table>
               </div>
 
-              <div style="border:1px solid #bfdbfe;background:#eff6ff;border-radius:18px;padding:18px;">
-                <h2 style="margin:0 0 10px;font-size:20px;color:#071b3a;">Artwork Received</h2>
-                <p style="margin:0;color:#334155;font-size:15px;line-height:1.6;">
-                  Your uploaded artwork file has been attached to your order.
-                </p>
-                <div style="margin-top:12px;background:white;border:1px solid #dbeafe;border-radius:14px;padding:12px;font-weight:800;color:#0f172a;word-break:break-word;">
-                  ${artworkFile}
-                </div>
-              </div>
+              ${buildArtworkBlock(order)}
 
               <div style="border:1px solid #dcfce7;background:#f0fdf4;border-radius:18px;padding:18px;">
                 <h2 style="margin:0 0 10px;font-size:20px;color:#166534;">What Happens Next</h2>
@@ -146,20 +174,20 @@ function buildOrderConfirmationEmailHtml(order, trackingUrl, baseUrl) {
               <div style="border:1px solid #e2e8f0;border-radius:18px;padding:18px;">
                 <h2 style="margin:0 0 14px;font-size:20px;">Customer Information</h2>
                 <div style="font-size:15px;line-height:1.7;">
-                  <div><strong>Name:</strong> ${order.customer_name || "—"}</div>
-                  <div><strong>Email:</strong> ${order.customer_email || "—"}</div>
-                  <div><strong>Phone:</strong> ${order.customer_phone || "—"}</div>
+                  <div><strong>Name:</strong> ${escapeHtml(order.customer_name || "—")}</div>
+                  <div><strong>Email:</strong> ${escapeHtml(order.customer_email || "—")}</div>
+                  <div><strong>Phone:</strong> ${escapeHtml(order.customer_phone || "—")}</div>
                 </div>
               </div>
 
               <div style="border:1px solid #e2e8f0;border-radius:18px;padding:18px;">
                 <h2 style="margin:0 0 14px;font-size:20px;">Shipping Information</h2>
                 <div style="font-size:15px;line-height:1.7;">
-                  <div><strong>Ship To:</strong> ${order.shipping_name || "—"}</div>
-                  <div>${order.shipping_address_line1 || "—"}</div>
+                  <div><strong>Ship To:</strong> ${escapeHtml(order.shipping_name || "—")}</div>
+                  <div>${escapeHtml(order.shipping_address_line1 || "—")}</div>
                   ${shippingLine2}
-                  <div>${order.shipping_city || "—"}, ${order.shipping_state || "—"} ${order.shipping_postal_code || ""}</div>
-                  <div>${order.shipping_country || "US"}</div>
+                  <div>${escapeHtml(order.shipping_city || "—")}, ${escapeHtml(order.shipping_state || "—")} ${escapeHtml(order.shipping_postal_code || "")}</div>
+                  <div>${escapeHtml(order.shipping_country || "US")}</div>
                 </div>
               </div>
 
@@ -167,7 +195,7 @@ function buildOrderConfirmationEmailHtml(order, trackingUrl, baseUrl) {
                 order.notes
                   ? `<div style="border:1px solid #e2e8f0;border-radius:18px;padding:18px;">
                       <h2 style="margin:0 0 14px;font-size:20px;">Order Notes</h2>
-                      <div style="white-space:pre-wrap;font-size:15px;line-height:1.7;color:#334155;">${order.notes}</div>
+                      <div style="white-space:pre-wrap;font-size:15px;line-height:1.7;color:#334155;">${escapeHtml(order.notes)}</div>
                     </div>`
                   : ""
               }
