@@ -47,98 +47,147 @@ async function ensureTrackingToken(order) {
   return token;
 }
 
-function buildShippedEmail(order, trackingUrl, carrierLink, baseUrl) {
+/* =========================
+   EMAIL UI HELPERS
+========================= */
+
+function emailWrapper(title, subtitle, content, baseUrl, color = "#2457f5") {
   const logoUrl = `${baseUrl}/images/logo-hero.png`;
 
   return `
     <div style="font-family:Arial;background:#f4f7fb;padding:20px;">
-      <div style="max-width:700px;margin:auto;background:white;border-radius:20px;overflow:hidden;">
+      <div style="max-width:720px;margin:auto;background:white;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);">
 
-        <div style="background:#1e40af;color:white;padding:25px;text-align:center;">
-          <img src="${logoUrl}" style="max-width:220px;margin-bottom:10px;" />
-          <h1>Your Order Has Shipped</h1>
+        <div style="background:${color};color:white;padding:30px;text-align:center;">
+          <img src="${logoUrl}" style="max-width:240px;margin-bottom:10px;" />
+          <h1 style="margin:0;">${title}</h1>
+          <p style="margin-top:10px;">${subtitle}</p>
         </div>
 
-        <div style="padding:20px;">
-          <p><strong>Order:</strong> ${order.order_number}</p>
-          <p><strong>Product:</strong> ${order.product_name}</p>
-          <p><strong>Carrier:</strong> ${order.tracking_carrier || "—"}</p>
-          <p><strong>Tracking:</strong> ${order.tracking_number || "—"}</p>
-
-          <div style="text-align:center;margin-top:24px;">
-
-            <a href="${trackingUrl}" style="
-              display:inline-block;
-              background:#2563eb;
-              color:white;
-              padding:12px 20px;
-              border-radius:10px;
-              text-decoration:none;
-              font-weight:bold;
-              margin:6px;
-            ">
-              Track Order Progress
-            </a>
-
-            ${
-              carrierLink
-                ? `<a href="${carrierLink}" style="
-                    display:inline-block;
-                    background:#16a34a;
-                    color:white;
-                    padding:12px 20px;
-                    border-radius:10px;
-                    text-decoration:none;
-                    font-weight:bold;
-                    margin:6px;
-                  ">
-                    Track With Carrier
-                  </a>`
-                : ""
-            }
-
-          </div>
+        <div style="padding:24px;">
+          ${content}
         </div>
+
       </div>
     </div>
   `;
+}
+
+function actionButtons(trackingUrl, carrierLink) {
+  return `
+    <div style="text-align:center;margin-top:28px;">
+
+      <a href="${trackingUrl}" style="
+        display:inline-block;
+        background:#2563eb;
+        color:white;
+        padding:14px 22px;
+        border-radius:12px;
+        text-decoration:none;
+        font-weight:bold;
+        margin:8px;
+      ">
+        Track Order Progress
+      </a>
+
+      ${
+        carrierLink
+          ? `<a href="${carrierLink}" style="
+              display:inline-block;
+              background:#16a34a;
+              color:white;
+              padding:14px 22px;
+              border-radius:12px;
+              text-decoration:none;
+              font-weight:bold;
+              margin:8px;
+            ">
+              Track With Carrier
+            </a>`
+          : ""
+      }
+
+    </div>
+  `;
+}
+
+/* =========================
+   EMAIL BUILDERS
+========================= */
+
+function buildPrintingEmail(order, trackingUrl, baseUrl) {
+  return emailWrapper(
+    "Printing Started",
+    `${order.customer_name || "Customer"}, your order is now in production.`,
+    `
+      <p><strong>Order:</strong> ${order.order_number}</p>
+      <p>Your artwork has been approved and is now being printed.</p>
+      ${actionButtons(trackingUrl)}
+    `,
+    baseUrl,
+    "#f59e0b"
+  );
+}
+
+function buildShippedEmail(order, trackingUrl, carrierLink, baseUrl) {
+  return emailWrapper(
+    "Your Order Has Shipped",
+    `${order.customer_name || "Customer"}, your order is on the way.`,
+    `
+      <p><strong>Order:</strong> ${order.order_number}</p>
+      <p><strong>Carrier:</strong> ${order.tracking_carrier || "—"}</p>
+      <p><strong>Tracking:</strong> ${order.tracking_number || "—"}</p>
+      ${actionButtons(trackingUrl, carrierLink)}
+    `,
+    baseUrl,
+    "#2563eb"
+  );
 }
 
 function buildDeliveredEmail(order, trackingUrl, baseUrl) {
-  const logoUrl = `${baseUrl}/images/logo-hero.png`;
-
-  return `
-    <div style="font-family:Arial;background:#f4f7fb;padding:20px;">
-      <div style="max-width:700px;margin:auto;background:white;border-radius:20px;overflow:hidden;">
-
-        <div style="background:#16a34a;color:white;padding:25px;text-align:center;">
-          <img src="${logoUrl}" style="max-width:220px;margin-bottom:10px;" />
-          <h1>Order Delivered</h1>
-        </div>
-
-        <div style="padding:20px;">
-          <p><strong>Order:</strong> ${order.order_number}</p>
-          <p><strong>Product:</strong> ${order.product_name}</p>
-          <p><strong>Total:</strong> $${Number(order.total || 0).toFixed(2)}</p>
-
-          <div style="text-align:center;margin-top:20px;">
-            <a href="${trackingUrl}" style="
-              display:inline-block;
-              background:#2563eb;
-              color:white;
-              padding:12px 18px;
-              border-radius:10px;
-              text-decoration:none;
-              font-weight:bold;
-            ">
-              View Order
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
+  return emailWrapper(
+    "Order Delivered",
+    `Your order has been delivered.`,
+    `
+      <p><strong>Order:</strong> ${order.order_number}</p>
+      <p><strong>Total:</strong> $${Number(order.total || 0).toFixed(2)}</p>
+      ${actionButtons(trackingUrl)}
+    `,
+    baseUrl,
+    "#16a34a"
+  );
 }
+
+function buildReviewEmail(order, baseUrl) {
+  return emailWrapper(
+    "How did we do?",
+    "We’d love your feedback.",
+    `
+      <p>Thanks again for your order <strong>${order.order_number}</strong>.</p>
+      <p>If you have a moment, please leave us a review.</p>
+
+      <div style="text-align:center;margin-top:20px;">
+        <a href="${baseUrl}" style="
+          display:inline-block;
+          background:#f59e0b;
+          color:white;
+          padding:14px 20px;
+          border-radius:12px;
+          text-decoration:none;
+          font-weight:bold;
+        ">
+          Leave a Review
+        </a>
+      </div>
+    `,
+    baseUrl,
+    "#f59e0b"
+  );
+}
+
+/* =========================
+   EMAIL SENDER
+========================= */
 
 async function sendEmail(req, order, status) {
   if (!resend || !order?.customer_email) return;
@@ -146,11 +195,20 @@ async function sendEmail(req, order, status) {
   const token = await ensureTrackingToken(order);
   const baseUrl = getBaseUrl(req);
 
-  const trackingUrl = `${baseUrl}/track/${token}`;
+  const trackingUrl = `${baseUrl}/track?token=${token}`;
   const carrierLink = getCarrierTrackingLink(
     order.tracking_carrier,
     order.tracking_number
   );
+
+  if (status === "printing") {
+    await resend.emails.send({
+      from: "EnVision Direct <orders@envisiondirect.net>",
+      to: order.customer_email,
+      subject: `Your order ${order.order_number} is printing`,
+      html: buildPrintingEmail(order, trackingUrl, baseUrl),
+    });
+  }
 
   if (status === "shipped") {
     await resend.emails.send({
@@ -168,16 +226,26 @@ async function sendEmail(req, order, status) {
       subject: `Your order ${order.order_number} was delivered`,
       html: buildDeliveredEmail(order, trackingUrl, baseUrl),
     });
+
+    // review email
+    await resend.emails.send({
+      from: "EnVision Direct <orders@envisiondirect.net>",
+      to: order.customer_email,
+      subject: `How was your order?`,
+      html: buildReviewEmail(order, baseUrl),
+    });
   }
 }
+
+/* =========================
+   API ROUTE
+========================= */
 
 export async function POST(req) {
   try {
     const body = await req.json();
     const orderIds = Array.isArray(body?.orderIds) ? body.orderIds : [];
-    const status = typeof body?.status === "string"
-      ? body.status.trim().toLowerCase()
-      : "";
+    const status = (body?.status || "").toLowerCase().trim();
 
     if (!orderIds.length) {
       return NextResponse.json({ error: "No order IDs provided." }, { status: 400 });
@@ -197,9 +265,11 @@ export async function POST(req) {
       .update({ status })
       .in("id", orderIds);
 
-    if (status === "shipped" || status === "delivered") {
-      for (const order of orders || []) {
+    for (const order of orders || []) {
+      try {
         await sendEmail(req, order, status);
+      } catch (err) {
+        console.error("Email failed for order:", order.id, err);
       }
     }
 
