@@ -170,7 +170,7 @@ export default async function HomePage() {
                 <Link
                   key={product.name}
                   href={product.href}
-                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl"
+                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
                 >
                   <div className="relative overflow-hidden">
                     <Image
