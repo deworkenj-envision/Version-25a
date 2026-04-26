@@ -82,7 +82,7 @@ export default async function HomePage() {
       {/* HERO */}
       <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
         <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-12">
-          <div className="grid items-center gap-10 lg:grid-cols-[1.2fr_480px]">
+          <div className="grid items-center gap-16 lg:grid-cols-[1.2fr_480px]">
             {/* HERO CONTENT */}
             <div className="max-w-2xl">
               <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight md:text-5xl xl:text-[4rem]">
