@@ -175,9 +175,9 @@ export default async function HomePage() {
                   <div className="relative overflow-hidden">
 
   {product.name === "Business Cards" && (
-    <div className="absolute right-4 top-4 z-10 rounded-full bg-blue-600 px-4 py-1 text-xs font-bold text-white shadow">
-      MOST POPULAR
-    </div>
+  <div className="absolute left-4 top-4 z-10 rounded-full bg-blue-600 px-4 py-1 text-xs font-bold text-white shadow">
+    MOST POPULAR
+  </div>
   )}
                     <Image
                       src={product.image}
