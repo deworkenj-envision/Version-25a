@@ -21,7 +21,7 @@ export default function RootLayout({ children }) {
                   EnVision Direct
                 </div>
                 <p className="mt-2 text-sm text-slate-600">
-                  Professional online printing with fast turnaround and competitive pricing.
+                  With more than 20 years of industry experience, EnVision Direct is built on a commitment to quality, reliability, and efficiency. We combine expert print production with a streamlined online ordering experience to deliver professional results—quickly and affordably.
                 </p>
               </div>
 
