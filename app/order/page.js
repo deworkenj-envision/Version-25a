@@ -655,10 +655,30 @@ export default function OrderPage() {
                     </label>
 
                     {artworkFile && (
-                      <div className="mt-3 rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                        Selected file: <span className="font-semibold">{artworkFile.name}</span>
-                      </div>
-                    )}
+  <div className="mt-3 space-y-3">
+    <div className="rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+      Selected file: <span className="font-semibold">{artworkFile.name}</span>
+    </div>
+
+    {/* IMAGE PREVIEW */}
+    {artworkFile.type.startsWith("image/") && (
+      <div className="overflow-hidden rounded-[18px] border border-slate-200">
+        <img
+          src={URL.createObjectURL(artworkFile)}
+          alt="Artwork Preview"
+          className="max-h-64 w-full object-contain bg-white"
+        />
+      </div>
+    )}
+
+    {/* PDF PREVIEW */}
+    {artworkFile.type === "application/pdf" && (
+      <div className="rounded-[18px] border border-slate-200 bg-white p-4 text-sm text-slate-600">
+        PDF uploaded: preview will be available after checkout.
+      </div>
+    )}
+  </div>
+)}
 
                     {uploadedArtworkUrl && (
                       <div className="mt-3 rounded-[18px] border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
