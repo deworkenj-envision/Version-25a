@@ -83,7 +83,6 @@ export default async function HomePage() {
       <section className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white">
         <div className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-12">
           <div className="grid items-center gap-28 lg:grid-cols-[1.2fr_480px]">
-            {/* HERO CONTENT */}
             <div className="max-w-2xl">
               <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight md:text-5xl xl:text-[4rem]">
                 <span className="block">Professional Printing Made Simple.</span>
@@ -130,7 +129,6 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* SINGLE HERO COLLAGE */}
             <div className="mx-auto w-full max-w-[520px]">
               <div className="rounded-[28px] bg-[#2347d8]/40 p-4 shadow-2xl md:p-6">
                 <div className="overflow-hidden rounded-[22px]">
@@ -173,12 +171,6 @@ export default async function HomePage() {
                   className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
                 >
                   <div className="relative overflow-hidden">
-
-  {product.name === "Business Cards" && (
-  <div className="absolute left-4 top-4 z-10 rounded-full bg-blue-600 px-4 py-1 text-xs font-bold text-white shadow">
-    MOST POPULAR
-  </div>
-  )}
                     <Image
                       src={product.image}
                       alt={product.name}
@@ -195,9 +187,17 @@ export default async function HomePage() {
                   </div>
 
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-slate-900">
-                      {product.name}
-                    </h3>
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="text-xl font-bold text-slate-900">
+                        {product.name}
+                      </h3>
+
+                      {product.name === "Business Cards" && (
+                        <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">
+                          MOST POPULAR
+                        </span>
+                      )}
+                    </div>
 
                     <p className="mt-2 text-sm leading-6 text-slate-600">
                       {product.description}
@@ -214,14 +214,14 @@ export default async function HomePage() {
                     )}
 
                     <div className="mt-6 flex items-center justify-between">
-  <span className="text-sm font-semibold text-blue-700 group-hover:underline">
-    {product.button}
-  </span>
+                      <span className="text-sm font-semibold text-blue-700 group-hover:underline">
+                        {product.button}
+                      </span>
 
-  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white transition group-hover:bg-blue-700">
-    →
-  </span>
-</div>
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white transition group-hover:bg-blue-700">
+                        →
+                      </span>
+                    </div>
                   </div>
                 </Link>
               );
