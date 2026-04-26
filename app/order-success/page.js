@@ -22,13 +22,8 @@ function OrderSuccessContent() {
         let data = null;
 
         if (orderId) {
-          const res = await fetch(`/api/orders/${orderId}`, {
-            cache: "no-store",
-          });
-
-          if (res.ok) {
-            data = await res.json();
-          }
+          const res = await fetch(`/api/orders/${orderId}`, { cache: "no-store" });
+          if (res.ok) data = await res.json();
         }
 
         if (!data && sessionId) {
@@ -36,10 +31,7 @@ function OrderSuccessContent() {
             `/api/orders?session_id=${encodeURIComponent(sessionId)}`,
             { cache: "no-store" }
           );
-
-          if (res.ok) {
-            data = await res.json();
-          }
+          if (res.ok) data = await res.json();
         }
 
         setOrder(data?.order || data || null);
@@ -58,6 +50,12 @@ function OrderSuccessContent() {
     const value = Number(order?.total || 0);
     return value > 0 ? `$${value.toFixed(2)}` : "Unavailable";
   }, [order]);
+
+  const artworkUrl = order?.artwork_url || order?.artworkUrl || "";
+  const fileName = order?.file_name || order?.artwork_file_name || "Uploaded artwork";
+
+  const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(fileName || artworkUrl);
+  const isPdf = /\.pdf/i.test(fileName || artworkUrl);
 
   return (
     <main style={styles.page}>
@@ -98,17 +96,62 @@ function OrderSuccessContent() {
               <span style={styles.statusBadge}>{order?.status || "Paid"}</span>
             </div>
 
-            <div style={styles.grid}>
-              <Info label="Customer" value={order?.customer_name} />
-              <Info label="Email" value={order?.customer_email} />
-              <Info label="Product" value={order?.product_name} />
-              <Info label="Size" value={order?.size} />
-              <Info label="Paper" value={order?.paper} />
-              <Info label="Finish" value={order?.finish} />
-              <Info label="Sides" value={order?.sides} />
-              <Info label="Quantity" value={order?.quantity} />
-              <Info label="Total" value={displayTotal} />
-              <Info label="Artwork File" value={order?.file_name} />
+            <div style={styles.reassuranceGrid}>
+              <div style={styles.reassuranceBox}>✓ Artwork Received</div>
+              <div style={styles.reassuranceBox}>✓ Order Processing</div>
+              <div style={styles.reassuranceBox}>✓ Email Updates</div>
+            </div>
+
+            <div style={styles.twoColumn}>
+              <div>
+                <h3 style={styles.sectionTitle}>Order Summary</h3>
+
+                <div style={styles.grid}>
+                  <Info label="Customer" value={order?.customer_name} />
+                  <Info label="Email" value={order?.customer_email} />
+                  <Info label="Product" value={order?.product_name} />
+                  <Info label="Size" value={order?.size} />
+                  <Info label="Paper" value={order?.paper} />
+                  <Info label="Finish" value={order?.finish} />
+                  <Info label="Sides" value={order?.sides} />
+                  <Info label="Quantity" value={order?.quantity} />
+                  <Info label="Total" value={displayTotal} />
+                </div>
+              </div>
+
+              <div>
+                <h3 style={styles.sectionTitle}>Artwork</h3>
+
+                <div style={styles.artworkCard}>
+                  <div style={styles.artworkFileName}>{fileName}</div>
+
+                  {artworkUrl ? (
+                    <div style={styles.previewBox}>
+                      {isImage ? (
+                        <img
+                          src={artworkUrl}
+                          alt="Artwork preview"
+                          style={styles.previewImage}
+                        />
+                      ) : isPdf ? (
+                        <iframe
+                          src={artworkUrl}
+                          title="Artwork PDF preview"
+                          style={styles.previewFrame}
+                        />
+                      ) : (
+                        <div style={styles.previewFallback}>
+                          Artwork uploaded successfully.
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={styles.previewFallback}>
+                      Artwork received. Preview unavailable.
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div style={styles.actions}>
@@ -140,9 +183,7 @@ function Info({ label, value }) {
     <div style={styles.infoBox}>
       <div style={styles.infoLabel}>{label}</div>
       <div style={styles.infoValue}>
-        {value !== null && value !== undefined && value !== ""
-          ? value
-          : "Unavailable"}
+        {value !== null && value !== undefined && value !== "" ? value : "Unavailable"}
       </div>
     </div>
   );
@@ -214,7 +255,7 @@ const styles = {
     lineHeight: 1.6,
   },
   card: {
-    maxWidth: 980,
+    maxWidth: 1180,
     margin: "0 auto",
     background: "#ffffff",
     border: "1px solid #dbe6f3",
@@ -260,10 +301,37 @@ const styles = {
     fontWeight: 900,
     textTransform: "capitalize",
   },
+  reassuranceGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+    gap: 12,
+    marginBottom: 24,
+  },
+  reassuranceBox: {
+    border: "1px solid #bbf7d0",
+    background: "#f0fdf4",
+    color: "#166534",
+    borderRadius: 16,
+    padding: "13px 15px",
+    fontWeight: 900,
+    fontSize: 14,
+    textAlign: "center",
+  },
+  twoColumn: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1.1fr) minmax(320px, 0.9fr)",
+    gap: 22,
+  },
+  sectionTitle: {
+    margin: "0 0 14px",
+    fontSize: 20,
+    fontWeight: 900,
+    color: "#071b3a",
+  },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-    gap: 16,
+    gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+    gap: 14,
   },
   infoBox: {
     border: "1px solid #e1e9f3",
@@ -282,9 +350,49 @@ const styles = {
   },
   infoValue: {
     color: "#071b3a",
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: 900,
     wordBreak: "break-word",
+  },
+  artworkCard: {
+    border: "1px solid #e1e9f3",
+    borderRadius: 20,
+    padding: 16,
+    background: "#f8fbff",
+  },
+  artworkFileName: {
+    fontSize: 13,
+    fontWeight: 900,
+    color: "#071b3a",
+    wordBreak: "break-word",
+    marginBottom: 12,
+  },
+  previewBox: {
+    overflow: "hidden",
+    borderRadius: 16,
+    border: "1px solid #dbe6f3",
+    background: "#ffffff",
+  },
+  previewImage: {
+    display: "block",
+    width: "100%",
+    maxHeight: 330,
+    objectFit: "contain",
+  },
+  previewFrame: {
+    width: "100%",
+    height: 330,
+    border: 0,
+    display: "block",
+  },
+  previewFallback: {
+    padding: 18,
+    color: "#486381",
+    fontSize: 14,
+    fontWeight: 700,
+    background: "#ffffff",
+    borderRadius: 16,
+    border: "1px solid #dbe6f3",
   },
   actions: {
     display: "flex",
