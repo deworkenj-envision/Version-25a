@@ -318,7 +318,7 @@ export default function OrderPage() {
   const heroQty = quantity || String(bestValue?.quantity || "");
   const heroUnit = unitPrice || Number(bestValue?.unitPrice || 0);
 
-  const shippingPreview = 12.95;
+  const shippingPreview = 1.00;
   const estimatedTotal = heroPrice ? heroPrice + shippingPreview : 0;
 
   const canContinue = Boolean(
