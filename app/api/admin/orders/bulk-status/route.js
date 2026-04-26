@@ -65,17 +65,19 @@ function buildShippedEmail(order, trackingUrl, carrierLink, baseUrl) {
           <p><strong>Carrier:</strong> ${order.tracking_carrier || "—"}</p>
           <p><strong>Tracking:</strong> ${order.tracking_number || "—"}</p>
 
-          <div style="text-align:center;margin-top:20px;">
+          <div style="display:flex;justify-content:center;gap:10px;margin-top:20px;flex-wrap:wrap;">
             <a href="${trackingUrl}" style="background:#2563eb;color:white;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:bold;">
-              Track Your Order
+              Track Order Progress
             </a>
-          </div>
 
-          ${
-            carrierLink
-              ? `<p style="text-align:center;margin-top:10px;"><a href="${carrierLink}">Track with carrier</a></p>`
-              : ""
-          }
+            ${
+              carrierLink
+                ? `<a href="${carrierLink}" style="background:#16a34a;color:white;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:bold;">
+                    Track With Carrier
+                  </a>`
+                : ""
+            }
+          </div>
         </div>
       </div>
     </div>
