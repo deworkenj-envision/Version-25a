@@ -43,7 +43,7 @@ export default function RootLayout({ children }) {
 
               {/* CONTACT */}
               <div className="text-sm text-slate-600">
-                <div>Email: support@envisiondirect.net</div>
+                <div>Email: orders@envisiondirect.net</div>
                 <div className="mt-2">
                   © {new Date().getFullYear()} EnVision Direct
                 </div>
