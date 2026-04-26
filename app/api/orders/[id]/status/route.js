@@ -59,61 +59,177 @@ async function ensureTrackingToken(orderId, existingToken) {
   return newToken;
 }
 
-function buildShippedEmailHtml(order, trackingUrl, carrierLink) {
+function buildShippedEmailHtml(order, trackingUrl, carrierLink, baseUrl) {
+  const logoUrl = `${baseUrl}/images/logo-hero.png`;
+
   return `
-    <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
-      <h2 style="margin-bottom: 8px;">Your order has shipped</h2>
-      <p>Hello ${order.customer_name || "Customer"},</p>
-      <p>Your order <strong>${order.order_number || ""}</strong> has been shipped.</p>
+    <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+      <div style="max-width:720px;margin:0 auto;padding:28px 16px;">
+        <div style="background:#ffffff;border:1px solid #dbe6f3;border-radius:24px;overflow:hidden;box-shadow:0 16px 40px rgba(15,43,82,0.12);">
+          <div style="background:linear-gradient(135deg,#2457f5,#0e98ff);padding:30px 24px;text-align:center;color:white;">
+            <img
+              src="${logoUrl}"
+              alt="EnVision Direct"
+              width="290"
+              style="display:block;margin:0 auto 18px;max-width:290px;width:100%;height:auto;border-radius:8px;"
+            />
 
-      <div style="margin: 20px 0; padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px;">
-        <p style="margin: 0 0 8px;"><strong>Order Number:</strong> ${order.order_number || "—"}</p>
-        <p style="margin: 0 0 8px;"><strong>Status:</strong> shipped</p>
-        <p style="margin: 0 0 8px;"><strong>Product:</strong> ${order.product_name || "—"}</p>
-        <p style="margin: 0 0 8px;"><strong>Carrier:</strong> ${order.tracking_carrier || "—"}</p>
-        <p style="margin: 0;"><strong>Tracking Number:</strong> ${order.tracking_number || "—"}</p>
+            <h1 style="margin:0;font-size:32px;line-height:1.2;color:#ffffff;">
+              Your Order Has Shipped
+            </h1>
+
+            <p style="margin:12px 0 0;color:#eaf2ff;font-size:15px;line-height:1.6;">
+              ${order.customer_name || "Customer"}, your order is on the way.
+            </p>
+          </div>
+
+          <div style="padding:26px 24px;">
+            <div style="background:#f8fbff;border:1px solid #dbe6f3;border-radius:18px;padding:18px;text-align:center;margin-bottom:20px;">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b;">
+                Order Number
+              </div>
+              <div style="margin-top:6px;font-size:28px;font-weight:900;color:#071b3a;">
+                ${order.order_number || "Order Shipped"}
+              </div>
+            </div>
+
+            <div style="border:1px solid #e2e8f0;border-radius:18px;padding:18px;margin-bottom:18px;">
+              <h2 style="margin:0 0 14px;font-size:20px;color:#071b3a;">Shipment Details</h2>
+
+              <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                <tr>
+                  <td style="padding:9px 0;color:#64748b;">Product</td>
+                  <td style="padding:9px 0;text-align:right;font-weight:700;">${order.product_name || "—"}</td>
+                </tr>
+                <tr>
+                  <td style="padding:9px 0;color:#64748b;">Carrier</td>
+                  <td style="padding:9px 0;text-align:right;font-weight:700;">${order.tracking_carrier || "—"}</td>
+                </tr>
+                <tr>
+                  <td style="padding:9px 0;color:#64748b;">Tracking Number</td>
+                  <td style="padding:9px 0;text-align:right;font-weight:700;">${order.tracking_number || "—"}</td>
+                </tr>
+                <tr>
+                  <td style="padding:9px 0;color:#64748b;">Status</td>
+                  <td style="padding:9px 0;text-align:right;font-weight:700;color:#2563eb;">Shipped</td>
+                </tr>
+              </table>
+            </div>
+
+            <div style="border:1px solid #dcfce7;background:#f0fdf4;border-radius:18px;padding:18px;margin-bottom:22px;">
+              <h2 style="margin:0 0 10px;font-size:20px;color:#166534;">What Happens Next</h2>
+              <div style="font-size:15px;line-height:1.8;color:#166534;font-weight:700;">
+                <div>✓ Your order has shipped</div>
+                <div>✓ Tracking information is available</div>
+                <div>✓ Delivery updates will depend on the carrier</div>
+              </div>
+            </div>
+
+            <div style="text-align:center;margin:24px 0 8px;">
+              <a href="${trackingUrl}" style="display:inline-block;background:#0b5cff;color:white;text-decoration:none;padding:15px 24px;border-radius:14px;font-weight:900;font-size:15px;">
+                Track Your Order
+              </a>
+            </div>
+
+            ${
+              carrierLink
+                ? `<div style="text-align:center;margin-top:12px;">
+                    <a href="${carrierLink}" style="color:#2563eb;font-weight:800;text-decoration:none;">
+                      Track directly with carrier
+                    </a>
+                  </div>`
+                : ""
+            }
+
+            <p style="margin:24px 0 0;text-align:center;color:#64748b;font-size:13px;line-height:1.6;">
+              You can use the secure tracking link anytime to check your order status.<br/>
+              Thank you for choosing EnVision Direct.
+            </p>
+          </div>
+        </div>
       </div>
-
-      <p style="margin-top: 20px;">
-        <a href="${trackingUrl}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 700;">
-          Track Your Order
-        </a>
-      </p>
-
-      ${
-        carrierLink
-          ? `<p style="margin-top: 14px;"><a href="${carrierLink}" style="color: #2563eb;">Open carrier tracking</a></p>`
-          : ""
-      }
-
-      <p style="margin-top: 18px;">You can also use the secure tracking link above anytime.</p>
-      <p>Thank you for choosing EnVision Direct.</p>
     </div>
   `;
 }
 
-function buildDeliveredEmailHtml(order, trackingUrl) {
+function buildDeliveredEmailHtml(order, trackingUrl, baseUrl) {
+  const logoUrl = `${baseUrl}/images/logo-hero.png`;
+
   return `
-    <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
-      <h2 style="margin-bottom: 8px;">Your order was delivered</h2>
-      <p>Hello ${order.customer_name || "Customer"},</p>
-      <p>Your order <strong>${order.order_number || ""}</strong> has been marked as delivered.</p>
+    <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+      <div style="max-width:720px;margin:0 auto;padding:28px 16px;">
+        <div style="background:#ffffff;border:1px solid #dbe6f3;border-radius:24px;overflow:hidden;box-shadow:0 16px 40px rgba(15,43,82,0.12);">
+          <div style="background:linear-gradient(135deg,#16a34a,#22c55e);padding:30px 24px;text-align:center;color:white;">
+            <img
+              src="${logoUrl}"
+              alt="EnVision Direct"
+              width="290"
+              style="display:block;margin:0 auto 18px;max-width:290px;width:100%;height:auto;border-radius:8px;"
+            />
 
-      <div style="margin: 20px 0; padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px;">
-        <p style="margin: 0 0 8px;"><strong>Order Number:</strong> ${order.order_number || "—"}</p>
-        <p style="margin: 0 0 8px;"><strong>Status:</strong> delivered</p>
-        <p style="margin: 0 0 8px;"><strong>Product:</strong> ${order.product_name || "—"}</p>
-        <p style="margin: 0;"><strong>Total:</strong> $${Number(order.total || 0).toFixed(2)}</p>
+            <div style="width:54px;height:54px;margin:0 auto 14px;border-radius:50%;background:#ffffff;color:#16a34a;font-size:34px;font-weight:900;line-height:54px;">
+              ✓
+            </div>
+
+            <h1 style="margin:0;font-size:32px;line-height:1.2;color:#ffffff;">
+              Order Delivered
+            </h1>
+
+            <p style="margin:12px 0 0;color:#ecfdf5;font-size:15px;line-height:1.6;">
+              ${order.customer_name || "Customer"}, your order has been marked as delivered.
+            </p>
+          </div>
+
+          <div style="padding:26px 24px;">
+            <div style="background:#f8fbff;border:1px solid #dbe6f3;border-radius:18px;padding:18px;text-align:center;margin-bottom:20px;">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b;">
+                Order Number
+              </div>
+              <div style="margin-top:6px;font-size:28px;font-weight:900;color:#071b3a;">
+                ${order.order_number || "Order Delivered"}
+              </div>
+            </div>
+
+            <div style="border:1px solid #e2e8f0;border-radius:18px;padding:18px;margin-bottom:18px;">
+              <h2 style="margin:0 0 14px;font-size:20px;color:#071b3a;">Delivery Summary</h2>
+
+              <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                <tr>
+                  <td style="padding:9px 0;color:#64748b;">Product</td>
+                  <td style="padding:9px 0;text-align:right;font-weight:700;">${order.product_name || "—"}</td>
+                </tr>
+                <tr>
+                  <td style="padding:9px 0;color:#64748b;">Status</td>
+                  <td style="padding:9px 0;text-align:right;font-weight:700;color:#16a34a;">Delivered</td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 0 0;color:#0f172a;font-size:18px;font-weight:800;border-top:1px solid #e2e8f0;">Total</td>
+                  <td style="padding:14px 0 0;text-align:right;color:#0f172a;font-size:22px;font-weight:900;border-top:1px solid #e2e8f0;">
+                    $${Number(order.total || 0).toFixed(2)}
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <div style="border:1px solid #dcfce7;background:#f0fdf4;border-radius:18px;padding:18px;margin-bottom:22px;text-align:center;">
+              <h2 style="margin:0 0 10px;font-size:20px;color:#166534;">Thank You For Your Business</h2>
+              <p style="margin:0;color:#166534;font-size:15px;line-height:1.7;font-weight:700;">
+                We appreciate your order with EnVision Direct.
+              </p>
+            </div>
+
+            <div style="text-align:center;margin:24px 0 8px;">
+              <a href="${trackingUrl}" style="display:inline-block;background:#0b5cff;color:white;text-decoration:none;padding:15px 24px;border-radius:14px;font-weight:900;font-size:15px;">
+                View Order Status
+              </a>
+            </div>
+
+            <p style="margin:24px 0 0;text-align:center;color:#64748b;font-size:13px;line-height:1.6;">
+              Thank you for choosing EnVision Direct.
+            </p>
+          </div>
+        </div>
       </div>
-
-      <p style="margin-top: 20px;">
-        <a href="${trackingUrl}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 700;">
-          View Order Status
-        </a>
-      </p>
-
-      <p style="margin-top: 18px;">Thank you for your business.</p>
-      <p>We appreciate your order with EnVision Direct.</p>
     </div>
   `;
 }
@@ -140,7 +256,8 @@ async function sendStatusEmail(req, order, status) {
       html: buildShippedEmailHtml(
         { ...order, status: "shipped", tracking_token: trackingToken },
         trackingUrl,
-        carrierLink
+        carrierLink,
+        baseUrl
       ),
     });
   }
@@ -154,7 +271,8 @@ async function sendStatusEmail(req, order, status) {
       subject: `Your order ${order.order_number || ""} was delivered`,
       html: buildDeliveredEmailHtml(
         { ...order, status: "delivered", tracking_token: trackingToken },
-        trackingUrl
+        trackingUrl,
+        baseUrl
       ),
     });
   }
