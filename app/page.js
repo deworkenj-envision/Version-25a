@@ -204,14 +204,24 @@ export default async function HomePage() {
                     </p>
 
                     {startingPrice !== undefined ? (
-                      <div className="mt-4 text-sm font-semibold text-blue-700">
-                        Starting at {money(startingPrice)}
-                      </div>
-                    ) : (
-                      <div className="mt-4 text-sm font-semibold text-slate-500">
-                        Live pricing available in estimator
-                      </div>
-                    )}
+  <div className="mt-5 rounded-2xl bg-blue-50 p-4">
+    <div className="text-xs font-bold uppercase tracking-wide text-blue-700">
+      Starting at
+    </div>
+    <div className="mt-1 text-3xl font-extrabold text-slate-900">
+      {money(startingPrice)}
+    </div>
+    <div className="mt-1 text-xs font-medium text-slate-500">
+      Live pricing updates in estimator
+    </div>
+  </div>
+) : (
+  <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+    <div className="text-sm font-semibold text-slate-600">
+      Live pricing available in estimator
+    </div>
+  </div>
+)}
 
                     <div className="mt-6 flex items-center justify-between">
                       <span className="text-sm font-semibold text-blue-700 group-hover:underline">
