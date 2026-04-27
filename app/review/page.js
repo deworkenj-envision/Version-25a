@@ -35,9 +35,7 @@ function ReviewContent() {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to send review");
-      }
+      if (!res.ok) throw new Error("Failed to submit review");
 
       setSubmitted(true);
     } catch (err) {
@@ -48,45 +46,44 @@ function ReviewContent() {
   }
 
   return (
-    <main style={{
-      minHeight: "100vh",
-      background: "#f4f7fb",
-      padding: "40px 16px",
-      fontFamily: "Arial, Helvetica, sans-serif"
-    }}>
-      <div style={{
-        maxWidth: "720px",
-        margin: "0 auto",
-        background: "#ffffff",
-        borderRadius: "24px",
-        overflow: "hidden",
-        boxShadow: "0 16px 40px rgba(15,43,82,0.12)"
-      }}>
-        <div style={{
-          padding: "24px",
-          textAlign: "center",
-          borderBottom: "1px solid #e5e7eb"
-        }}>
-          <img src="/images/logo-hero.png" style={{ maxWidth: "200px" }} />
+    <main className="min-h-screen bg-[#f4f7fb] px-4 py-10">
+      <div className="mx-auto max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
+        <div className="border-b border-slate-200 bg-white p-6 text-center">
+          <img
+            src="/images/logo-hero.png"
+            alt="EnVision Direct"
+            className="mx-auto h-auto w-full max-w-[200px]"
+          />
         </div>
 
-        <div style={{ padding: "32px 24px", textAlign: "center" }}>
+        <div className="p-8 text-center">
           {!submitted ? (
             <>
-              <h1 style={{ fontSize: "30px" }}>How did we do?</h1>
+              <h1 className="text-3xl font-extrabold text-slate-900">
+                How did we do?
+              </h1>
 
-              <div style={{ margin: "20px 0" }}>
+              <p className="mt-3 text-slate-600">
+                Thank you for choosing EnVision Direct. Please rate your
+                experience.
+              </p>
+
+              {orderNumber ? (
+                <div className="mx-auto mt-6 max-w-md rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-900">
+                  <strong>Order Number:</strong> {orderNumber}
+                </div>
+              ) : null}
+
+              <div className="mt-8">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
+                    type="button"
                     onClick={() => setRating(star)}
                     onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(0)}
+                    className="px-1 text-5xl transition"
                     style={{
-                      border: "none",
-                      background: "transparent",
-                      fontSize: "42px",
-                      cursor: "pointer",
                       color: star <= activeRating ? "#f59e0b" : "#d1d5db",
                     }}
                   >
@@ -95,33 +92,26 @@ function ReviewContent() {
                 ))}
               </div>
 
+              <p className="mt-3 text-sm text-slate-500">
+                {rating
+                  ? `You selected ${rating} out of 5 stars.`
+                  : "Click a star rating."}
+              </p>
+
               <textarea
-                placeholder="Tell us about your experience..."
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
-                style={{
-                  width: "100%",
-                  maxWidth: "560px",
-                  borderRadius: "14px",
-                  padding: "14px",
-                  border: "1px solid #ccc"
-                }}
+                placeholder="Tell us about your experience..."
+                rows={6}
+                className="mt-6 w-full max-w-xl rounded-2xl border border-slate-300 p-4 text-sm outline-none"
               />
 
-              <div style={{ marginTop: "20px" }}>
+              <div className="mt-6">
                 <button
+                  type="button"
                   onClick={handleSubmit}
                   disabled={!rating || loading}
-                  style={{
-                    background: "#f59e0b",
-                    color: "white",
-                    padding: "14px 24px",
-                    borderRadius: "14px",
-                    border: "none",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    opacity: !rating || loading ? 0.6 : 1
-                  }}
+                  className="rounded-2xl bg-amber-500 px-8 py-4 font-extrabold text-white disabled:opacity-50"
                 >
                   {loading ? "Sending..." : "Submit Review"}
                 </button>
@@ -129,8 +119,12 @@ function ReviewContent() {
             </>
           ) : (
             <>
-              <h1>Thank you!</h1>
-              <p>Your review has been sent.</p>
+              <h1 className="text-3xl font-extrabold text-slate-900">
+                Thank you!
+              </h1>
+              <p className="mt-3 text-slate-600">
+                Your review has been sent.
+              </p>
             </>
           )}
         </div>
