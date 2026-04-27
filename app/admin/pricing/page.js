@@ -471,7 +471,7 @@ export default function AdminPricingPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 p-6 md:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="w-full px-4 space-y-6">
         <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -758,9 +758,9 @@ export default function AdminPricingPage() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
+        <div className="w-full overflow-x-auto rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
           <div className="overflow-x-auto pb-2">
-            <table className="w-full min-w-[1800px] text-sm">
+            <table className="w-full min-w-[2000px] text-sm">
               <thead className="bg-slate-100 text-left text-slate-700">
                 <tr>
                   <th className="px-3 py-4 font-semibold">Product</th>
