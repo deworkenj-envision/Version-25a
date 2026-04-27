@@ -16,37 +16,35 @@ export default function AdminDashboard() {
   }
 
   const adminLinks = [
-    {
-      title: "Orders Dashboard",
-      description:
-        "View incoming orders, update statuses, and manage production workflow.",
-      href: "/admin/orders",
-      cta: "Go to Orders →",
-    },
-    {
-      title: "Pricing Admin",
-      description:
-        "Update live pricing, quantities, active products, and sorting for your estimator.",
-      href: "/admin/pricing",
-      cta: "Manage Pricing →",
-    },
-    {
-      title: "Tracking / Shipping",
-      description:
-        "Enter carrier and tracking details for customer orders and shipping updates.",
-      href: "/admin/track",
-      cta: "Manage Tracking →",
-    },
-  ];
-
-{
+  {
+    title: "Orders Dashboard",
+    description:
+      "View incoming orders, update statuses, and manage production workflow.",
+    href: "/admin/orders",
+    cta: "Go to Orders →",
+  },
+  {
+    title: "Pricing Admin",
+    description:
+      "Update live pricing, quantities, active products, and sorting for your estimator.",
+    href: "/admin/pricing",
+    cta: "Manage Pricing →",
+  },
+  {
+    title: "Tracking / Shipping",
+    description:
+      "Enter carrier and tracking details for customer orders and shipping updates.",
+    href: "/admin/track",
+    cta: "Manage Tracking →",
+  },
+  {
     title: "Review Management",
     description:
       "View, approve, hide, and delete customer reviews shown on the homepage.",
     href: "/admin/reviews",
     cta: "Manage Reviews →",
   },
-];,
+];
 
   return (
     <main className="min-h-screen bg-slate-50 p-6 md:p-10">
