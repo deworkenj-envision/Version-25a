@@ -9,10 +9,27 @@ const emptyForm = {
   finish: "",
   sides: "",
   quantity: "",
-  price: "",
+  your_cost: "",
+  markup_percent: "",
+  shipping_cost: "",
   sort_order: "",
   active: true,
 };
+
+function money(value) {
+  const num = Number(value || 0);
+  return `$${num.toFixed(2)}`;
+}
+
+function finalPrice(row) {
+  const cost = Number(row.your_cost || 0);
+  const markup = Number(row.markup_percent || 0);
+  return cost * (1 + markup / 100);
+}
+
+function totalWithShipping(row) {
+  return finalPrice(row) + Number(row.shipping_cost || 0);
+}
 
 export default function AdminPricingPage() {
   const [rows, setRows] = useState([]);
@@ -64,12 +81,27 @@ export default function AdminPricingPage() {
       setSavingId(id);
       setMessage("");
 
+      const numericFields = [
+        "quantity",
+        "your_cost",
+        "markup_percent",
+        "shipping_cost",
+        "sort_order",
+      ];
+
+      const cleanValue =
+        field === "active"
+          ? Boolean(value)
+          : numericFields.includes(field)
+            ? Number(value)
+            : value;
+
       const res = await fetch("/api/admin/update-pricing", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id, field, value }),
+        body: JSON.stringify({ id, field, value: cleanValue }),
       });
 
       const data = await res.json();
@@ -83,14 +115,7 @@ export default function AdminPricingPage() {
           row.id === id
             ? {
                 ...row,
-                [field]:
-                  field === "price"
-                    ? Number(value)
-                    : field === "active"
-                    ? Boolean(value)
-                    : field === "sort_order"
-                    ? Number(value)
-                    : value,
+                [field]: cleanValue,
               }
             : row
         )
@@ -119,7 +144,9 @@ export default function AdminPricingPage() {
         finish: form.finish.trim(),
         sides: form.sides.trim(),
         quantity: Number(form.quantity),
-        price: Number(form.price),
+        your_cost: Number(form.your_cost),
+        markup_percent: Number(form.markup_percent),
+        shipping_cost: Number(form.shipping_cost),
         sort_order: form.sort_order === "" ? 0 : Number(form.sort_order),
         active: Boolean(form.active),
       };
@@ -132,7 +159,9 @@ export default function AdminPricingPage() {
         !payload.sides ||
         !payload.quantity ||
         Number.isNaN(payload.quantity) ||
-        Number.isNaN(payload.price)
+        Number.isNaN(payload.your_cost) ||
+        Number.isNaN(payload.markup_percent) ||
+        Number.isNaN(payload.shipping_cost)
       ) {
         throw new Error("Please complete all required pricing row fields.");
       }
@@ -303,8 +332,18 @@ export default function AdminPricingPage() {
       finish: row.finish || "",
       sides: row.sides || "",
       quantity: row.quantity ? String(row.quantity) : "",
-      price:
-        row.price !== null && row.price !== undefined ? String(row.price) : "",
+      your_cost:
+        row.your_cost !== null && row.your_cost !== undefined
+          ? String(row.your_cost)
+          : "",
+      markup_percent:
+        row.markup_percent !== null && row.markup_percent !== undefined
+          ? String(row.markup_percent)
+          : "",
+      shipping_cost:
+        row.shipping_cost !== null && row.shipping_cost !== undefined
+          ? String(row.shipping_cost)
+          : "",
       sort_order:
         row.sort_order !== null && row.sort_order !== undefined
           ? String(row.sort_order)
@@ -313,7 +352,7 @@ export default function AdminPricingPage() {
     });
 
     setMessage(
-      `Copied row for ${row.product_name}. Update quantity or price, then click Add New Pricing Row.`
+      `Copied row for ${row.product_name}. Update quantity, cost, markup, or shipping, then click Add New Pricing Row.`
     );
 
     if (createFormRef.current) {
@@ -403,7 +442,9 @@ export default function AdminPricingPage() {
         row.finish,
         row.sides,
         row.quantity,
-        row.price,
+        row.your_cost,
+        row.markup_percent,
+        row.shipping_cost,
       ]
         .join(" ")
         .toLowerCase();
@@ -441,7 +482,7 @@ export default function AdminPricingPage() {
                 Pricing Admin
               </h1>
               <p className="mt-2 text-slate-600">
-                Update live pricing used by your order page and checkout flow.
+                Update product-specific pricing, markup, shipping, and live order options.
               </p>
             </div>
 
@@ -479,7 +520,7 @@ export default function AdminPricingPage() {
           </p>
           <p className="mt-2 text-sm text-slate-500">
             Required columns: product_name, size, paper, finish, sides, quantity,
-            price, sort_order, active
+            your_cost, markup_percent, shipping_cost, sort_order, active
           </p>
 
           <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
@@ -537,6 +578,7 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
+
             <input
               type="text"
               placeholder="Size"
@@ -546,6 +588,7 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
+
             <input
               type="text"
               placeholder="Paper"
@@ -555,6 +598,7 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
+
             <input
               type="text"
               placeholder="Finish"
@@ -564,6 +608,7 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
+
             <input
               type="text"
               placeholder="Sides"
@@ -573,6 +618,7 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
+
             <input
               type="number"
               placeholder="Quantity"
@@ -582,16 +628,40 @@ export default function AdminPricingPage() {
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
+
             <input
               type="number"
               step="0.01"
-              placeholder="Price"
-              value={form.price}
+              placeholder="Your Cost"
+              value={form.your_cost}
               onChange={(e) =>
-                setForm((prev) => ({ ...prev, price: e.target.value }))
+                setForm((prev) => ({ ...prev, your_cost: e.target.value }))
               }
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
+
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Markup %"
+              value={form.markup_percent}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, markup_percent: e.target.value }))
+              }
+              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            />
+
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Shipping Cost"
+              value={form.shipping_cost}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, shipping_cost: e.target.value }))
+              }
+              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            />
+
             <input
               type="number"
               placeholder="Sort Order"
@@ -602,7 +672,19 @@ export default function AdminPricingPage() {
               className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
 
-            <label className="flex items-center gap-3 rounded-2xl border border-slate-300 px-4 py-3 xl:col-span-2">
+            <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                Final Price Preview
+              </div>
+              <div className="mt-1 text-lg font-bold text-slate-900">
+                {money(finalPrice(form))}
+              </div>
+              <div className="text-xs text-slate-500">
+                Total with shipping: {money(totalWithShipping(form))}
+              </div>
+            </div>
+
+            <label className="flex items-center gap-3 rounded-2xl border border-slate-300 px-4 py-3">
               <input
                 type="checkbox"
                 checked={form.active}
@@ -614,7 +696,7 @@ export default function AdminPricingPage() {
               <span className="text-sm font-medium text-slate-700">Active</span>
             </label>
 
-            <div className="xl:col-span-2">
+            <div className="xl:col-span-4">
               <button
                 type="submit"
                 disabled={creating}
@@ -659,7 +741,7 @@ export default function AdminPricingPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search size, paper, finish, sides, quantity..."
+                placeholder="Search product, size, paper, finish, sides, quantity..."
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
               />
             </div>
@@ -678,7 +760,7 @@ export default function AdminPricingPage() {
 
         <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1120px] text-sm">
+            <table className="w-full min-w-[1500px] text-sm">
               <thead className="bg-slate-100 text-left text-slate-700">
                 <tr>
                   <th className="px-3 py-4 font-semibold">Product</th>
@@ -688,7 +770,11 @@ export default function AdminPricingPage() {
                   <th className="px-3 py-4 font-semibold">Sides</th>
                   <th className="px-3 py-4 font-semibold">Qty</th>
                   <th className="px-3 py-4 font-semibold">Sort</th>
-                  <th className="px-3 py-4 font-semibold">Price</th>
+                  <th className="px-3 py-4 font-semibold">Your Cost</th>
+                  <th className="px-3 py-4 font-semibold">Markup %</th>
+                  <th className="px-3 py-4 font-semibold">Shipping</th>
+                  <th className="px-3 py-4 font-semibold">Final Price</th>
+                  <th className="px-3 py-4 font-semibold">Total</th>
                   <th className="px-3 py-4 font-semibold">Active</th>
                   <th className="px-3 py-4 font-semibold">Actions</th>
                   <th className="px-3 py-4 font-semibold">Status</th>
@@ -698,7 +784,7 @@ export default function AdminPricingPage() {
               <tbody>
                 {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="p-8 text-center text-slate-500">
+                    <td colSpan="15" className="p-8 text-center text-slate-500">
                       No pricing rows found.
                     </td>
                   </tr>
@@ -708,18 +794,23 @@ export default function AdminPricingPage() {
                       <td className="px-3 py-4 font-medium text-slate-900 whitespace-nowrap">
                         {row.product_name}
                       </td>
+
                       <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
                         {row.size}
                       </td>
+
                       <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
                         {row.paper}
                       </td>
+
                       <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
                         {row.finish}
                       </td>
+
                       <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
                         {row.sides}
                       </td>
+
                       <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
                         {row.quantity}
                       </td>
@@ -739,12 +830,44 @@ export default function AdminPricingPage() {
                         <input
                           type="number"
                           step="0.01"
-                          value={row.price ?? 0}
+                          value={row.your_cost ?? 0}
                           onChange={(e) =>
-                            updateRow(row.id, "price", e.target.value)
+                            updateRow(row.id, "your_cost", e.target.value)
+                          }
+                          className="w-28 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        />
+                      </td>
+
+                      <td className="px-3 py-4">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={row.markup_percent ?? 0}
+                          onChange={(e) =>
+                            updateRow(row.id, "markup_percent", e.target.value)
                           }
                           className="w-24 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
+                      </td>
+
+                      <td className="px-3 py-4">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={row.shipping_cost ?? 0}
+                          onChange={(e) =>
+                            updateRow(row.id, "shipping_cost", e.target.value)
+                          }
+                          className="w-28 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        />
+                      </td>
+
+                      <td className="px-3 py-4 whitespace-nowrap font-bold text-slate-900">
+                        {money(finalPrice(row))}
+                      </td>
+
+                      <td className="px-3 py-4 whitespace-nowrap font-bold text-emerald-700">
+                        {money(totalWithShipping(row))}
                       </td>
 
                       <td className="px-3 py-4 whitespace-nowrap">
