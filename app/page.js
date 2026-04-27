@@ -1,3 +1,4 @@
+import ReviewsSection from "./components/ReviewsSection";
 import Image from "next/image";
 import Link from "next/link";
 import { supabaseAdmin } from "../lib/supabaseAdmin";
@@ -239,6 +240,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+<ReviewsSection />
     </main>
   );
 }
