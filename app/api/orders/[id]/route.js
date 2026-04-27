@@ -47,21 +47,6 @@ function getCarrierTrackingLink(carrier, trackingNumber) {
   return "";
 }
 
-function getReorderUrl(baseUrl, order) {
-  if (!order?.product_name) return "";
-
-  const params = new URLSearchParams({
-    product: order.product_name || "",
-    size: order.size || "",
-    paper: order.paper || "",
-    finish: order.finish || "",
-    sides: order.sides || "",
-    quantity: String(order.quantity || ""),
-  });
-
-  return `${baseUrl}/order?${params.toString()}`;
-}
-
 async function ensureTrackingToken(order) {
   if (order?.tracking_token) return order.tracking_token;
 
@@ -132,4 +117,318 @@ function brandedEmail({ baseUrl, title, subtitle, customerName, content }) {
 
           <div style="padding:26px 24px;">
             <div style="text-align:center;margin-bottom:20px;">
-              <h1 style="margin:0;font-size:24px;color
+              <h1 style="margin:0;font-size:24px;color:#111827;">${title}</h1>
+              <p style="margin-top:8px;color:#6b7280;font-size:14px;">
+                Hello ${escapeHtml(customerName || "Customer")}, ${subtitle}
+              </p>
+            </div>
+
+            ${content}
+
+            <p style="margin:24px 0 0;text-align:center;color:#64748b;font-size:13px;line-height:1.6;">
+              Thank you for choosing EnVision Direct.<br/>
+              Premium Printing • Fast Turnaround • Trusted Quality
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function buildShippedEmailHtml(order, trackingUrl, carrierLink, baseUrl) {
+  return brandedEmail({
+    baseUrl,
+    title: "Your Order Has Shipped",
+    subtitle: "your order is on the way.",
+    customerName: order.customer_name,
+    content: `
+      <div style="border:1px solid #bfdbfe;background:#eff6ff;border-radius:18px;padding:18px;margin-bottom:18px;">
+        <h2 style="margin:0 0 10px;font-size:20px;color:#1e3a8a;">Tracking Information</h2>
+        <p style="margin:0 0 8px;color:#1e3a8a;font-size:15px;line-height:1.7;"><strong>Carrier:</strong> ${escapeHtml(order.tracking_carrier || "—")}</p>
+        <p style="margin:0;color:#1e3a8a;font-size:15px;line-height:1.7;"><strong>Tracking Number:</strong> ${escapeHtml(order.tracking_number || "—")}</p>
+      </div>
+
+      ${orderSummaryCard(order)}
+
+      <div style="text-align:center;margin-top:22px;">
+        ${primaryButton("View Order Status", trackingUrl, "#0b5cff")}
+        ${carrierLink ? primaryButton("Track With Carrier", carrierLink, "#16a34a") : ""}
+      </div>
+    `,
+  });
+}
+
+function buildDeliveredEmailHtml(order, trackingUrl, baseUrl) {
+  return brandedEmail({
+    baseUrl,
+    title: "Your Order Was Delivered",
+    subtitle: "your order has been marked as delivered.",
+    customerName: order.customer_name,
+    content: `
+      <div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:18px;padding:18px;margin-bottom:18px;">
+        <h2 style="margin:0 0 10px;font-size:20px;color:#166534;">Delivered Successfully</h2>
+        <p style="margin:0;color:#166534;font-size:15px;line-height:1.7;font-weight:700;">
+          We hope everything looks great. Your order details are below.
+        </p>
+      </div>
+
+      ${orderSummaryCard(order)}
+
+      <div style="text-align:center;margin-top:22px;">
+        ${primaryButton("View Order Status", trackingUrl, "#0b5cff")}
+      </div>
+    `,
+  });
+}
+
+function buildReviewEmailHtml(order, baseUrl) {
+  const reviewUrl = `${baseUrl}/review?order=${encodeURIComponent(
+    order.order_number || ""
+  )}&id=${encodeURIComponent(order.id || "")}`;
+
+  return brandedEmail({
+    baseUrl,
+    title: "How Did We Do?",
+    subtitle: "we’d love your feedback.",
+    customerName: order.customer_name,
+    content: `
+      <div style="border:1px solid #fef3c7;background:#fffbeb;border-radius:18px;padding:18px;margin-bottom:18px;text-align:center;">
+        <h2 style="margin:0 0 10px;font-size:22px;color:#92400e;">Thank you for your order</h2>
+        <p style="margin:0;color:#92400e;font-size:15px;line-height:1.7;">
+          Your feedback helps us improve and helps other customers choose EnVision Direct.
+        </p>
+      </div>
+
+      ${orderSummaryCard(order)}
+
+      <div style="text-align:center;margin-top:22px;">
+        ${primaryButton("Leave a Review", reviewUrl, "#f59e0b")}
+      </div>
+    `,
+  });
+}
+
+async function sendStatusEmail(req, order, status) {
+  if (!resend) return;
+  if (!order?.customer_email) return;
+  if (status !== "shipped" && status !== "delivered") return;
+
+  const trackingToken = await ensureTrackingToken(order);
+  const baseUrl = getBaseUrl(req);
+  const trackingUrl = `${baseUrl}/track?token=${encodeURIComponent(trackingToken)}`;
+
+  const carrierLink = getCarrierTrackingLink(
+    order.tracking_carrier,
+    order.tracking_number
+  );
+
+  const from =
+    process.env.RESEND_FROM_EMAIL ||
+    "EnVision Direct <orders@envisiondirect.net>";
+
+  if (status === "shipped") {
+    await resend.emails.send({
+      from,
+      to: order.customer_email,
+      subject: `Your order ${order.order_number || ""} has shipped`,
+      html: buildShippedEmailHtml(
+        { ...order, status: "shipped", tracking_token: trackingToken },
+        trackingUrl,
+        carrierLink,
+        baseUrl
+      ),
+    });
+  }
+
+  if (status === "delivered") {
+    await resend.emails.send({
+      from,
+      to: order.customer_email,
+      subject: `Your order ${order.order_number || ""} was delivered`,
+      html: buildDeliveredEmailHtml(
+        { ...order, status: "delivered", tracking_token: trackingToken },
+        trackingUrl,
+        baseUrl
+      ),
+    });
+
+    await resend.emails.send({
+      from,
+      to: order.customer_email,
+      subject: `How was your order from EnVision Direct?`,
+      html: buildReviewEmailHtml(
+        { ...order, status: "delivered", tracking_token: trackingToken },
+        baseUrl
+      ),
+    });
+  }
+}
+
+export async function GET(req, context) {
+  try {
+    const { id } = await context.params;
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing order ID." }, { status: 400 });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message || "Failed to load order." },
+        { status: 500 }
+      );
+    }
+
+    const { data: events } = await supabaseAdmin
+      .from("order_events")
+      .select("*")
+      .eq("order_id", id)
+      .order("created_at", { ascending: false });
+
+    return NextResponse.json({
+      order: {
+        ...data,
+        events: events || [],
+      },
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err.message || "Server error." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(req, context) {
+  try {
+    const { id } = await context.params;
+    const body = await req.json();
+
+    const status = String(body?.status || "").toLowerCase().trim();
+    const tracking_number =
+      typeof body?.tracking_number === "string" && body.tracking_number.trim()
+        ? body.tracking_number.trim()
+        : null;
+    const tracking_carrier =
+      typeof body?.tracking_carrier === "string" && body.tracking_carrier.trim()
+        ? body.tracking_carrier.trim()
+        : null;
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing order ID." }, { status: 400 });
+    }
+
+    if (!ALLOWED_STATUSES.includes(status)) {
+      return NextResponse.json({ error: "Invalid status." }, { status: 400 });
+    }
+
+    if (status === "shipped" && (!tracking_number || !tracking_carrier)) {
+      return NextResponse.json(
+        {
+          error:
+            "Tracking carrier and tracking number are required before marking an order as shipped.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const { data: beforeOrder } = await supabaseAdmin
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    const { data: updatedOrder, error: updateError } = await supabaseAdmin
+      .from("orders")
+      .update({
+        status,
+        tracking_number,
+        tracking_carrier,
+      })
+      .eq("id", id)
+      .select("*")
+      .single();
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: updateError.message || "Failed to update order." },
+        { status: 500 }
+      );
+    }
+
+    if (beforeOrder?.status !== updatedOrder.status) {
+      await addOrderEvent(
+        id,
+        "status_change",
+        `Status changed to ${updatedOrder.status}`,
+        `Previous status: ${beforeOrder?.status || "none"}`
+      );
+    }
+
+    const trackingChanged =
+      (beforeOrder?.tracking_number || "") !==
+        (updatedOrder?.tracking_number || "") ||
+      (beforeOrder?.tracking_carrier || "") !==
+        (updatedOrder?.tracking_carrier || "");
+
+    if (
+      trackingChanged &&
+      (updatedOrder?.tracking_number || updatedOrder?.tracking_carrier)
+    ) {
+      await addOrderEvent(
+        id,
+        "tracking_update",
+        "Tracking information updated",
+        `${updatedOrder?.tracking_carrier || "Carrier"} ${
+          updatedOrder?.tracking_number || ""
+        }`.trim()
+      );
+    }
+
+    try {
+      if (status === "shipped" || status === "delivered") {
+        await sendStatusEmail(req, updatedOrder, status);
+        await addOrderEvent(
+          id,
+          "email_sent",
+          `${status === "shipped" ? "Shipped" : "Delivered"} email sent`,
+          `Sent to ${updatedOrder.customer_email || "customer"}`
+        );
+      }
+    } catch (emailError) {
+      return NextResponse.json(
+        {
+          order: updatedOrder,
+          warning:
+            emailError.message || "Order updated, but email failed to send.",
+        },
+        { status: 200 }
+      );
+    }
+
+    const { data: events } = await supabaseAdmin
+      .from("order_events")
+      .select("*")
+      .eq("order_id", id)
+      .order("created_at", { ascending: false });
+
+    return NextResponse.json({
+      order: {
+        ...updatedOrder,
+        events: events || [],
+      },
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err.message || "Server error." },
+      { status: 500 }
+    );
+  }
+}
