@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
+function clean(value) {
+  return String(value ?? "")
+    .trim()
+    .replace(/\s+/g, " "); // remove double spaces
+}
+
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
@@ -37,7 +43,19 @@ export async function GET(req) {
       );
     }
 
-    const rows = data || [];
+    // 🔥 CLEAN + NORMALIZE ALL FIELDS
+    const rows = (data || []).map((row) => ({
+      ...row,
+      product_name: clean(row.product_name),
+      size: clean(row.size),
+      paper: clean(row.paper),
+      finish: clean(row.finish),
+      sides: clean(row.sides),
+      quantity: Number(row.quantity),
+      your_cost: Number(row.your_cost ?? 0),
+      markup_percent: Number(row.markup_percent ?? 0),
+      shipping_cost: Number(row.shipping_cost ?? 0),
+    }));
 
     const exactMatch =
       product_name &&
@@ -46,13 +64,23 @@ export async function GET(req) {
       finish &&
       sides &&
       quantity
-        ? rows[0] || null
+        ? rows.find(
+            (r) =>
+              r.product_name === product_name &&
+              r.size === size &&
+              r.paper === paper &&
+              r.finish === finish &&
+              r.sides === sides &&
+              r.quantity === Number(quantity)
+          ) || null
         : null;
 
     return NextResponse.json({
       success: true,
       pricing: rows,
-      exactPrice: exactMatch ? Number(exactMatch.price) : null,
+      exactPrice: exactMatch
+        ? exactMatch.your_cost * (1 + exactMatch.markup_percent / 100)
+        : null,
       exactMatch,
     });
   } catch (err) {
