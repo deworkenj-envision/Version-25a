@@ -39,6 +39,15 @@ export default function AdminDashboard() {
     },
   ];
 
+{
+    title: "Review Management",
+    description:
+      "View, approve, hide, and delete customer reviews shown on the homepage.",
+    href: "/admin/reviews",
+    cta: "Manage Reviews →",
+  },
+];,
+
   return (
     <main className="min-h-screen bg-slate-50 p-6 md:p-10">
       <div className="mx-auto max-w-6xl space-y-6">
