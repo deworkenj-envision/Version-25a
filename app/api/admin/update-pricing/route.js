@@ -23,49 +23,53 @@ export async function POST(req) {
       );
     }
 
-    // ✅ UPDATED FIELDS
     const allowedFields = [
+      "product_name",
+      "size",
+      "paper",
+      "finish",
+      "sides",
+      "quantity",
       "your_cost",
       "markup_percent",
       "shipping_cost",
       "active",
       "sort_order",
-      "price" // keep for backward compatibility
+      "price",
     ];
 
     if (!allowedFields.includes(field)) {
       return NextResponse.json(
-        { success: false, error: "Invalid field" },
+        { success: false, error: `Invalid field: ${field}` },
         { status: 400 }
       );
     }
 
-    // ✅ HANDLE TYPES CORRECTLY
+    const numericFields = [
+      "quantity",
+      "your_cost",
+      "markup_percent",
+      "shipping_cost",
+      "sort_order",
+      "price",
+    ];
+
     let cleanValue;
 
     if (field === "active") {
       cleanValue = Boolean(value);
-    } else if (
-      field === "your_cost" ||
-      field === "markup_percent" ||
-      field === "shipping_cost" ||
-      field === "price"
-    ) {
-      cleanValue = Number(value);
-    } else if (field === "sort_order") {
-      cleanValue = Number(value);
+    } else if (numericFields.includes(field)) {
+      cleanValue = Number(value || 0);
     } else {
-      cleanValue = value;
+      cleanValue = String(value || "");
     }
 
-    const updateData = {
-      [field]: cleanValue,
-    };
-
-    const { error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from("pricing")
-      .update(updateData)
-      .eq("id", id);
+      .update({ [field]: cleanValue })
+      .eq("id", id)
+      .select("id")
+      .single();
 
     if (error) {
       return NextResponse.json(
@@ -74,7 +78,19 @@ export async function POST(req) {
       );
     }
 
-    return NextResponse.json({ success: true });
+    if (!data?.id) {
+      return NextResponse.json(
+        { success: false, error: "Pricing row not found." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      id: data.id,
+      field,
+      value: cleanValue,
+    });
   } catch (err) {
     return NextResponse.json(
       { success: false, error: err.message || "Server error" },
