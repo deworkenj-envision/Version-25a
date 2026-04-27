@@ -16,6 +16,58 @@ const emptyForm = {
   active: true,
 };
 
+const presetOptions = {
+  product_name: [
+    "Business Cards",
+    "Postcards",
+    "Flyers",
+    "Banners",
+    "Brochures",
+    "Door Hangers",
+    "EDDM Postcards",
+    "Rack Cards",
+  ],
+  size: [
+    "2 x 3.5",
+    "4 x 6",
+    "5 x 7",
+    "5.5 x 8.5",
+    "6 x 9",
+    "8.5 x 11",
+    "8.5 x 14",
+    "11 x 17",
+    "24 x 36",
+    "36 x 48",
+  ],
+  paper: [
+    "14pt C2S",
+    "16pt C2S",
+    "100lb Gloss Text",
+    "100lb Matte Text",
+    "100lb Gloss Cover",
+    "100lb Matte Cover",
+    "13oz Vinyl Banner",
+  ],
+  finish: [
+    "No Coating",
+    "Matte",
+    "Gloss",
+    "UV Coating",
+    "AQ Coating",
+    "High Gloss UV",
+  ],
+  sides: ["Front Only", "Front and Back"],
+  quantity: [
+    "100",
+    "250",
+    "500",
+    "1000",
+    "2500",
+    "5000",
+    "10000",
+  ],
+};
+
 function money(value) {
   const num = Number(value || 0);
   return `$${num.toFixed(2)}`;
@@ -106,6 +158,16 @@ export default function AdminPricingPage() {
     if (field === "active") return Boolean(value);
     if (numericFields.includes(field)) return Number(value || 0);
     return value;
+  }
+
+  function getDropdownOptions(field) {
+    const preset = presetOptions[field] || [];
+    const existing = rows
+      .map((row) => row[field])
+      .filter((value) => value !== null && value !== undefined && value !== "")
+      .map((value) => String(value));
+
+    return [...new Set([...preset, ...existing])];
   }
 
   function handleLocalChange(id, field, value) {
@@ -592,6 +654,7 @@ export default function AdminPricingPage() {
             </div>
           </div>
         </div>
+
         <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8">
           <h2 className="text-2xl font-bold text-slate-900">Bulk CSV Import</h2>
           <p className="mt-2 text-slate-600">
@@ -648,65 +711,95 @@ export default function AdminPricingPage() {
             onSubmit={handleCreateRow}
             className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4"
           >
-            <input
-              type="text"
-              placeholder="Product Name"
+            <select
               value={form.product_name}
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, product_name: e.target.value }))
               }
-              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-            />
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            >
+              <option value="">Product Name</option>
+              {getDropdownOptions("product_name").map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
 
-            <input
-              type="text"
-              placeholder="Size"
+            <select
               value={form.size}
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, size: e.target.value }))
               }
-              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-            />
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            >
+              <option value="">Size</option>
+              {getDropdownOptions("size").map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
 
-            <input
-              type="text"
-              placeholder="Paper"
+            <select
               value={form.paper}
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, paper: e.target.value }))
               }
-              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-            />
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            >
+              <option value="">Paper</option>
+              {getDropdownOptions("paper").map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
 
-            <input
-              type="text"
-              placeholder="Finish"
+            <select
               value={form.finish}
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, finish: e.target.value }))
               }
-              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-            />
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            >
+              <option value="">Finish</option>
+              {getDropdownOptions("finish").map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
 
-            <input
-              type="text"
-              placeholder="Sides"
+            <select
               value={form.sides}
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, sides: e.target.value }))
               }
-              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-            />
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            >
+              <option value="">Sides</option>
+              {getDropdownOptions("sides").map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
 
-            <input
-              type="number"
-              placeholder="Quantity"
+            <select
               value={form.quantity}
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, quantity: e.target.value }))
               }
-              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-            />
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            >
+              <option value="">Quantity</option>
+              {getDropdownOptions("quantity").map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
 
             <input
               type="number"
@@ -899,69 +992,105 @@ export default function AdminPricingPage() {
                   filteredRows.map((row) => (
                     <tr key={row.id} className="border-t border-slate-200 align-top">
                       <td className="sticky left-0 z-20 bg-white px-2 py-3 shadow-[2px_0_0_0_rgba(226,232,240,1)]">
-                        <input
-                          type="text"
+                        <select
                           value={row.product_name ?? ""}
                           onChange={(e) =>
                             handleLocalChange(row.id, "product_name", e.target.value)
                           }
-                          className="w-40 rounded-xl border border-slate-300 px-2 py-1.5 text-xs font-semibold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                        />
+                          className="w-40 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs font-semibold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        >
+                          <option value="">Select Product</option>
+                          {getDropdownOptions("product_name").map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
                       </td>
 
                       <td className="px-2 py-3">
-                        <input
-                          type="text"
+                        <select
                           value={row.size ?? ""}
                           onChange={(e) =>
                             handleLocalChange(row.id, "size", e.target.value)
                           }
-                          className="w-32 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                        />
+                          className="w-32 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        >
+                          <option value="">Select Size</option>
+                          {getDropdownOptions("size").map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
                       </td>
 
                       <td className="px-2 py-3">
-                        <input
-                          type="text"
+                        <select
                           value={row.paper ?? ""}
                           onChange={(e) =>
                             handleLocalChange(row.id, "paper", e.target.value)
                           }
-                          className="w-36 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                        />
+                          className="w-36 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        >
+                          <option value="">Select Paper</option>
+                          {getDropdownOptions("paper").map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
                       </td>
 
                       <td className="px-2 py-3">
-                        <input
-                          type="text"
+                        <select
                           value={row.finish ?? ""}
                           onChange={(e) =>
                             handleLocalChange(row.id, "finish", e.target.value)
                           }
-                          className="w-32 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                        />
+                          className="w-32 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        >
+                          <option value="">Select Finish</option>
+                          {getDropdownOptions("finish").map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
                       </td>
 
                       <td className="px-2 py-3">
-                        <input
-                          type="text"
+                        <select
                           value={row.sides ?? ""}
                           onChange={(e) =>
                             handleLocalChange(row.id, "sides", e.target.value)
                           }
-                          className="w-36 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                        />
+                          className="w-36 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        >
+                          <option value="">Select Sides</option>
+                          {getDropdownOptions("sides").map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
                       </td>
 
                       <td className="px-2 py-3">
-                        <input
-                          type="number"
-                          value={row.quantity ?? 0}
+                        <select
+                          value={String(row.quantity ?? "")}
                           onChange={(e) =>
                             handleLocalChange(row.id, "quantity", e.target.value)
                           }
-                          className="w-24 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                        />
+                          className="w-24 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        >
+                          <option value="">Qty</option>
+                          {getDropdownOptions("quantity").map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
                       </td>
 
                       <td className="px-2 py-3">
