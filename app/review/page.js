@@ -3,48 +3,131 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-function ReviewInner() {
+function ReviewContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order") || "";
+  const orderId = searchParams.get("id") || "";
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-12">
-      <div className="mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-        <img
-          src="/images/logo-hero.png"
-          alt="EnVision Direct"
-          className="mx-auto h-24 w-auto object-contain"
-        />
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#f4f7fb",
+        padding: "40px 16px",
+        fontFamily: "Arial, Helvetica, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "720px",
+          margin: "0 auto",
+          background: "#ffffff",
+          border: "1px solid #dbe6f3",
+          borderRadius: "24px",
+          overflow: "hidden",
+          boxShadow: "0 16px 40px rgba(15,43,82,0.12)",
+        }}
+      >
+        <div
+          style={{
+            padding: "24px",
+            textAlign: "center",
+            borderBottom: "1px solid #e5e7eb",
+            background: "#ffffff",
+          }}
+        >
+          <img
+            src="/images/logo-hero.png"
+            alt="EnVision Direct"
+            style={{
+              maxWidth: "200px",
+              width: "100%",
+              height: "auto",
+            }}
+          />
+        </div>
 
-        <h1 className="mt-6 text-4xl font-bold text-slate-900">
-          How did we do?
-        </h1>
+        <div
+          style={{
+            padding: "32px 24px",
+            textAlign: "center",
+          }}
+        >
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "30px",
+              color: "#111827",
+            }}
+          >
+            How did we do?
+          </h1>
 
-        {orderNumber ? (
-          <p className="mt-3 text-slate-600">
-            Order <span className="font-bold">{orderNumber}</span>
+          <p
+            style={{
+              marginTop: "10px",
+              color: "#6b7280",
+              fontSize: "16px",
+              lineHeight: "1.6",
+            }}
+          >
+            Thank you for choosing EnVision Direct. We would love your feedback.
           </p>
-        ) : null}
 
-        <p className="mt-4 text-slate-600">
-          Thank you for choosing EnVision Direct. We would love your feedback.
-        </p>
+          {orderNumber ? (
+            <div
+              style={{
+                margin: "24px auto",
+                maxWidth: "420px",
+                background: "#f8fafc",
+                border: "1px solid #e5e7eb",
+                borderRadius: "16px",
+                padding: "16px",
+                color: "#111827",
+              }}
+            >
+              <strong>Order Number:</strong> {orderNumber}
+            </div>
+          ) : null}
 
-        <div className="mt-8 grid gap-3">
-          <a
-            href="https://www.google.com/search?q=EnVision+Direct+reviews"
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-2xl bg-blue-700 px-5 py-4 font-semibold text-white transition hover:bg-blue-800"
+          <div
+            style={{
+              fontSize: "34px",
+              margin: "22px 0",
+              letterSpacing: "4px",
+            }}
           >
-            Leave a Google Review
-          </a>
+            ⭐ ⭐ ⭐ ⭐ ⭐
+          </div>
+
+          <p
+            style={{
+              color: "#374151",
+              lineHeight: "1.7",
+              maxWidth: "520px",
+              margin: "0 auto",
+            }}
+          >
+            Please send us your review or comments. Your feedback helps us
+            improve and helps other customers choose EnVision Direct.
+          </p>
 
           <a
-            href="/"
-            className="rounded-2xl border border-slate-300 px-5 py-4 font-semibold text-slate-700 transition hover:bg-slate-50"
+            href={`mailto:orders@envisiondirect.net?subject=Review for Order ${
+              orderNumber || orderId
+            }`}
+            style={{
+              display: "inline-block",
+              background: "#f59e0b",
+              color: "#ffffff",
+              textDecoration: "none",
+              padding: "15px 24px",
+              borderRadius: "14px",
+              fontWeight: "900",
+              marginTop: "24px",
+            }}
           >
-            Back to EnVision Direct
+            Send Review
           </a>
         </div>
       </div>
@@ -55,7 +138,7 @@ function ReviewInner() {
 export default function ReviewPage() {
   return (
     <Suspense fallback={<div>Loading review page...</div>}>
-      <ReviewInner />
+      <ReviewContent />
     </Suspense>
   );
 }

@@ -182,6 +182,33 @@ function buildDeliveredEmailHtml(order, trackingUrl, baseUrl) {
   });
 }
 
+function buildReviewEmailHtml(order, baseUrl) {
+  const reviewUrl = `${baseUrl}/review?order=${encodeURIComponent(
+    order.order_number || ""
+  )}&id=${encodeURIComponent(order.id || "")}`;
+
+  return brandedEmail({
+    baseUrl,
+    title: "How Did We Do?",
+    subtitle: "we’d love your feedback.",
+    customerName: order.customer_name,
+    content: `
+      <div style="border:1px solid #fef3c7;background:#fffbeb;border-radius:18px;padding:18px;margin-bottom:18px;text-align:center;">
+        <h2 style="margin:0 0 10px;font-size:22px;color:#92400e;">Thank you for your order</h2>
+        <p style="margin:0;color:#92400e;font-size:15px;line-height:1.7;">
+          Your feedback helps us improve and helps other customers choose EnVision Direct.
+        </p>
+      </div>
+
+      ${orderSummaryCard(order)}
+
+      <div style="text-align:center;margin-top:22px;">
+        ${primaryButton("Leave a Review", reviewUrl, "#f59e0b")}
+      </div>
+    `,
+  });
+}
+
 async function sendStatusEmail(req, order, status) {
   if (!resend) return;
   if (!order?.customer_email) return;
@@ -222,6 +249,16 @@ async function sendStatusEmail(req, order, status) {
       html: buildDeliveredEmailHtml(
         { ...order, status: "delivered", tracking_token: trackingToken },
         trackingUrl,
+        baseUrl
+      ),
+    });
+
+    await resend.emails.send({
+      from,
+      to: order.customer_email,
+      subject: `How was your order from EnVision Direct?`,
+      html: buildReviewEmailHtml(
+        { ...order, status: "delivered", tracking_token: trackingToken },
         baseUrl
       ),
     });
