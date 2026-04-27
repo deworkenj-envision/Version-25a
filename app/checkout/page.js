@@ -39,7 +39,7 @@ function CheckoutInner() {
 
   const productImage = searchParams.get("productImage") || "";
   const subtotal = toNumber(searchParams.get("subtotal"));
-  const shipping = 1.00;
+  const shipping = toNumber(searchParams.get("shipping"));
   const total = subtotal + shipping;
 
   const [customerName, setCustomerName] = useState("");
