@@ -158,7 +158,12 @@ function buildDeliveredEmail(order, trackingUrl, baseUrl) {
   );
 }
 
+/* ✅ FIXED REVIEW EMAIL */
 function buildReviewEmail(order, baseUrl) {
+  const reviewUrl = `${baseUrl}/review?order=${encodeURIComponent(
+    order.order_number || ""
+  )}`;
+
   return emailWrapper(
     "How did we do?",
     "We’d love your feedback.",
@@ -167,7 +172,7 @@ function buildReviewEmail(order, baseUrl) {
       <p>If you have a moment, please leave us a review.</p>
 
       <div style="text-align:center;margin-top:20px;">
-        <a href="${baseUrl}" style="
+        <a href="${reviewUrl}" style="
           display:inline-block;
           background:#f59e0b;
           color:white;
@@ -226,7 +231,6 @@ async function sendStatusEmail(req, order, status) {
       html: buildDeliveredEmail(order, trackingUrl, baseUrl),
     });
 
-    // 🔥 send review email AFTER delivery
     await resend.emails.send({
       from: "EnVision Direct <orders@envisiondirect.net>",
       to: order.customer_email,
