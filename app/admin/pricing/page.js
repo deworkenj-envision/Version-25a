@@ -759,7 +759,7 @@ export default function AdminPricingPage() {
         </div>
 
         <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto pb-2">
             <table className="w-full min-w-[1800px] text-sm">
               <thead className="bg-slate-100 text-left text-slate-700">
                 <tr>
@@ -815,7 +815,7 @@ export default function AdminPricingPage() {
                         {row.quantity}
                       </td>
 
-                      <td className="px-3 py-4">
+                      <td className="px-4 py-4">
                         <input
                           type="number"
                           value={row.sort_order ?? 0}
@@ -826,7 +826,7 @@ export default function AdminPricingPage() {
                         />
                       </td>
 
-                      <td className="px-3 py-4">
+                      <td className="px-4 py-4">
                         <input
                           type="number"
                           step="0.01"
@@ -838,7 +838,7 @@ export default function AdminPricingPage() {
                         />
                       </td>
 
-                      <td className="px-3 py-4">
+                      <td className="px-4 py-4">
                         <input
                           type="number"
                           step="0.01"
@@ -850,7 +850,7 @@ export default function AdminPricingPage() {
                         />
                       </td>
 
-                      <td className="px-3 py-4">
+                      <td className="px-4 py-4">
                         <input
                           type="number"
                           step="0.01"
@@ -886,7 +886,7 @@ export default function AdminPricingPage() {
                         </label>
                       </td>
 
-                      <td className="px-3 py-4">
+                      <td className="px-4 py-4">
                         <div className="flex flex-col gap-2">
                           <button
                             type="button"
