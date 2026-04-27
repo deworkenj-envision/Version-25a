@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const LOGO_SRC = "/logo.png";
-
 function formatMoney(value) {
   const num = Number(value || 0);
   return `$${num.toFixed(2)}`;
@@ -20,6 +18,21 @@ function slugify(value) {
     .replace(/&/g, "and")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function calculateFinalPrice(row) {
+  const yourCost = Number(row.your_cost ?? row.cost ?? 0);
+  const markupPercent = Number(row.markup_percent ?? row.markup ?? 0);
+
+  if (yourCost > 0) {
+    return yourCost * (1 + markupPercent / 100);
+  }
+
+  return Number(row.price ?? row.base_price ?? row.total ?? 0);
+}
+
+function calculateShipping(row) {
+  return Number(row.shipping_cost ?? row.shipping ?? row.shipping_price ?? 0);
 }
 
 const PRODUCT_META = {
@@ -155,16 +168,25 @@ export default function OrderPage() {
 
         const cleanedRows = rows
           .filter(Boolean)
-          .map((row) => ({
-            id: row.id,
-            product_name: normalize(row.product_name),
-            size: normalize(row.size),
-            paper: normalize(row.paper),
-            finish: normalize(row.finish),
-            sides: normalize(row.sides),
-            quantity: String(row.quantity ?? "").trim(),
-            price: Number(row.price ?? row.base_price ?? row.total ?? 0),
-          }))
+          .map((row) => {
+            const price = calculateFinalPrice(row);
+            const shipping = calculateShipping(row);
+
+            return {
+              id: row.id,
+              product_name: normalize(row.product_name),
+              size: normalize(row.size),
+              paper: normalize(row.paper),
+              finish: normalize(row.finish),
+              sides: normalize(row.sides),
+              quantity: String(row.quantity ?? "").trim(),
+              your_cost: Number(row.your_cost ?? row.cost ?? 0),
+              markup_percent: Number(row.markup_percent ?? row.markup ?? 0),
+              price,
+              shipping,
+              total_with_shipping: price + shipping,
+            };
+          })
           .filter((row) => row.product_name && row.quantity && Number.isFinite(row.price));
 
         setPricingRows(cleanedRows);
@@ -299,6 +321,8 @@ export default function OrderPage() {
   }, [rowsForSides, quantity]);
 
   const subtotal = Number(selectedRow?.price || 0);
+  const shippingCost = Number(selectedRow?.shipping || 0);
+  const estimatedTotal = subtotal + shippingCost;
 
   const unitPrice = useMemo(() => {
     const qty = Number(quantity || 0);
@@ -317,9 +341,8 @@ export default function OrderPage() {
   const heroPrice = subtotal || Number(bestValue?.price || 0);
   const heroQty = quantity || String(bestValue?.quantity || "");
   const heroUnit = unitPrice || Number(bestValue?.unitPrice || 0);
-
-  const shippingPreview = 1.00;
-  const estimatedTotal = heroPrice ? heroPrice + shippingPreview : 0;
+  const heroShipping = selectedRow ? shippingCost : Number(bestValue?.shipping || 0);
+  const heroTotal = heroPrice + heroShipping;
 
   const canContinue = Boolean(
     selectedRow &&
@@ -393,6 +416,11 @@ export default function OrderPage() {
         sides,
         quantity: Number(quantity),
         price: subtotal,
+        shipping: shippingCost,
+        subtotal,
+        total: estimatedTotal,
+        yourCost: selectedRow.your_cost,
+        markupPercent: selectedRow.markup_percent,
         notes,
         artworkUrl: uploadResult.artworkUrl,
         artworkFileName: uploadResult.fileName,
@@ -409,6 +437,8 @@ export default function OrderPage() {
         sides,
         quantity: String(quantity),
         subtotal: String(subtotal),
+        shipping: String(shippingCost),
+        total: String(estimatedTotal),
         notes,
         artworkUrl: uploadResult.artworkUrl,
         artworkFileName: uploadResult.fileName,
@@ -439,13 +469,7 @@ export default function OrderPage() {
   return (
     <main className="min-h-screen bg-[#eef2f7]">
       <section className="bg-gradient-to-r from-[#2457f5] via-[#1f63f4] to-[#0e98ff] text-white">
-        <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-          <div className="mb-6 flex items-center justify-between">
-            <div />
-          </div>
-        </div>
-
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:px-8 lg:pb-16">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 pb-10 pt-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:px-8 lg:pb-16">
           <div className="flex flex-col justify-center">
             <h1 className="max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl">
               Build Your Order.
@@ -504,7 +528,7 @@ export default function OrderPage() {
 
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                 <div className="flex justify-between gap-2">
-                  <span className="text-slate-500">Price</span>
+                  <span className="text-slate-500">Print</span>
                   <span className="font-semibold">
                     {heroPrice ? formatMoney(heroPrice) : "—"}
                   </span>
@@ -519,7 +543,7 @@ export default function OrderPage() {
 
                 <div className="flex justify-between gap-2">
                   <span className="text-slate-500">Ship</span>
-                  <span className="font-semibold">{formatMoney(shippingPreview)}</span>
+                  <span className="font-semibold">{formatMoney(heroShipping)}</span>
                 </div>
 
                 <div className="flex justify-between gap-2">
@@ -532,7 +556,7 @@ export default function OrderPage() {
             <div className="min-w-[140px] rounded-[20px] bg-[#2457f5] px-5 py-4 text-center text-white">
               <div className="text-xs text-blue-100">Total</div>
               <div className="text-2xl font-extrabold">
-                {estimatedTotal ? formatMoney(estimatedTotal) : "—"}
+                {heroTotal ? formatMoney(heroTotal) : "—"}
               </div>
             </div>
           </div>
@@ -543,7 +567,9 @@ export default function OrderPage() {
         {loading ? (
           <div className="rounded-[28px] bg-white p-10 text-center shadow-sm">
             <div className="text-lg font-semibold text-slate-800">Loading pricing...</div>
-            <p className="mt-2 text-sm text-slate-500">Please wait while we load your print options.</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Please wait while we load your print options.
+            </p>
           </div>
         ) : loadError ? (
           <div className="rounded-[28px] border border-red-200 bg-red-50 p-6 text-red-700 shadow-sm">
@@ -665,7 +691,7 @@ export default function OrderPage() {
                             <img
                               src={URL.createObjectURL(artworkFile)}
                               alt="Artwork Preview"
-                              className="max-h-64 w-full object-contain bg-white"
+                              className="max-h-64 w-full bg-white object-contain"
                             />
                           </div>
                         )}
@@ -719,7 +745,7 @@ export default function OrderPage() {
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-2xl font-extrabold text-slate-900">Order Summary</h2>
                   <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                    Live Match
+                    Live Price
                   </span>
                 </div>
 
@@ -750,9 +776,11 @@ export default function OrderPage() {
                 {bestValue?.quantity && (
                   <div className="mt-5 rounded-[20px] border border-amber-300 bg-amber-50 p-4">
                     <div className="text-sm font-semibold text-amber-700">Best Value Quantity</div>
-                    <div className="mt-1 text-3xl font-extrabold text-slate-900">{bestValue.quantity}</div>
+                    <div className="mt-1 text-3xl font-extrabold text-slate-900">
+                      {bestValue.quantity}
+                    </div>
                     <div className="mt-1 text-sm text-slate-600">
-                      {formatMoney(bestValue.price)} total · {formatMoney(bestValue.unitPrice)} each
+                      {formatMoney(bestValue.price)} print price · {formatMoney(bestValue.unitPrice)} each
                     </div>
                   </div>
                 )}
@@ -763,7 +791,7 @@ export default function OrderPage() {
                   </div>
 
                   <div className="mt-1 text-4xl font-extrabold">
-                    {subtotal ? formatMoney(subtotal + shippingPreview) : "—"}
+                    {estimatedTotal ? formatMoney(estimatedTotal) : "—"}
                   </div>
 
                   <div className="mt-3 space-y-1 text-sm text-blue-100">
@@ -773,11 +801,12 @@ export default function OrderPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Shipping</span>
-                      <span>{formatMoney(shippingPreview)}</span>
+                      <span>{formatMoney(shippingCost)}</span>
                     </div>
                   </div>
 
                   <div className="mt-4 border-t border-white/20 pt-3 text-xs text-blue-100">
+                    <div>✓ Shipping passed through with no markup</div>
                     <div>✓ Secure Checkout</div>
                     <div>✓ High Quality Printing</div>
                     <div>✓ Fast Turnaround</div>
@@ -800,7 +829,7 @@ export default function OrderPage() {
                 )}
 
                 <p className="mt-3 text-center text-xs text-slate-500">
-                  Final shipping and payment details will be completed on the next step.
+                  Final payment details will be completed on the next step.
                 </p>
               </div>
             </div>
@@ -808,15 +837,6 @@ export default function OrderPage() {
         )}
       </section>
     </main>
-  );
-}
-
-function MiniStat({ label, value }) {
-  return (
-    <div className="rounded-[18px] bg-slate-100 p-4">
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="mt-1 text-2xl font-bold text-slate-900">{value}</div>
-    </div>
   );
 }
 
