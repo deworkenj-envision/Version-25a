@@ -109,31 +109,33 @@ export default function AdminPricingPage() {
   }
 
   function handleLocalChange(id, field, value) {
-    const cleanValue = normalizeValue(field, value);
+  const cleanValue = normalizeValue(field, value);
 
-    setRows((prev) =>
-      prev.map((row) =>
-        row.id === id
-          ? {
-              ...row,
-              [field]: cleanValue,
-            }
-          : row
-      )
+  setRows((prev) => {
+    const updatedRows = prev.map((row) =>
+      row.id === id
+        ? {
+            ...row,
+            [field]: cleanValue,
+          }
+        : row
     );
 
     scheduleAutoSave(id, field, cleanValue);
-  }
+
+    return updatedRows;
+  });
+}
 
   function scheduleAutoSave(id, field, value) {
-    const key = `${id}-${field}`;
+  const key = `${id}-${field}`;
 
-    clearTimeout(saveTimeout.current[key]);
+  clearTimeout(saveTimeout.current[key]);
 
-    saveTimeout.current[key] = setTimeout(() => {
-      updateRow(id, field, value);
-    }, 600);
-  }
+  saveTimeout.current[key] = setTimeout(() => {
+    updateRow(id, field, value);
+  }, 250);
+}
 
   async function updateRow(id, field, value) {
     try {
