@@ -132,7 +132,7 @@ export default function AdminPricingPage() {
 
     saveTimeout.current[key] = setTimeout(() => {
       updateRow(id, field, value);
-    }, 250);
+    }, 800);
   }
 
   async function updateRow(id, field, value) {
