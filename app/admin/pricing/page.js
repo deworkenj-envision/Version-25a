@@ -138,6 +138,57 @@ export default function AdminPricingPage() {
 }
 
   async function updateRow(id, field, value) {
+  try {
+    setSavingId(id);
+    setMessage("");
+
+    const cleanValue = normalizeValue(field, value);
+
+    const res = await fetch("/api/admin/update-pricing", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id, field, value: cleanValue }),
+    });
+
+    const data = await res.json();
+
+    console.log("PRICING SAVE RESPONSE:", {
+      status: res.status,
+      ok: res.ok,
+      data,
+      id,
+      field,
+      value: cleanValue,
+    });
+
+    if (!res.ok || !data?.success) {
+      throw new Error(
+        data?.error || `Update failed with status ${res.status}`
+      );
+    }
+
+    setRows((prev) =>
+      prev.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              [field]: cleanValue,
+            }
+          : row
+      )
+    );
+
+    setMessage(`Saved ${field}.`);
+  } catch (err) {
+    console.error("PRICING SAVE ERROR:", err);
+    setMessage(`Save failed: ${err.message}`);
+  } finally {
+    setSavingId(null);
+  }
+}
     try {
       setSavingId(id);
       setMessage("");
