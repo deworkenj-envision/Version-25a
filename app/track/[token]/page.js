@@ -26,10 +26,12 @@ function getTrackingLink(carrier, trackingNumber) {
 }
 
 function stepState(currentStatus, step) {
+  const status = (currentStatus || "").toLowerCase();
   const order = ["pending", "paid", "printing", "shipped", "delivered"];
-  const currentIndex = order.indexOf((currentStatus || "").toLowerCase());
+  const currentIndex = order.indexOf(status);
   const stepIndex = order.indexOf(step);
 
+  if (status === "delivered" && step === "delivered") return "complete";
   if (currentIndex > stepIndex) return "complete";
   if (currentIndex === stepIndex) return "current";
   return "upcoming";
