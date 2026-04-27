@@ -760,7 +760,7 @@ export default function AdminPricingPage() {
 
         <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1500px] text-sm">
+            <table className="w-full min-w-[1800px] text-sm">
               <thead className="bg-slate-100 text-left text-slate-700">
                 <tr>
                   <th className="px-3 py-4 font-semibold">Product</th>
@@ -834,7 +834,7 @@ export default function AdminPricingPage() {
                           onChange={(e) =>
                             updateRow(row.id, "your_cost", e.target.value)
                           }
-                          className="w-28 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                          className="w-36 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
                       </td>
 
@@ -846,7 +846,7 @@ export default function AdminPricingPage() {
                           onChange={(e) =>
                             updateRow(row.id, "markup_percent", e.target.value)
                           }
-                          className="w-24 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                          className="w-32 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
                       </td>
 
@@ -858,7 +858,7 @@ export default function AdminPricingPage() {
                           onChange={(e) =>
                             updateRow(row.id, "shipping_cost", e.target.value)
                           }
-                          className="w-28 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                          className="w-36 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
                       </td>
 
