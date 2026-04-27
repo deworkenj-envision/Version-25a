@@ -93,7 +93,7 @@ export default function AdminPricingPage() {
         field === "active"
           ? Boolean(value)
           : numericFields.includes(field)
-            ? Number(value)
+            ? Number(value || 0)
             : value;
 
       const res = await fetch("/api/admin/update-pricing", {
@@ -815,50 +815,50 @@ export default function AdminPricingPage() {
                         {row.quantity}
                       </td>
 
-                      <td className="px-4 py-4">
+                      <td className="px-2 py-3">
                         <input
                           type="number"
-                          value={row.sort_order ?? 0}
-                          onChange={(e) =>
+                          defaultValue={row.sort_order ?? 0}
+                          onBlur={(e) =>
                             updateRow(row.id, "sort_order", e.target.value)
                           }
-                          className="w-20 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                          className="w-20 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
                       </td>
 
-                      <td className="px-4 py-4">
+                      <td className="px-2 py-3">
                         <input
                           type="number"
                           step="0.01"
-                          value={row.your_cost ?? 0}
-                          onChange={(e) =>
+                          defaultValue={row.your_cost ?? 0}
+                          onBlur={(e) =>
                             updateRow(row.id, "your_cost", e.target.value)
                           }
-                          className="w-24 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                          className="w-24 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
                       </td>
 
-                      <td className="px-4 py-4">
+                      <td className="px-2 py-3">
                         <input
                           type="number"
                           step="0.01"
-                          value={row.markup_percent ?? 0}
-                          onChange={(e) =>
+                          defaultValue={row.markup_percent ?? 0}
+                          onBlur={(e) =>
                             updateRow(row.id, "markup_percent", e.target.value)
                           }
-                          className="w-20 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                          className="w-20 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
                       </td>
 
-                      <td className="px-4 py-4">
+                      <td className="px-2 py-3">
                         <input
                           type="number"
                           step="0.01"
-                          value={row.shipping_cost ?? 0}
-                          onChange={(e) =>
+                          defaultValue={row.shipping_cost ?? 0}
+                          onBlur={(e) =>
                             updateRow(row.id, "shipping_cost", e.target.value)
                           }
-                          className="w-24 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                          className="w-24 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
                       </td>
 
