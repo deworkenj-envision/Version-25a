@@ -54,15 +54,23 @@ export default function AdminPricingPage() {
 
   const [productFilter, setProductFilter] = useState("All");
   const [search, setSearch] = useState("");
+  const [bulkMarkup, setBulkMarkup] = useState("");
 
   const [form, setForm] = useState(emptyForm);
   const [csvFile, setCsvFile] = useState(null);
   const [replaceExisting, setReplaceExisting] = useState(false);
 
   const createFormRef = useRef(null);
+  const saveTimeout = useRef({});
 
   useEffect(() => {
     loadPricing();
+
+    return () => {
+      Object.values(saveTimeout.current).forEach((timer) =>
+        clearTimeout(timer)
+      );
+    };
   }, []);
 
   async function loadPricing() {
@@ -86,25 +94,53 @@ export default function AdminPricingPage() {
     }
   }
 
+  function normalizeValue(field, value) {
+    const numericFields = [
+      "quantity",
+      "your_cost",
+      "markup_percent",
+      "shipping_cost",
+      "sort_order",
+    ];
+
+    if (field === "active") return Boolean(value);
+    if (numericFields.includes(field)) return Number(value || 0);
+    return value;
+  }
+
+  function handleLocalChange(id, field, value) {
+    const cleanValue = normalizeValue(field, value);
+
+    setRows((prev) =>
+      prev.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              [field]: cleanValue,
+            }
+          : row
+      )
+    );
+
+    scheduleAutoSave(id, field, cleanValue);
+  }
+
+  function scheduleAutoSave(id, field, value) {
+    const key = `${id}-${field}`;
+
+    clearTimeout(saveTimeout.current[key]);
+
+    saveTimeout.current[key] = setTimeout(() => {
+      updateRow(id, field, value);
+    }, 600);
+  }
+
   async function updateRow(id, field, value) {
     try {
       setSavingId(id);
       setMessage("");
 
-      const numericFields = [
-        "quantity",
-        "your_cost",
-        "markup_percent",
-        "shipping_cost",
-        "sort_order",
-      ];
-
-      const cleanValue =
-        field === "active"
-          ? Boolean(value)
-          : numericFields.includes(field)
-            ? Number(value || 0)
-            : value;
+      const cleanValue = normalizeValue(field, value);
 
       const res = await fetch("/api/admin/update-pricing", {
         method: "POST",
@@ -130,8 +166,6 @@ export default function AdminPricingPage() {
             : row
         )
       );
-
-      setMessage("Pricing updated successfully.");
     } catch (err) {
       console.error(err);
       setMessage(err.message || "Update failed.");
@@ -140,6 +174,40 @@ export default function AdminPricingPage() {
     }
   }
 
+  async function handleApplyBulkMarkup() {
+    const value = Number(bulkMarkup);
+
+    if (bulkMarkup === "" || Number.isNaN(value)) {
+      setMessage("Enter a valid markup percentage first.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Apply ${value}% markup to ALL pricing rows?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setMessage("Applying bulk markup...");
+
+      setRows((prev) =>
+        prev.map((row) => ({
+          ...row,
+          markup_percent: value,
+        }))
+      );
+
+      await Promise.all(
+        rows.map((row) => updateRow(row.id, "markup_percent", value))
+      );
+
+      setMessage(`Bulk markup updated to ${value}% for all rows.`);
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message || "Bulk markup update failed.");
+    }
+  }
   async function handleCreateRow(e) {
     e.preventDefault();
 
@@ -522,7 +590,6 @@ export default function AdminPricingPage() {
             </div>
           </div>
         </div>
-
         <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8">
           <h2 className="text-2xl font-bold text-slate-900">Bulk CSV Import</h2>
           <p className="mt-2 text-slate-600">
@@ -563,6 +630,7 @@ export default function AdminPricingPage() {
             </span>
           </label>
         </div>
+
         <div
           ref={createFormRef}
           className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8"
@@ -756,23 +824,49 @@ export default function AdminPricingPage() {
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-3 text-sm text-slate-600">
-            <div className="rounded-full bg-slate-100 px-4 py-2">
-              Total Rows: <span className="font-semibold">{rows.length}</span>
+          <div className="mt-5 grid gap-3 md:grid-cols-[220px_auto_1fr] md:items-end">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Bulk Markup %
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={bulkMarkup}
+                onChange={(e) => setBulkMarkup(e.target.value)}
+                placeholder="Example: 50"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              />
             </div>
-            <div className="rounded-full bg-slate-100 px-4 py-2">
-              Showing:{" "}
-              <span className="font-semibold">{filteredRows.length}</span>
+
+            <button
+              type="button"
+              onClick={handleApplyBulkMarkup}
+              className="rounded-2xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-800"
+            >
+              Apply to All Rows
+            </button>
+
+            <div className="flex flex-wrap gap-3 text-sm text-slate-600">
+              <div className="rounded-full bg-slate-100 px-4 py-2">
+                Total Rows: <span className="font-semibold">{rows.length}</span>
+              </div>
+              <div className="rounded-full bg-slate-100 px-4 py-2">
+                Showing:{" "}
+                <span className="font-semibold">{filteredRows.length}</span>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="w-full overflow-x-auto rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
-          <div className="overflow-x-auto pb-2">
-            <table className="w-full min-w-[1600px] text-sm">
-              <thead className="bg-slate-100 text-left text-slate-700">
+          <div className="max-h-[720px] overflow-auto pb-2">
+            <table className="w-full min-w-[1900px] border-separate border-spacing-0 text-sm">
+              <thead className="sticky top-0 z-30 bg-slate-100 text-left text-slate-700 shadow-sm">
                 <tr>
-                  <th className="px-2 py-3 font-semibold">Product</th>
+                  <th className="sticky left-0 z-40 bg-slate-100 px-2 py-3 font-semibold">
+                    Product
+                  </th>
                   <th className="px-2 py-3 font-semibold">Size</th>
                   <th className="px-2 py-3 font-semibold">Paper</th>
                   <th className="px-2 py-3 font-semibold">Finish</th>
@@ -802,36 +896,78 @@ export default function AdminPricingPage() {
                 ) : (
                   filteredRows.map((row) => (
                     <tr key={row.id} className="border-t border-slate-200 align-top">
-                      <td className="px-3 py-4 font-medium text-slate-900 whitespace-nowrap">
-                        {row.product_name}
+                      <td className="sticky left-0 z-20 bg-white px-2 py-3 shadow-[2px_0_0_0_rgba(226,232,240,1)]">
+                        <input
+                          type="text"
+                          value={row.product_name ?? ""}
+                          onChange={(e) =>
+                            handleLocalChange(row.id, "product_name", e.target.value)
+                          }
+                          className="w-40 rounded-xl border border-slate-300 px-2 py-1.5 text-xs font-semibold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        />
                       </td>
 
-                      <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
-                        {row.size}
+                      <td className="px-2 py-3">
+                        <input
+                          type="text"
+                          value={row.size ?? ""}
+                          onChange={(e) =>
+                            handleLocalChange(row.id, "size", e.target.value)
+                          }
+                          className="w-32 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        />
                       </td>
 
-                      <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
-                        {row.paper}
+                      <td className="px-2 py-3">
+                        <input
+                          type="text"
+                          value={row.paper ?? ""}
+                          onChange={(e) =>
+                            handleLocalChange(row.id, "paper", e.target.value)
+                          }
+                          className="w-36 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        />
                       </td>
 
-                      <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
-                        {row.finish}
+                      <td className="px-2 py-3">
+                        <input
+                          type="text"
+                          value={row.finish ?? ""}
+                          onChange={(e) =>
+                            handleLocalChange(row.id, "finish", e.target.value)
+                          }
+                          className="w-32 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        />
                       </td>
 
-                      <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
-                        {row.sides}
-                      </td>
-
-                      <td className="px-3 py-4 text-slate-700 whitespace-nowrap">
-                        {row.quantity}
+                      <td className="px-2 py-3">
+                        <input
+                          type="text"
+                          value={row.sides ?? ""}
+                          onChange={(e) =>
+                            handleLocalChange(row.id, "sides", e.target.value)
+                          }
+                          className="w-36 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        />
                       </td>
 
                       <td className="px-2 py-3">
                         <input
                           type="number"
-                          defaultValue={row.sort_order ?? 0}
-                          onBlur={(e) =>
-                            updateRow(row.id, "sort_order", e.target.value)
+                          value={row.quantity ?? 0}
+                          onChange={(e) =>
+                            handleLocalChange(row.id, "quantity", e.target.value)
+                          }
+                          className="w-24 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                        />
+                      </td>
+
+                      <td className="px-2 py-3">
+                        <input
+                          type="number"
+                          value={row.sort_order ?? 0}
+                          onChange={(e) =>
+                            handleLocalChange(row.id, "sort_order", e.target.value)
                           }
                           className="w-20 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
@@ -841,18 +977,9 @@ export default function AdminPricingPage() {
                         <input
                           type="number"
                           step="0.01"
-                          value={row.your_cost ?? ""}
+                          value={row.your_cost ?? 0}
                           onChange={(e) =>
-                            setRows((prev) =>
-                              prev.map((item) =>
-                                item.id === row.id
-                                  ? { ...item, your_cost: Number(e.target.value || 0) }
-                                  : item
-                              )
-                            )
-                          }
-                          onBlur={(e) =>
-                            updateRow(row.id, "your_cost", e.target.value)
+                            handleLocalChange(row.id, "your_cost", e.target.value)
                           }
                           className="w-24 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
@@ -862,18 +989,9 @@ export default function AdminPricingPage() {
                         <input
                           type="number"
                           step="0.01"
-                          value={row.markup_percent ?? ""}
+                          value={row.markup_percent ?? 0}
                           onChange={(e) =>
-                            setRows((prev) =>
-                              prev.map((item) =>
-                                item.id === row.id
-                                  ? { ...item, markup_percent: Number(e.target.value || 0) }
-                                  : item
-                              )
-                            )
-                          }
-                          onBlur={(e) =>
-                            updateRow(row.id, "markup_percent", e.target.value)
+                            handleLocalChange(row.id, "markup_percent", e.target.value)
                           }
                           className="w-20 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
@@ -883,18 +1001,9 @@ export default function AdminPricingPage() {
                         <input
                           type="number"
                           step="0.01"
-                          value={row.shipping_cost ?? ""}
+                          value={row.shipping_cost ?? 0}
                           onChange={(e) =>
-                            setRows((prev) =>
-                              prev.map((item) =>
-                                item.id === row.id
-                                  ? { ...item, shipping_cost: Number(e.target.value || 0) }
-                                  : item
-                              )
-                            )
-                          }
-                          onBlur={(e) =>
-                            updateRow(row.id, "shipping_cost", e.target.value)
+                            handleLocalChange(row.id, "shipping_cost", e.target.value)
                           }
                           className="w-24 rounded-xl border border-slate-300 px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
@@ -908,23 +1017,23 @@ export default function AdminPricingPage() {
                         {money(totalWithShipping(row))}
                       </td>
 
-<td className="px-3 py-4 whitespace-nowrap font-bold text-blue-700">
-  {money(profit(row))}
-</td>
+                      <td className="px-3 py-4 whitespace-nowrap font-bold text-blue-700">
+                        {money(profit(row))}
+                      </td>
 
-<td className="px-3 py-4 whitespace-nowrap">
-  <span
-    className={`rounded-full px-3 py-1 text-xs font-bold ${
-      marginPercent(row) >= 40
-        ? "bg-emerald-100 text-emerald-700"
-        : marginPercent(row) >= 25
-          ? "bg-amber-100 text-amber-700"
-          : "bg-red-100 text-red-700"
-    }`}
-  >
-    {marginPercent(row).toFixed(1)}%
-  </span>
-</td>
+                      <td className="px-3 py-4 whitespace-nowrap">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-bold ${
+                            marginPercent(row) >= 40
+                              ? "bg-emerald-100 text-emerald-700"
+                              : marginPercent(row) >= 25
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {marginPercent(row).toFixed(1)}%
+                        </span>
+                      </td>
 
                       <td className="px-3 py-4 whitespace-nowrap">
                         <label className="inline-flex cursor-pointer items-center gap-2">
@@ -932,7 +1041,7 @@ export default function AdminPricingPage() {
                             type="checkbox"
                             checked={Boolean(row.active)}
                             onChange={(e) =>
-                              updateRow(row.id, "active", e.target.checked)
+                              handleLocalChange(row.id, "active", e.target.checked)
                             }
                             className="h-4 w-4 rounded border-slate-300"
                           />
