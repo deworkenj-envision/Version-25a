@@ -23,7 +23,15 @@ export async function POST(req) {
       );
     }
 
-    const allowedFields = ["price", "active", "sort_order"];
+    // ✅ UPDATED FIELDS
+    const allowedFields = [
+      "your_cost",
+      "markup_percent",
+      "shipping_cost",
+      "active",
+      "sort_order",
+      "price" // keep for backward compatibility
+    ];
 
     if (!allowedFields.includes(field)) {
       return NextResponse.json(
@@ -32,13 +40,26 @@ export async function POST(req) {
       );
     }
 
+    // ✅ HANDLE TYPES CORRECTLY
+    let cleanValue;
+
+    if (field === "active") {
+      cleanValue = Boolean(value);
+    } else if (
+      field === "your_cost" ||
+      field === "markup_percent" ||
+      field === "shipping_cost" ||
+      field === "price"
+    ) {
+      cleanValue = Number(value);
+    } else if (field === "sort_order") {
+      cleanValue = Number(value);
+    } else {
+      cleanValue = value;
+    }
+
     const updateData = {
-      [field]:
-        field === "price"
-          ? Number(value)
-          : field === "active"
-          ? Boolean(value)
-          : value,
+      [field]: cleanValue,
     };
 
     const { error } = await supabaseAdmin
