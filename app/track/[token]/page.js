@@ -1,279 +1,260 @@
 import Link from "next/link";
-import Image from "next/image";
-import { notFound } from "next/navigation";
-import { supabaseAdmin } from "../../../lib/supabaseAdmin";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
+export const dynamic = "force-dynamic";
+
+function formatMoney(value) {
+  const num = Number(value || 0);
+  return num.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
+}
 
 function formatDate(value) {
-  if (!value) return "—";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
+  if (!value) return "Not available";
+
+  return new Date(value).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
-function getTrackingLink(carrier, trackingNumber) {
-  if (!trackingNumber) return "";
+function getStatusSteps(status) {
+  const steps = ["paid", "printing", "shipped", "delivered"];
+  const currentIndex = steps.indexOf(status);
 
-  const num = encodeURIComponent(trackingNumber.trim());
-  const c = (carrier || "").toLowerCase();
-
-  if (c === "ups") return `https://www.ups.com/track?tracknum=${num}`;
-  if (c === "usps") return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${num}`;
-  if (c === "fedex") return `https://www.fedex.com/fedextrack/?trknbr=${num}`;
-
-  return "";
+  return steps.map((step, index) => ({
+    key: step,
+    label:
+      step === "paid"
+        ? "Order Received"
+        : step === "printing"
+        ? "In Production"
+        : step === "shipped"
+        ? "Shipped"
+        : "Delivered",
+    complete: currentIndex >= index,
+    current: currentIndex === index,
+  }));
 }
 
-function stepState(currentStatus, step) {
-  const status = (currentStatus || "").toLowerCase();
-  const order = ["pending", "paid", "printing", "shipped", "delivered"];
-  const currentIndex = order.indexOf(status);
-  const stepIndex = order.indexOf(step);
+export default async function TrackTokenPage({ params }) {
+  const token = params?.token;
 
-  if (status === "delivered" && step === "delivered") return "complete";
-  if (currentIndex > stepIndex) return "complete";
-  if (currentIndex === stepIndex) return "current";
-  return "upcoming";
-}
-
-function statusMessage(status) {
-  const s = (status || "").toLowerCase();
-
-  if (s === "paid") {
-    return "We received your order and payment. Your artwork is queued for production review.";
+  if (!token) {
+    return (
+      <main style={styles.page}>
+        <section style={styles.card}>
+          <h1 style={styles.title}>Tracking link missing</h1>
+          <p style={styles.text}>
+            This tracking link is missing the secure order token.
+          </p>
+          <Link href="/" style={styles.secondaryButton}>
+            Return Home
+          </Link>
+        </section>
+      </main>
+    );
   }
-
-  if (s === "printing") {
-    return "Your order is currently in production. We will notify you when it ships.";
-  }
-
-  if (s === "shipped") {
-    return "Your order has shipped. Use the carrier tracking button for the latest delivery updates.";
-  }
-
-  if (s === "delivered") {
-    return "Your order has been delivered. Thank you for choosing EnVision Direct.";
-  }
-
-  return "Your order has been received and is being reviewed.";
-}
-
-function statusLabel(status) {
-  const s = (status || "pending").toLowerCase();
-
-  if (s === "paid") return "Paid";
-  if (s === "printing") return "Printing";
-  if (s === "shipped") return "Shipped";
-  if (s === "delivered") return "Delivered";
-
-  return "Pending";
-}
-
-export default async function SecureTrackingPage({ params }) {
-  const resolvedParams = await params;
-  const token = resolvedParams?.token;
-
-  if (!token) notFound();
 
   const { data: order, error } = await supabaseAdmin
     .from("orders")
     .select("*")
     .eq("tracking_token", token)
-    .maybeSingle();
+    .single();
 
-  if (error || !order) notFound();
+  if (error || !order) {
+    return (
+      <main style={styles.page}>
+        <section style={styles.card}>
+          <h1 style={styles.title}>Order not found</h1>
+          <p style={styles.text}>
+            We could not find an order for this tracking link.
+          </p>
+          <Link href="/" style={styles.secondaryButton}>
+            Return Home
+          </Link>
+        </section>
+      </main>
+    );
+  }
 
-  const carrier = order.tracking_carrier || order.carrier || "";
-  const trackingNumber = order.tracking_number || "";
-  const trackingUrl =
-    order.tracking_url || getTrackingLink(carrier, trackingNumber);
-
-  const status = (order.status || "pending").toLowerCase();
-
-  const steps = [
-    ["paid", "Order Received"],
-    ["printing", "Printing"],
-    ["shipped", "Shipped"],
-    ["delivered", "Delivered"],
-  ];
+  const status = order.status || "paid";
+  const steps = getStatusSteps(status);
+  const isDelivered = status === "delivered";
 
   return (
     <main style={styles.page}>
-      <div style={styles.container}>
-        <section style={styles.hero}>
-          <div style={styles.logoWrap}>
-            <Image
-              src="/images/logo-hero.png"
-              alt="EnVision Direct"
-              width={280}
-              height={105}
-              priority
-              style={styles.logo}
-            />
+      <section style={styles.card}>
+        <div style={styles.header}>
+          <div>
+            <p style={styles.kicker}>Order Status</p>
+            <h1 style={styles.title}>
+              {isDelivered ? "Your order has been delivered" : "Track Your Order"}
+            </h1>
+            <p style={styles.text}>
+              Order{" "}
+              <strong>{order.order_number || `#${order.id}`}</strong>
+            </p>
           </div>
 
-          <div style={styles.orderBadge}>Secure Order Tracking</div>
-
-          <h1 style={styles.title}>{order.order_number || "Your Order"}</h1>
-
-          <div style={styles.statusRow}>
-            <span style={styles.statusPill}>{statusLabel(status)}</span>
+          <div style={styles.badge}>
+            {status.replaceAll("_", " ").toUpperCase()}
           </div>
+        </div>
 
-          <p style={styles.heroText}>{statusMessage(status)}</p>
-        </section>
-
-        <section style={styles.topGrid}>
-          <div style={styles.card}>
-            <div style={styles.cardHeader}>
-              <div>
-                <p style={styles.eyebrow}>Progress</p>
-                <h2 style={styles.cardTitle}>Order Timeline</h2>
+        <div style={styles.progressBox}>
+          {steps.map((step, index) => (
+            <div key={step.key} style={styles.stepWrap}>
+              <div
+                style={{
+                  ...styles.stepCircle,
+                  ...(step.complete ? styles.stepCircleComplete : {}),
+                  ...(step.current ? styles.stepCircleCurrent : {}),
+                }}
+              >
+                {step.complete ? "✓" : index + 1}
               </div>
+
+              <div>
+                <div
+                  style={{
+                    ...styles.stepLabel,
+                    ...(step.current ? styles.stepLabelCurrent : {}),
+                  }}
+                >
+                  {step.label}
+                </div>
+              </div>
+
+              {index < steps.length - 1 && (
+                <div
+                  style={{
+                    ...styles.stepLine,
+                    ...(steps[index + 1].complete ? styles.stepLineComplete : {}),
+                  }}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div style={styles.grid}>
+          <div style={styles.infoBox}>
+            <h2 style={styles.sectionTitle}>Order Information</h2>
+
+            <div style={styles.row}>
+              <span>Product</span>
+              <strong>{order.product_name || "Not available"}</strong>
             </div>
 
-            <div style={styles.timeline}>
-              {steps.map(([step, label], index) => {
-                const state = stepState(status, step);
+            <div style={styles.row}>
+              <span>Size</span>
+              <strong>{order.size || "Not available"}</strong>
+            </div>
 
-                return (
-                  <div key={step} style={styles.timelineRow}>
-                    <div style={styles.timelineLeft}>
-                      <div
-                        style={{
-                          ...styles.circle,
-                          background:
-                            state === "complete"
-                              ? "#16a34a"
-                              : state === "current"
-                              ? "#0b5cff"
-                              : "#d1d5db",
-                          boxShadow:
-                            state === "current"
-                              ? "0 0 0 6px rgba(11,92,255,0.12)"
-                              : "none",
-                        }}
-                      >
-                        {state === "complete" ? "✓" : ""}
-                      </div>
+            <div style={styles.row}>
+              <span>Paper</span>
+              <strong>{order.paper || "Not available"}</strong>
+            </div>
 
-                      {index !== steps.length - 1 && <div style={styles.line} />}
-                    </div>
+            <div style={styles.row}>
+              <span>Finish</span>
+              <strong>{order.finish || "Not available"}</strong>
+            </div>
 
-                    <div style={styles.timelineText}>
-                      <div style={styles.stepTitle}>{label}</div>
-                      <div
-                        style={{
-                          ...styles.stepStatus,
-                          color:
-                            state === "complete"
-                              ? "#15803d"
-                              : state === "current"
-                              ? "#0b5cff"
-                              : "#64748b",
-                        }}
-                      >
-                        {state === "complete"
-                          ? "Complete"
-                          : state === "current"
-                          ? "In Progress"
-                          : "Pending"}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div style={styles.row}>
+              <span>Sides</span>
+              <strong>{order.sides || "Not available"}</strong>
+            </div>
+
+            <div style={styles.row}>
+              <span>Quantity</span>
+              <strong>{order.quantity || "Not available"}</strong>
+            </div>
+
+            <div style={styles.row}>
+              <span>Total</span>
+              <strong>{formatMoney(order.total)}</strong>
+            </div>
+
+            <div style={styles.row}>
+              <span>Order Date</span>
+              <strong>{formatDate(order.created_at)}</strong>
             </div>
           </div>
 
-          <div style={styles.card}>
-            <div style={styles.cardHeader}>
-              <div>
-                <p style={styles.eyebrow}>Delivery</p>
-                <h2 style={styles.cardTitle}>Shipping Details</h2>
-              </div>
+          <div style={styles.infoBox}>
+            <h2 style={styles.sectionTitle}>Shipping Information</h2>
+
+            <div style={styles.row}>
+              <span>Status</span>
+              <strong>{status.replaceAll("_", " ")}</strong>
             </div>
 
-            <div style={styles.detailList}>
-              <Detail label="Carrier" value={carrier || "Pending"} />
-              <Detail label="Tracking Number" value={trackingNumber || "Pending"} />
-              <Detail label="Order Date" value={formatDate(order.created_at)} />
+            <div style={styles.row}>
+              <span>Carrier</span>
+              <strong>
+                {order.tracking_carrier || order.carrier || "Not available"}
+              </strong>
             </div>
 
-            {trackingUrl ? (
+            <div style={styles.row}>
+              <span>Tracking Number</span>
+              <strong>{order.tracking_number || "Not available"}</strong>
+            </div>
+
+            {order.tracking_url && (
               <a
-                href={trackingUrl}
+                href={order.tracking_url}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 style={styles.primaryButton}
               >
-                Open Carrier Tracking
+                Track Package
               </a>
-            ) : (
-              <div style={styles.pendingBox}>
-                Carrier tracking will appear here once your order ships.
-              </div>
             )}
-          </div>
-        </section>
 
-        <section style={styles.bottomGrid}>
-          <div style={styles.card}>
-            <p style={styles.eyebrow}>Customer</p>
-            <h3 style={styles.smallTitle}>Contact</h3>
-            <div style={styles.compactText}>
-              <p style={styles.boldLine}>{order.customer_name || "—"}</p>
-              <p>{order.customer_email || "—"}</p>
-              <p>{order.customer_phone || "—"}</p>
-            </div>
+            <Link
+              href={`/order?reorderToken=${encodeURIComponent(token)}`}
+              style={styles.reorderButton}
+            >
+              Reorder This
+            </Link>
           </div>
-
-          <div style={styles.card}>
-            <p style={styles.eyebrow}>Ship To</p>
-            <h3 style={styles.smallTitle}>Address</h3>
-            <div style={styles.compactText}>
-              <p style={styles.boldLine}>{order.shipping_name || "—"}</p>
-              <p>{order.shipping_address_line1 || "—"}</p>
-              {order.shipping_address_line2 ? (
-                <p>{order.shipping_address_line2}</p>
-              ) : null}
-              <p>
-                {order.shipping_city || "—"}, {order.shipping_state || "—"}{" "}
-                {order.shipping_postal_code || ""}
-              </p>
-              <p>{order.shipping_country || "US"}</p>
-            </div>
-          </div>
-
-          <div style={styles.card}>
-            <p style={styles.eyebrow}>Order</p>
-            <h3 style={styles.smallTitle}>Details</h3>
-            <div style={styles.compactText}>
-              <p style={styles.boldLine}>{order.product_name || "—"}</p>
-              <p>Quantity: {order.quantity || "—"}</p>
-              <p>Size: {order.size || "—"}</p>
-              <p>Total: ${Number(order.total || 0).toFixed(2)}</p>
-            </div>
-          </div>
-        </section>
-
-        <div style={styles.footer}>
-          <Link href="/" style={styles.backLink}>
-            Back to EnVision Direct
-          </Link>
         </div>
-      </div>
-    </main>
-  );
-}
 
-function Detail({ label, value }) {
-  return (
-    <div style={styles.detailRow}>
-      <span style={styles.detailLabel}>{label}</span>
-      <span style={styles.detailValue}>{value}</span>
-    </div>
+        {isDelivered && (
+          <div style={styles.deliveredBox}>
+            <h2 style={styles.deliveredTitle}>Delivered</h2>
+            <p style={styles.text}>
+              Thank you for ordering with EnVision Direct. We hope everything
+              arrived exactly as expected.
+            </p>
+
+            <div style={styles.buttonRow}>
+              <Link
+                href={`/reviews?token=${encodeURIComponent(token)}`}
+                style={styles.primaryButton}
+              >
+                Leave a Review
+              </Link>
+
+              <Link
+                href={`/order?reorderToken=${encodeURIComponent(token)}`}
+                style={styles.reorderButton}
+              >
+                Reorder This
+              </Link>
+            </div>
+          </div>
+        )}
+      </section>
+    </main>
   );
 }
 
@@ -281,233 +262,189 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "radial-gradient(circle at top, #ffffff 0%, #eef4fb 40%, #f8fbff 100%)",
-    padding: "34px 18px 64px",
+      "linear-gradient(135deg, #eef5ff 0%, #f8fbff 45%, #ffffff 100%)",
+    padding: "48px 18px",
     fontFamily:
-      'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    color: "#071b3a",
-  },
-  container: {
-    maxWidth: 1120,
-    margin: "0 auto",
-  },
-  hero: {
-    background: "#ffffff",
-    border: "1px solid #dbe6f3",
-    borderRadius: 28,
-    padding: "32px 24px",
-    textAlign: "center",
-    boxShadow: "0 22px 55px rgba(15, 43, 82, 0.10)",
-    marginBottom: 22,
-  },
-  logoWrap: {
-    display: "flex",
-    justifyContent: "center",
-    marginBottom: 18,
-  },
-  logo: {
-    width: "280px",
-    height: "auto",
-    objectFit: "contain",
-    borderRadius: 8,
-  },
-  orderBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "#eef4ff",
-    color: "#0b5cff",
-    border: "1px solid #cfe0ff",
-    borderRadius: 999,
-    padding: "7px 13px",
-    fontSize: 12,
-    fontWeight: 900,
-    textTransform: "uppercase",
-    letterSpacing: "0.08em",
-    marginBottom: 12,
-  },
-  title: {
-    margin: 0,
-    fontSize: "clamp(34px, 5vw, 50px)",
-    lineHeight: 1.05,
-    fontWeight: 950,
-    letterSpacing: "-0.04em",
-    color: "#061936",
-  },
-  statusRow: {
-    marginTop: 14,
-  },
-  statusPill: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "#dcfce7",
-    color: "#166534",
-    borderRadius: 999,
-    padding: "9px 16px",
-    fontSize: 13,
-    fontWeight: 900,
-  },
-  heroText: {
-    margin: "16px auto 0",
-    maxWidth: 720,
-    color: "#486381",
-    fontSize: 16,
-    lineHeight: 1.65,
-  },
-  topGrid: {
-    display: "grid",
-    gridTemplateColumns: "1.1fr 0.9fr",
-    gap: 18,
-    marginBottom: 18,
-  },
-  bottomGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: 18,
+      "Arial, Helvetica, sans-serif",
+    color: "#102033",
   },
   card: {
+    maxWidth: "1050px",
+    margin: "0 auto",
     background: "#ffffff",
-    border: "1px solid #dbe6f3",
-    borderRadius: 24,
-    padding: 24,
-    boxShadow: "0 18px 45px rgba(15, 43, 82, 0.08)",
+    borderRadius: "24px",
+    padding: "32px",
+    boxShadow: "0 24px 70px rgba(15, 35, 70, 0.12)",
+    border: "1px solid rgba(20, 64, 120, 0.08)",
   },
-  cardHeader: {
-    borderBottom: "1px solid #e5edf6",
-    paddingBottom: 14,
-    marginBottom: 18,
-  },
-  eyebrow: {
-    margin: "0 0 6px",
-    color: "#2563eb",
-    fontSize: 12,
-    fontWeight: 900,
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
-  },
-  cardTitle: {
-    margin: 0,
-    fontSize: 24,
-    fontWeight: 900,
-    color: "#071b3a",
-  },
-  smallTitle: {
-    margin: "0 0 12px",
-    fontSize: 19,
-    fontWeight: 900,
-    color: "#071b3a",
-  },
-  timeline: {
-    display: "grid",
-    gap: 0,
-  },
-  timelineRow: {
-    display: "flex",
-    gap: 14,
-    minHeight: 58,
-  },
-  timelineLeft: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    paddingTop: 3,
-  },
-  circle: {
-    width: 24,
-    height: 24,
-    borderRadius: "50%",
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: 900,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  line: {
-    width: 2,
-    flex: 1,
-    background: "#e5edf6",
-    marginTop: 5,
-    marginBottom: 5,
-  },
-  timelineText: {
-    paddingBottom: 16,
-  },
-  stepTitle: {
-    fontSize: 16,
-    fontWeight: 900,
-    color: "#071b3a",
-  },
-  stepStatus: {
-    marginTop: 3,
-    fontSize: 13,
-    fontWeight: 800,
-  },
-  detailList: {
-    display: "grid",
-    gap: 12,
-    marginBottom: 18,
-  },
-  detailRow: {
+  header: {
     display: "flex",
     justifyContent: "space-between",
-    gap: 18,
-    borderBottom: "1px solid #edf2f7",
-    paddingBottom: 10,
+    gap: "20px",
+    alignItems: "flex-start",
+    marginBottom: "28px",
+    flexWrap: "wrap",
   },
-  detailLabel: {
+  kicker: {
+    margin: "0 0 8px",
+    color: "#2563eb",
+    fontSize: "13px",
+    fontWeight: "900",
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+  },
+  title: {
+    margin: "0 0 10px",
+    fontSize: "34px",
+    lineHeight: "1.1",
+    color: "#0f2745",
+  },
+  text: {
+    margin: "0",
+    color: "#526173",
+    fontSize: "16px",
+    lineHeight: "1.6",
+  },
+  badge: {
+    background: "#eff6ff",
+    color: "#1d4ed8",
+    border: "1px solid #bfdbfe",
+    padding: "10px 14px",
+    borderRadius: "999px",
+    fontSize: "12px",
+    fontWeight: "900",
+    letterSpacing: "0.06em",
+  },
+  progressBox: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: "12px",
+    background: "#f8fafc",
+    padding: "18px",
+    borderRadius: "18px",
+    marginBottom: "24px",
+    border: "1px solid #e5edf7",
+  },
+  stepWrap: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    minHeight: "44px",
+  },
+  stepCircle: {
+    width: "34px",
+    height: "34px",
+    borderRadius: "50%",
+    background: "#e5e7eb",
     color: "#64748b",
-    fontSize: 13,
-    fontWeight: 800,
-  },
-  detailValue: {
-    textAlign: "right",
-    color: "#071b3a",
-    fontSize: 14,
-    fontWeight: 900,
-    wordBreak: "break-word",
-  },
-  primaryButton: {
-    display: "inline-flex",
-    width: "100%",
-    minHeight: 46,
+    display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 14,
-    background: "#0b5cff",
+    fontWeight: "900",
+    zIndex: 2,
+    flexShrink: 0,
+  },
+  stepCircleComplete: {
+    background: "#2563eb",
     color: "#ffffff",
+  },
+  stepCircleCurrent: {
+    boxShadow: "0 0 0 5px rgba(37, 99, 235, 0.15)",
+  },
+  stepLabel: {
+    fontSize: "13px",
+    fontWeight: "800",
+    color: "#64748b",
+  },
+  stepLabelCurrent: {
+    color: "#1d4ed8",
+  },
+  stepLine: {
+    position: "absolute",
+    left: "34px",
+    right: "-12px",
+    top: "22px",
+    height: "3px",
+    background: "#e5e7eb",
+    zIndex: 1,
+  },
+  stepLineComplete: {
+    background: "#2563eb",
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gap: "20px",
+  },
+  infoBox: {
+    background: "#ffffff",
+    border: "1px solid #e5edf7",
+    borderRadius: "18px",
+    padding: "22px",
+  },
+  sectionTitle: {
+    margin: "0 0 16px",
+    fontSize: "20px",
+    color: "#0f2745",
+  },
+  row: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "16px",
+    borderBottom: "1px solid #edf2f7",
+    padding: "12px 0",
+    fontSize: "14px",
+    color: "#526173",
+  },
+  primaryButton: {
+    display: "inline-block",
+    marginTop: "18px",
+    padding: "14px 22px",
+    borderRadius: "12px",
+    background: "#2563eb",
+    color: "#ffffff",
+    fontWeight: "900",
     textDecoration: "none",
-    fontWeight: 900,
-    boxShadow: "0 12px 24px rgba(11, 92, 255, 0.22)",
+    boxShadow: "0 10px 24px rgba(37,99,235,0.25)",
   },
-  pendingBox: {
-    background: "#f8fbff",
-    border: "1px solid #dbe6f3",
-    borderRadius: 16,
-    padding: 14,
-    color: "#486381",
-    fontSize: 14,
-    lineHeight: 1.5,
-    fontWeight: 700,
-  },
-  compactText: {
-    color: "#334155",
-    fontSize: 14,
-    lineHeight: 1.65,
-  },
-  boldLine: {
-    fontWeight: 900,
-    color: "#071b3a",
-  },
-  footer: {
-    textAlign: "center",
-    marginTop: 24,
-  },
-  backLink: {
-    color: "#0b5cff",
-    fontWeight: 900,
+  reorderButton: {
+    display: "inline-block",
+    marginTop: "18px",
+    marginLeft: "10px",
+    padding: "14px 22px",
+    borderRadius: "12px",
+    background: "#0f2745",
+    color: "#ffffff",
+    fontWeight: "900",
     textDecoration: "none",
+    boxShadow: "0 10px 24px rgba(15,39,69,0.22)",
+  },
+  secondaryButton: {
+    display: "inline-block",
+    marginTop: "18px",
+    padding: "14px 22px",
+    borderRadius: "12px",
+    background: "#e5edf7",
+    color: "#0f2745",
+    fontWeight: "900",
+    textDecoration: "none",
+  },
+  deliveredBox: {
+    marginTop: "24px",
+    background: "#f0fdf4",
+    border: "1px solid #bbf7d0",
+    borderRadius: "18px",
+    padding: "22px",
+  },
+  deliveredTitle: {
+    margin: "0 0 8px",
+    color: "#166534",
+    fontSize: "22px",
+  },
+  buttonRow: {
+    display: "flex",
+    gap: "12px",
+    flexWrap: "wrap",
   },
 };
