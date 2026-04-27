@@ -150,7 +150,16 @@ function buildDeliveredEmail(order, trackingUrl, baseUrl) {
     `Your order has been delivered.`,
     `
       <p><strong>Order:</strong> ${order.order_number}</p>
-      <p><strong>Total:</strong> $${Number(order.total || 0).toFixed(2)}</p>
+
+      <p style="margin-top:12px;"><strong>Product:</strong> ${order.product_name || "—"}</p>
+      <p><strong>Size:</strong> ${order.size || "—"}</p>
+      <p><strong>Paper:</strong> ${order.paper || "—"}</p>
+      <p><strong>Finish:</strong> ${order.finish || "—"}</p>
+      <p><strong>Sides:</strong> ${order.sides || "—"}</p>
+      <p><strong>Quantity:</strong> ${order.quantity || "—"}</p>
+
+      <p style="margin-top:12px;"><strong>Total:</strong> $${Number(order.total || 0).toFixed(2)}</p>
+
       ${actionButtons(trackingUrl)}
     `,
     baseUrl,
@@ -158,7 +167,6 @@ function buildDeliveredEmail(order, trackingUrl, baseUrl) {
   );
 }
 
-/* ✅ FIXED REVIEW EMAIL */
 function buildReviewEmail(order, baseUrl) {
   const reviewUrl = `${baseUrl}/review?order=${encodeURIComponent(
     order.order_number || ""
