@@ -50,7 +50,7 @@ export async function POST(req) {
       comments,
       customer_name: order?.customer_name || null,
       customer_email: order?.customer_email || null,
-      is_approved: true,
+      is_approved: false,
     });
 
     if (reviewError) {
