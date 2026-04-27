@@ -47,6 +47,21 @@ function getCarrierTrackingLink(carrier, trackingNumber) {
   return "";
 }
 
+function getReorderUrl(baseUrl, order) {
+  if (!order?.product_name) return "";
+
+  const params = new URLSearchParams({
+    product: order.product_name || "",
+    size: order.size || "",
+    paper: order.paper || "",
+    finish: order.finish || "",
+    sides: order.sides || "",
+    quantity: String(order.quantity || ""),
+  });
+
+  return `${baseUrl}/order?${params.toString()}`;
+}
+
 async function ensureTrackingToken(order) {
   if (order?.tracking_token) return order.tracking_token;
 
@@ -137,6 +152,8 @@ function brandedEmail({ baseUrl, title, subtitle, customerName, content }) {
 }
 
 function buildShippedEmailHtml(order, trackingUrl, carrierLink, baseUrl) {
+  const reorderUrl = getReorderUrl(baseUrl, order);
+
   return brandedEmail({
     baseUrl,
     title: "Your Order Has Shipped",
@@ -154,12 +171,15 @@ function buildShippedEmailHtml(order, trackingUrl, carrierLink, baseUrl) {
       <div style="text-align:center;margin-top:22px;">
         ${primaryButton("View Order Status", trackingUrl, "#0b5cff")}
         ${carrierLink ? primaryButton("Track With Carrier", carrierLink, "#16a34a") : ""}
+        ${reorderUrl ? primaryButton("Reorder This Product", reorderUrl, "#f59e0b") : ""}
       </div>
     `,
   });
 }
 
 function buildDeliveredEmailHtml(order, trackingUrl, baseUrl) {
+  const reorderUrl = getReorderUrl(baseUrl, order);
+
   return brandedEmail({
     baseUrl,
     title: "Your Order Was Delivered",
@@ -177,6 +197,7 @@ function buildDeliveredEmailHtml(order, trackingUrl, baseUrl) {
 
       <div style="text-align:center;margin-top:22px;">
         ${primaryButton("View Order Status", trackingUrl, "#0b5cff")}
+        ${reorderUrl ? primaryButton("Reorder This Product", reorderUrl, "#f59e0b") : ""}
       </div>
     `,
   });
@@ -186,6 +207,8 @@ function buildReviewEmailHtml(order, baseUrl) {
   const reviewUrl = `${baseUrl}/review?order=${encodeURIComponent(
     order.order_number || ""
   )}&id=${encodeURIComponent(order.id || "")}`;
+
+  const reorderUrl = getReorderUrl(baseUrl, order);
 
   return brandedEmail({
     baseUrl,
@@ -204,6 +227,7 @@ function buildReviewEmailHtml(order, baseUrl) {
 
       <div style="text-align:center;margin-top:22px;">
         ${primaryButton("Leave a Review", reviewUrl, "#f59e0b")}
+        ${reorderUrl ? primaryButton("Reorder This Product", reorderUrl, "#0b5cff") : ""}
       </div>
     `,
   });
