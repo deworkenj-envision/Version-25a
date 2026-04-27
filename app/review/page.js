@@ -1,12 +1,37 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 function ReviewContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order") || "";
   const orderId = searchParams.get("id") || "";
+
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comments, setComments] = useState("");
+
+  const activeRating = hoverRating || rating;
+
+  const mailtoHref = useMemo(() => {
+    const subject = "A Customer Left a Review!";
+
+    const body = [
+      "A customer left a review for EnVision Direct.",
+      "",
+      `Order Number: ${orderNumber || "Not provided"}`,
+      `Order ID: ${orderId || "Not provided"}`,
+      `Rating: ${rating ? `${rating} out of 5 stars` : "Not selected"}`,
+      "",
+      "Comments:",
+      comments || "No comments provided.",
+    ].join("\n");
+
+    return `mailto:orders@envisiondirect.net?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+  }, [orderNumber, orderId, rating, comments]);
 
   return (
     <main
@@ -53,13 +78,7 @@ function ReviewContent() {
             textAlign: "center",
           }}
         >
-          <h1
-            style={{
-              margin: 0,
-              fontSize: "30px",
-              color: "#111827",
-            }}
-          >
+          <h1 style={{ margin: 0, fontSize: "30px", color: "#111827" }}>
             How did we do?
           </h1>
 
@@ -71,7 +90,7 @@ function ReviewContent() {
               lineHeight: "1.6",
             }}
           >
-            Thank you for choosing EnVision Direct. We would love your feedback.
+            Thank you for choosing EnVision Direct. Please rate your experience.
           </p>
 
           {orderNumber ? (
@@ -90,45 +109,86 @@ function ReviewContent() {
             </div>
           ) : null}
 
-          <div
-            style={{
-              fontSize: "34px",
-              margin: "22px 0",
-              letterSpacing: "4px",
-            }}
-          >
-            ⭐ ⭐ ⭐ ⭐ ⭐
+          <div style={{ margin: "26px 0 10px" }}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setRating(star)}
+                onMouseEnter={() => setHoverRating(star)}
+                onMouseLeave={() => setHoverRating(0)}
+                aria-label={`${star} star${star > 1 ? "s" : ""}`}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  fontSize: "42px",
+                  padding: "4px",
+                  color: star <= activeRating ? "#f59e0b" : "#d1d5db",
+                  transition: "transform 0.15s ease, color 0.15s ease",
+                  transform: star <= activeRating ? "scale(1.08)" : "scale(1)",
+                }}
+              >
+                ★
+              </button>
+            ))}
           </div>
 
           <p
             style={{
-              color: "#374151",
-              lineHeight: "1.7",
-              maxWidth: "520px",
-              margin: "0 auto",
+              color: "#6b7280",
+              fontSize: "14px",
+              marginBottom: "22px",
             }}
           >
-            Please send us your review or comments. Your feedback helps us
-            improve and helps other customers choose EnVision Direct.
+            {rating ? `You selected ${rating} out of 5 stars.` : "Click a star rating."}
           </p>
 
-          <a
-            href={`mailto:orders@envisiondirect.net?subject=Review for Order ${
-              orderNumber || orderId
-            }`}
+          <textarea
+            value={comments}
+            onChange={(e) => setComments(e.target.value)}
+            placeholder="Tell us about your experience..."
+            rows={6}
             style={{
-              display: "inline-block",
-              background: "#f59e0b",
-              color: "#ffffff",
-              textDecoration: "none",
-              padding: "15px 24px",
-              borderRadius: "14px",
-              fontWeight: "900",
-              marginTop: "24px",
+              width: "100%",
+              maxWidth: "560px",
+              boxSizing: "border-box",
+              border: "1px solid #d1d5db",
+              borderRadius: "16px",
+              padding: "16px",
+              fontSize: "15px",
+              lineHeight: "1.6",
+              color: "#111827",
+              outline: "none",
+              resize: "vertical",
+              fontFamily: "Arial, Helvetica, sans-serif",
+              background: "#ffffff",
             }}
-          >
-            Send Review
-          </a>
+          />
+
+          <div style={{ marginTop: "24px" }}>
+            <a
+              href={mailtoHref}
+              style={{
+                display: "inline-block",
+                background: rating ? "#f59e0b" : "#9ca3af",
+                color: "#ffffff",
+                textDecoration: "none",
+                padding: "15px 24px",
+                borderRadius: "14px",
+                fontWeight: "900",
+                pointerEvents: rating ? "auto" : "none",
+              }}
+            >
+              Send Review
+            </a>
+          </div>
+
+          {!rating ? (
+            <p style={{ marginTop: "12px", color: "#ef4444", fontSize: "13px" }}>
+              Please choose a star rating before sending.
+            </p>
+          ) : null}
         </div>
       </div>
     </main>
