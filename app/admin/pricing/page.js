@@ -57,7 +57,15 @@ const presetOptions = {
     "High Gloss UV",
   ],
   sides: ["Front Only", "Front and Back"],
-  quantity: ["100", "250", "500", "1000", "2500", "5000", "10000"],
+  quantity: [
+    "100",
+    "250",
+    "500",
+    "1000",
+    "2500",
+    "5000",
+    "10000",
+  ],
 };
 
 function money(value) {
@@ -152,101 +160,14 @@ export default function AdminPricingPage() {
     return value;
   }
 
-  function uniqueValues(values) {
-    return [
-      ...new Set(
-        values
-          .filter((value) => value !== null && value !== undefined && value !== "")
-          .map((value) => String(value))
-      ),
-    ];
-  }
-
   function getDropdownOptions(field) {
     const preset = presetOptions[field] || [];
-    const existing = rows.map((row) => row[field]);
+    const existing = rows
+      .map((row) => row[field])
+      .filter((value) => value !== null && value !== undefined && value !== "")
+      .map((value) => String(value));
 
-    return uniqueValues([...preset, ...existing]);
-  }
-
-  function getDependentDropdownOptions(field, source) {
-    if (field === "product_name") {
-      return getDropdownOptions("product_name");
-    }
-
-    let matchingRows = rows;
-
-    if (source.product_name) {
-      matchingRows = matchingRows.filter(
-        (row) => row.product_name === source.product_name
-      );
-    }
-
-    if (field !== "size" && source.size) {
-      matchingRows = matchingRows.filter((row) => String(row.size) === String(source.size));
-    }
-
-    if (!["size", "paper"].includes(field) && source.paper) {
-      matchingRows = matchingRows.filter((row) => row.paper === source.paper);
-    }
-
-    if (!["size", "paper", "finish"].includes(field) && source.finish) {
-      matchingRows = matchingRows.filter((row) => row.finish === source.finish);
-    }
-
-    if (!["size", "paper", "finish", "sides"].includes(field) && source.sides) {
-      matchingRows = matchingRows.filter((row) => row.sides === source.sides);
-    }
-
-    const matchingOptions = uniqueValues(matchingRows.map((row) => row[field]));
-    const fallbackOptions = getDropdownOptions(field);
-    const currentValue =
-      source[field] !== null && source[field] !== undefined && source[field] !== ""
-        ? [String(source[field])]
-        : [];
-
-    return uniqueValues([
-      ...currentValue,
-      ...(matchingOptions.length ? matchingOptions : fallbackOptions),
-    ]);
-  }
-
-  function handleFormChange(field, value) {
-    setForm((prev) => {
-      const next = { ...prev, [field]: value };
-
-      if (field === "product_name") {
-        next.size = "";
-        next.paper = "";
-        next.finish = "";
-        next.sides = "";
-        next.quantity = "";
-      }
-
-      if (field === "size") {
-        next.paper = "";
-        next.finish = "";
-        next.sides = "";
-        next.quantity = "";
-      }
-
-      if (field === "paper") {
-        next.finish = "";
-        next.sides = "";
-        next.quantity = "";
-      }
-
-      if (field === "finish") {
-        next.sides = "";
-        next.quantity = "";
-      }
-
-      if (field === "sides") {
-        next.quantity = "";
-      }
-
-      return next;
-    });
+    return [...new Set([...preset, ...existing])];
   }
 
   function handleLocalChange(id, field, value) {
@@ -792,11 +713,13 @@ export default function AdminPricingPage() {
           >
             <select
               value={form.product_name}
-              onChange={(e) => handleFormChange("product_name", e.target.value)}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, product_name: e.target.value }))
+              }
               className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">Product Name</option>
-              {getDependentDropdownOptions("product_name", form).map((option) => (
+              {getDropdownOptions("product_name").map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
@@ -805,11 +728,13 @@ export default function AdminPricingPage() {
 
             <select
               value={form.size}
-              onChange={(e) => handleFormChange("size", e.target.value)}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, size: e.target.value }))
+              }
               className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">Size</option>
-              {getDependentDropdownOptions("size", form).map((option) => (
+              {getDropdownOptions("size").map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
@@ -818,11 +743,13 @@ export default function AdminPricingPage() {
 
             <select
               value={form.paper}
-              onChange={(e) => handleFormChange("paper", e.target.value)}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, paper: e.target.value }))
+              }
               className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">Paper</option>
-              {getDependentDropdownOptions("paper", form).map((option) => (
+              {getDropdownOptions("paper").map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
@@ -831,11 +758,13 @@ export default function AdminPricingPage() {
 
             <select
               value={form.finish}
-              onChange={(e) => handleFormChange("finish", e.target.value)}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, finish: e.target.value }))
+              }
               className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">Finish</option>
-              {getDependentDropdownOptions("finish", form).map((option) => (
+              {getDropdownOptions("finish").map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
@@ -844,11 +773,13 @@ export default function AdminPricingPage() {
 
             <select
               value={form.sides}
-              onChange={(e) => handleFormChange("sides", e.target.value)}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, sides: e.target.value }))
+              }
               className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">Sides</option>
-              {getDependentDropdownOptions("sides", form).map((option) => (
+              {getDropdownOptions("sides").map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
@@ -857,11 +788,13 @@ export default function AdminPricingPage() {
 
             <select
               value={form.quantity}
-              onChange={(e) => handleFormChange("quantity", e.target.value)}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, quantity: e.target.value }))
+              }
               className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">Quantity</option>
-              {getDependentDropdownOptions("quantity", form).map((option) => (
+              {getDropdownOptions("quantity").map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
@@ -1067,7 +1000,7 @@ export default function AdminPricingPage() {
                           className="w-40 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs font-semibold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         >
                           <option value="">Select Product</option>
-                          {getDependentDropdownOptions("product_name", row).map((option) => (
+                          {getDropdownOptions("product_name").map((option) => (
                             <option key={option} value={option}>
                               {option}
                             </option>
@@ -1084,7 +1017,7 @@ export default function AdminPricingPage() {
                           className="w-32 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         >
                           <option value="">Select Size</option>
-                          {getDependentDropdownOptions("size", row).map((option) => (
+                          {getDropdownOptions("size").map((option) => (
                             <option key={option} value={option}>
                               {option}
                             </option>
@@ -1101,7 +1034,7 @@ export default function AdminPricingPage() {
                           className="w-36 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         >
                           <option value="">Select Paper</option>
-                          {getDependentDropdownOptions("paper", row).map((option) => (
+                          {getDropdownOptions("paper").map((option) => (
                             <option key={option} value={option}>
                               {option}
                             </option>
@@ -1118,7 +1051,7 @@ export default function AdminPricingPage() {
                           className="w-32 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         >
                           <option value="">Select Finish</option>
-                          {getDependentDropdownOptions("finish", row).map((option) => (
+                          {getDropdownOptions("finish").map((option) => (
                             <option key={option} value={option}>
                               {option}
                             </option>
@@ -1135,7 +1068,7 @@ export default function AdminPricingPage() {
                           className="w-36 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         >
                           <option value="">Select Sides</option>
-                          {getDependentDropdownOptions("sides", row).map((option) => (
+                          {getDropdownOptions("sides").map((option) => (
                             <option key={option} value={option}>
                               {option}
                             </option>
@@ -1152,7 +1085,7 @@ export default function AdminPricingPage() {
                           className="w-24 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         >
                           <option value="">Qty</option>
-                          {getDependentDropdownOptions("quantity", row).map((option) => (
+                          {getDropdownOptions("quantity").map((option) => (
                             <option key={option} value={option}>
                               {option}
                             </option>
