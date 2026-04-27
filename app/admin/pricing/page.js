@@ -31,6 +31,16 @@ function totalWithShipping(row) {
   return finalPrice(row) + Number(row.shipping_cost || 0);
 }
 
+function profit(row) {
+  return finalPrice(row) - Number(row.your_cost || 0);
+}
+
+function marginPercent(row) {
+  const price = finalPrice(row);
+  if (!price) return 0;
+  return (profit(row) / price) * 100;
+}
+
 export default function AdminPricingPage() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -774,6 +784,8 @@ export default function AdminPricingPage() {
                   <th className="px-2 py-3 font-semibold">Shipping</th>
                   <th className="px-2 py-3 font-semibold">Final Price</th>
                   <th className="px-2 py-3 font-semibold">Total</th>
+                  <th className="px-2 py-3 font-semibold">Profit</th>
+                  <th className="px-2 py-3 font-semibold">Margin</th>
                   <th className="px-2 py-3 font-semibold">Active</th>
                   <th className="px-2 py-3 font-semibold">Actions</th>
                   <th className="px-2 py-3 font-semibold">Status</th>
@@ -783,7 +795,7 @@ export default function AdminPricingPage() {
               <tbody>
                 {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan="15" className="p-8 text-center text-slate-500">
+                    <td colSpan="17" className="p-8 text-center text-slate-500">
                       No pricing rows found.
                     </td>
                   </tr>
@@ -834,7 +846,7 @@ export default function AdminPricingPage() {
                             setRows((prev) =>
                               prev.map((item) =>
                                 item.id === row.id
-                                  ? { ...item, your_cost: e.target.value }
+                                  ? { ...item, your_cost: Number(e.target.value || 0) }
                                   : item
                               )
                             )
@@ -855,7 +867,7 @@ export default function AdminPricingPage() {
                             setRows((prev) =>
                               prev.map((item) =>
                                 item.id === row.id
-                                  ? { ...item, markup_percent: e.target.value }
+                                  ? { ...item, markup_percent: Number(e.target.value || 0) }
                                   : item
                               )
                             )
@@ -876,7 +888,7 @@ export default function AdminPricingPage() {
                             setRows((prev) =>
                               prev.map((item) =>
                                 item.id === row.id
-                                  ? { ...item, shipping_cost: e.target.value }
+                                  ? { ...item, shipping_cost: Number(e.target.value || 0) }
                                   : item
                               )
                             )
@@ -895,6 +907,24 @@ export default function AdminPricingPage() {
                       <td className="px-3 py-4 whitespace-nowrap font-bold text-emerald-700">
                         {money(totalWithShipping(row))}
                       </td>
+
+<td className="px-3 py-4 whitespace-nowrap font-bold text-blue-700">
+  {money(profit(row))}
+</td>
+
+<td className="px-3 py-4 whitespace-nowrap">
+  <span
+    className={`rounded-full px-3 py-1 text-xs font-bold ${
+      marginPercent(row) >= 40
+        ? "bg-emerald-100 text-emerald-700"
+        : marginPercent(row) >= 25
+          ? "bg-amber-100 text-amber-700"
+          : "bg-red-100 text-red-700"
+    }`}
+  >
+    {marginPercent(row).toFixed(1)}%
+  </span>
+</td>
 
                       <td className="px-3 py-4 whitespace-nowrap">
                         <label className="inline-flex cursor-pointer items-center gap-2">
