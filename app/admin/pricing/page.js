@@ -760,24 +760,24 @@ export default function AdminPricingPage() {
 
         <div className="w-full overflow-x-auto rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
           <div className="overflow-x-auto pb-2">
-            <table className="w-full min-w-[2000px] text-sm">
+            <table className="w-full min-w-[1600px] text-sm">
               <thead className="bg-slate-100 text-left text-slate-700">
                 <tr>
-                  <th className="px-3 py-4 font-semibold">Product</th>
-                  <th className="px-3 py-4 font-semibold">Size</th>
-                  <th className="px-3 py-4 font-semibold">Paper</th>
-                  <th className="px-3 py-4 font-semibold">Finish</th>
-                  <th className="px-3 py-4 font-semibold">Sides</th>
-                  <th className="px-3 py-4 font-semibold">Qty</th>
-                  <th className="px-3 py-4 font-semibold">Sort</th>
-                  <th className="px-3 py-4 font-semibold">Your Cost</th>
-                  <th className="px-3 py-4 font-semibold">Markup %</th>
-                  <th className="px-3 py-4 font-semibold">Shipping</th>
-                  <th className="px-3 py-4 font-semibold">Final Price</th>
-                  <th className="px-3 py-4 font-semibold">Total</th>
-                  <th className="px-3 py-4 font-semibold">Active</th>
-                  <th className="px-3 py-4 font-semibold">Actions</th>
-                  <th className="px-3 py-4 font-semibold">Status</th>
+                  <th className="px-2 py-3 font-semibold">Product</th>
+                  <th className="px-2 py-3 font-semibold">Size</th>
+                  <th className="px-2 py-3 font-semibold">Paper</th>
+                  <th className="px-2 py-3 font-semibold">Finish</th>
+                  <th className="px-2 py-3 font-semibold">Sides</th>
+                  <th className="px-2 py-3 font-semibold">Qty</th>
+                  <th className="px-2 py-3 font-semibold">Sort</th>
+                  <th className="px-2 py-3 font-semibold">Your Cost</th>
+                  <th className="px-2 py-3 font-semibold">Markup %</th>
+                  <th className="px-2 py-3 font-semibold">Shipping</th>
+                  <th className="px-2 py-3 font-semibold">Final Price</th>
+                  <th className="px-2 py-3 font-semibold">Total</th>
+                  <th className="px-2 py-3 font-semibold">Active</th>
+                  <th className="px-2 py-3 font-semibold">Actions</th>
+                  <th className="px-2 py-3 font-semibold">Status</th>
                 </tr>
               </thead>
 
@@ -834,7 +834,7 @@ export default function AdminPricingPage() {
                           onChange={(e) =>
                             updateRow(row.id, "your_cost", e.target.value)
                           }
-                          className="w-36 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                          className="w-24 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
                       </td>
 
@@ -846,7 +846,7 @@ export default function AdminPricingPage() {
                           onChange={(e) =>
                             updateRow(row.id, "markup_percent", e.target.value)
                           }
-                          className="w-32 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                          className="w-20 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
                       </td>
 
@@ -858,7 +858,7 @@ export default function AdminPricingPage() {
                           onChange={(e) =>
                             updateRow(row.id, "shipping_cost", e.target.value)
                           }
-                          className="w-36 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                          className="w-24 rounded-xl border border-slate-300 px-2 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                         />
                       </td>
 
