@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default function TrackPage({ searchParams }) {
-  const token = searchParams?.token;
+export default async function TrackPage({ searchParams }) {
+  const params = await searchParams;
+  const token = params?.token;
 
   if (token) {
     redirect(`/track/${encodeURIComponent(token)}`);
