@@ -121,15 +121,13 @@ export default async function TrackTokenPage({ params }) {
                 {step.complete ? "✓" : index + 1}
               </div>
 
-              <div>
-                <div
-                  style={{
-                    ...styles.stepLabel,
-                    ...(step.current ? styles.stepLabelCurrent : {}),
-                  }}
-                >
-                  {step.label}
-                </div>
+              <div
+                style={{
+                  ...styles.stepLabel,
+                  ...(step.current ? styles.stepLabelCurrent : {}),
+                }}
+              >
+                {step.label}
               </div>
 
               {index < steps.length - 1 && (
@@ -329,13 +327,15 @@ const styles = {
   stepWrap: {
     position: "relative",
     display: "flex",
+    flexDirection: "column",
     alignItems: "center",
-    gap: "10px",
-    minHeight: "44px",
+    gap: "6px",
+    minHeight: "70px",
+    textAlign: "center",
   },
   stepCircle: {
-    width: "34px",
-    height: "34px",
+    width: "36px",
+    height: "36px",
     borderRadius: "50%",
     background: "#e5e7eb",
     color: "#64748b",
@@ -344,7 +344,6 @@ const styles = {
     justifyContent: "center",
     fontWeight: "900",
     zIndex: 2,
-    flexShrink: 0,
   },
   stepCircleComplete: {
     background: "#2563eb",
@@ -363,9 +362,9 @@ const styles = {
   },
   stepLine: {
     position: "absolute",
-    left: "34px",
-    right: "-12px",
-    top: "22px",
+    top: "17px",
+    left: "50%",
+    width: "calc(100% + 12px)",
     height: "3px",
     background: "#e5e7eb",
     zIndex: 1,
