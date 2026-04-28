@@ -43,7 +43,8 @@ function getStatusSteps(status) {
 }
 
 export default async function TrackTokenPage({ params }) {
-  const token = params?.token;
+  const resolvedParams = await params;
+  const token = resolvedParams?.token;
 
   if (!token) {
     return (
