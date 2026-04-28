@@ -299,7 +299,7 @@ async function sendStatusEmail(req, order, status) {
 
   const token = await ensureTrackingToken(order.id, order.tracking_token);
   const baseUrl = getBaseUrl(req);
-  const trackingUrl = `${baseUrl}/track?token=${token}`;
+  const trackingUrl = `${baseUrl}/track/${encodeURIComponent(token)}`;
   const carrierLink = getCarrierTrackingLink(
     order.tracking_carrier,
     order.tracking_number
