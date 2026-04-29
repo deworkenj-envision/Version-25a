@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
@@ -24,35 +24,28 @@ export async function GET(req) {
 
     const { data: order, error } = await supabaseAdmin
       .from("orders")
-      .select(
-        `
-        id,
-        order_number,
-        customer_email,
-        tracking_token
-      `
-      )
+      .select("id, order_number, customer_email, tracking_token")
       .eq("order_number", orderNumber)
       .ilike("customer_email", email)
       .maybeSingle();
 
     if (error) {
       return NextResponse.json(
-        { success: false, error: error.message || "Database lookup failed." },
+        { success: false, error: error.message || "Database error." },
         { status: 500 }
       );
     }
 
     if (!order) {
       return NextResponse.json(
-        { success: false, error: "Order not found. Please check your order number and email." },
+        { success: false, error: "Order not found." },
         { status: 404 }
       );
     }
 
     if (!order.tracking_token) {
       return NextResponse.json(
-        { success: false, error: "This order does not have a tracking link yet." },
+        { success: false, error: "Tracking not available yet." },
         { status: 404 }
       );
     }
