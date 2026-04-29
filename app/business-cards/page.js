@@ -74,13 +74,12 @@ export default function BusinessCardsPage() {
 
       <section className="mx-auto max-w-6xl px-6 pb-10">
         <h3 className="mb-3 text-xl font-semibold">
-          Business Card Printing in Huntington Beach & Orange County
+          Quality Business Card Printing To Make A Great Impression
         </h3>
 
         <p className="text-gray-700">
-          EnVision Direct provides online business card printing services for
-          customers in Huntington Beach, Orange County, and surrounding areas.
-          Whether you need business cards for networking, sales meetings,
+          EnVision Direct provides business card printing services for
+          customers nationwide. Whether you need business cards for networking,sales meetings,
           events, or everyday brand promotion, you can order online with fast
           turnaround and have your prints delivered directly to your door.
         </p>
