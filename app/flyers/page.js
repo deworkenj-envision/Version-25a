@@ -62,7 +62,7 @@ export default function FlyersPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadowE-sm">
             <h2 className="mb-2 text-xl font-semibold">Fast Turnaround</h2>
             <p className="text-gray-700">
               Order online quickly and receive your flyers delivered straight to
@@ -74,13 +74,12 @@ export default function FlyersPage() {
 
       <section className="mx-auto max-w-6xl px-6 pb-10">
         <h3 className="mb-3 text-xl font-semibold">
-          Flyer Printing in Huntington Beach & Orange County
+          Color Flyers & Brochures To Make Your Marketing Look Great!
         </h3>
 
         <p className="text-gray-700">
-          EnVision Direct provides online flyer printing services for customers
-          in Huntington Beach, Orange County, and surrounding areas. Whether you
-          are promoting an event, advertising a business, or sharing important
+          EnVision Direct provides flyer and brochure printing services for customers
+          all around the country. Whether you are promoting an event, advertising a business, or sharing important
           information, you can order online with fast turnaround and have your
           flyers delivered directly to your door.
         </p>
