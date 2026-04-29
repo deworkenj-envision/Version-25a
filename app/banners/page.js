@@ -186,23 +186,26 @@ export default function BannersPage() {
           </Link>
         </div>
       </section>
+
+      <section className="mx-auto max-w-6xl px-6 py-10">
+        <div className="border-t pt-8">
+          <h3 className="mb-4 text-lg font-semibold">
+            Explore Other Printing Products
+          </h3>
+
+          <div className="flex flex-wrap gap-4">
+            <Link href="/business-cards" className="text-blue-600 hover:underline">
+              Business Cards
+            </Link>
+            <Link href="/postcards" className="text-blue-600 hover:underline">
+              Postcards
+            </Link>
+            <Link href="/flyers" className="text-blue-600 hover:underline">
+              Flyers
+            </Link>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
-<div className="mt-12 border-t pt-8">
-  <h3 className="mb-4 text-lg font-semibold">
-    Explore Other Printing Products
-  </h3>
-
-  <div className="flex flex-wrap gap-4">
-    <a href="/business-cards" className="text-blue-600 hover:underline">
-      Business Cards
-    </a>
-    <a href="/postcards" className="text-blue-600 hover:underline">
-      Postcards
-    </a>
-    <a href="/flyers" className="text-blue-600 hover:underline">
-      Flyers
-    </a>
-  </div>
-</div>
