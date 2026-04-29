@@ -1,15 +1,60 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "PrintLuxe V35",
-  description: "Premium printing storefront",
+  title: "EnVision Direct | Online Printing Services – Fast Turnaround & Best Prices",
+  description:
+    "Order high-quality printing online with EnVision Direct. Business cards, postcards, flyers, and banners with fast turnaround, competitive pricing, and easy online ordering.",
+  
+  keywords: [
+    "online printing",
+    "business cards printing",
+    "postcards printing",
+    "flyer printing",
+    "banner printing",
+    "cheap printing online",
+    "fast printing services",
+    "print shop online",
+  ],
+
+  openGraph: {
+    title: "EnVision Direct – Professional Printing Made Simple",
+    description:
+      "Upload your artwork, get instant pricing, and order high-quality prints with fast turnaround.",
+    url: "https://envisiondirect.net",
+    siteName: "EnVision Direct",
+    images: [
+      {
+        url: "https://envisiondirect.net/images/hero-collage-logo.png",
+        width: 1200,
+        height: 630,
+      },
+    ],
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
+
         {children}
+
+        {/* SEO STRUCTURED DATA */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "EnVision Direct",
+              url: "https://envisiondirect.net",
+              email: "orders@envisiondirect.net",
+              description:
+                "Online printing services offering business cards, flyers, postcards, and banners with fast turnaround and competitive pricing.",
+            }),
+          }}
+        />
 
         <footer className="mt-20 border-t border-slate-200 bg-white">
           <div className="mx-auto max-w-7xl px-6 py-10 md:px-10">
