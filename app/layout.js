@@ -84,6 +84,23 @@ export default function RootLayout({ children }) {
                 <a href="/refund" className="text-slate-600 hover:text-blue-600">
                   Refund Policy
                 </a>
+
+                {/* 🔥 PRODUCT LINKS (SEO BOOST) */}
+                <div className="mt-4 font-semibold text-slate-800">
+                  Products
+                </div>
+                <a href="/business-cards" className="text-slate-600 hover:text-blue-600">
+                  Business Cards
+                </a>
+                <a href="/postcards" className="text-slate-600 hover:text-blue-600">
+                  Postcards
+                </a>
+                <a href="/flyers" className="text-slate-600 hover:text-blue-600">
+                  Flyers
+                </a>
+                <a href="/banners" className="text-slate-600 hover:text-blue-600">
+                  Banners
+                </a>
               </div>
 
               {/* CONTACT */}
