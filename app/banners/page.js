@@ -82,8 +82,7 @@ export default function BannersPage() {
             EnVision Direct provides online banner printing services nationwide.
             Whether you need banners for events, business promotions, or signage,
             you can order online with fast turnaround and have your banners
-            delivered directly to your door, including customers in Huntington
-            Beach and across Orange County.
+            delivered directly to your door.          
 </p>
         </p>
       </section>
