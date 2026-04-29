@@ -79,7 +79,7 @@ export default function BusinessCardsPage() {
 
         <p className="text-gray-700">
           EnVision Direct provides business card printing services for
-          customers nationwide. Whether you need business cards for networking,sales meetings,
+          customers nationwide. Whether you need business cards for networking, sales meetings,
           events, or everyday brand promotion, you can order online with fast
           turnaround and have your prints delivered directly to your door.
         </p>
