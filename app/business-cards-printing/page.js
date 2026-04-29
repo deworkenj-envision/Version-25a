@@ -111,3 +111,21 @@ export default function BusinessCardsPrintingPage() {
     </main>
   );
 }
+
+<div className="mt-12 border-t pt-8">
+  <h3 className="mb-4 text-lg font-semibold">
+    Explore Other Printing Products
+  </h3>
+
+  <div className="flex flex-wrap gap-4">
+    <a href="/postcards" className="text-blue-600 hover:underline">
+      Postcards
+    </a>
+    <a href="/flyers" className="text-blue-600 hover:underline">
+      Flyers
+    </a>
+    <a href="/banners" className="text-blue-600 hover:underline">
+      Banners
+    </a>
+  </div>
+</div>
