@@ -190,3 +190,21 @@ export default function FlyersPage() {
     </main>
   );
 }
+
+<div className="mt-12 border-t pt-8">
+  <h3 className="mb-4 text-lg font-semibold">
+    Explore Other Printing Products
+  </h3>
+
+  <div className="flex flex-wrap gap-4">
+    <a href="/business-cards" className="text-blue-600 hover:underline">
+      Business Cards
+    </a>
+    <a href="/postcards" className="text-blue-600 hover:underline">
+      Postcards
+    </a>
+    <a href="/banners" className="text-blue-600 hover:underline">
+      Banners
+    </a>
+  </div>
+</div>
