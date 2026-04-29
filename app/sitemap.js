@@ -1,20 +1,48 @@
 export default function sitemap() {
+  const baseUrl = "https://www.envisiondirect.net";
+
   return [
     {
-      url: "https://envisiondirect.net",
+      url: baseUrl,
       lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 1,
     },
     {
-      url: "https://envisiondirect.net/order",
+      url: `${baseUrl}/business-cards`,
       lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
     },
     {
-      url: "https://envisiondirect.net/track",
+      url: `${baseUrl}/postcards`,
       lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
     },
     {
-      url: "https://envisiondirect.net/contact",
+      url: `${baseUrl}/flyers`,
       lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/banners`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/order`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/track`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
     },
   ];
 }
