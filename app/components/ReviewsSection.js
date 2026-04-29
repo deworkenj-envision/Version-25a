@@ -2,6 +2,21 @@
 
 import { useEffect, useState } from "react";
 
+function formatName(name) {
+  if (!name) return "Verified Customer";
+
+  const parts = name.trim().toLowerCase().split(" ");
+
+  const first =
+    parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+
+  if (parts.length === 1) return first;
+
+  const lastInitial = parts[1].charAt(0).toUpperCase();
+
+  return `${first} ${lastInitial}.`;
+}
+
 export default function ReviewsSection() {
   const [reviews, setReviews] = useState([]);
 
@@ -49,15 +64,7 @@ export default function ReviewsSection() {
               </p>
 
               <div style={styles.footer}>
-                <span style={styles.name}>
-                  {review.customer_name || "Verified Customer"}
-                </span>
-
-                {review.order_number && (
-                  <span style={styles.order}>
-                    • {review.order_number}
-                  </span>
-                )}
+                {formatName(review.customer_name)} • Verified Customer
               </div>
 
             </div>
@@ -133,14 +140,6 @@ const styles = {
     borderTop: "1px solid #e5e7eb",
     fontSize: "14px",
     color: "#64748b",
-  },
-
-  name: {
     fontWeight: "600",
-    color: "#0f172a",
-  },
-
-  order: {
-    marginLeft: "6px",
   },
 };
