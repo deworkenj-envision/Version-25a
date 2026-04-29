@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req, { params }) {
   try {
-    const token = params?.token;
+    const resolvedParams = await params;
+    const token = resolvedParams?.token;
 
     if (!token) {
       return NextResponse.json(
