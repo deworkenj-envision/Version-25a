@@ -1,142 +1,115 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function TrackPage() {
+  const router = useRouter();
+
   const [orderNumber, setOrderNumber] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [order, setOrder] = useState(null);
   const [error, setError] = useState("");
 
-  const handleSearch = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
+
     setLoading(true);
     setError("");
-    setOrder(null);
 
     try {
-      const res = await fetch("/api/orders/track", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          order_number: orderNumber,
-          email: email,
-        }),
+      const params = new URLSearchParams({
+        orderNumber: orderNumber.trim(),
+        email: email.trim(),
       });
 
-      const data = await res.json();
+      const res = await fetch(`/api/orders/track?${params.toString()}`, {
+        method: "GET",
+        cache: "no-store",
+      });
 
-      if (!res.ok || !data?.order) {
-        throw new Error(data?.error || "Order not found");
+      const text = await res.text();
+
+      if (!text) {
+        throw new Error(
+          "Tracking lookup returned no response. Check app/api/orders/track/route.js."
+        );
       }
 
-      setOrder(data.order);
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(text || "Tracking lookup failed.");
+      }
+
+      if (!res.ok || !data?.success || !data?.token) {
+        throw new Error(data?.error || "Order not found.");
+      }
+
+      router.push(`/track/${data.token}`);
     } catch (err) {
-      setError(err.message || "Something went wrong");
+      setError(err.message || "Order not found.");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 py-10">
-      
-      {/* LOGO */}
-      <div className="mb-6">
-        <Image
-          src="/images/logo-hero.png"
-          alt="EnVision Direct"
-          width={220}
-          height={80}
-          priority
-        />
-      </div>
-
-      {/* TITLE */}
-      <h1 className="text-2xl font-semibold mb-6 text-gray-800">
-        Track Your Order
-      </h1>
-
-      {/* FORM */}
-      <form
-        onSubmit={handleSearch}
-        className="w-full max-w-md bg-white p-6 rounded-lg shadow-md space-y-4"
-      >
-        <input
-          type="text"
-          placeholder="Order Number (ex: EV-10109)"
-          value={orderNumber}
-          onChange={(e) => setOrderNumber(e.target.value)}
-          required
-          className="w-full border px-3 py-2 rounded"
-        />
-
-        <input
-          type="email"
-          placeholder="Email Address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full border px-3 py-2 rounded"
-        />
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-        >
-          {loading ? "Searching..." : "Track Order"}
-        </button>
-
-        {error && (
-          <p className="text-red-500 text-sm text-center">{error}</p>
-        )}
-      </form>
-
-      {/* ORDER RESULT */}
-      {order && (
-        <div className="w-full max-w-md mt-8 bg-white p-6 rounded-lg shadow-md">
-          
-          <h2 className="text-lg font-semibold mb-4 text-gray-800 text-center">
-            Order Details
-          </h2>
-
-          <div className="space-y-2 text-sm text-gray-700">
-            <p><strong>Order #:</strong> {order.order_number}</p>
-            <p><strong>Name:</strong> {order.customer_name}</p>
-            <p><strong>Product:</strong> {order.product_name}</p>
-            <p><strong>Quantity:</strong> {order.quantity}</p>
-            <p><strong>Status:</strong> {order.status}</p>
-
-            {order.tracking_number && (
-              <p>
-                <strong>Tracking:</strong>{" "}
-                <a
-                  href={order.tracking_url}
-                  target="_blank"
-                  className="text-blue-600 underline"
-                >
-                  {order.tracking_number}
-                </a>
-              </p>
-            )}
-          </div>
-
-          {/* REORDER BUTTON */}
-          <div className="mt-6 flex justify-center">
-            <a
-              href="/order"
-              className="bg-black text-white px-6 py-3 rounded-md text-sm hover:bg-gray-800 transition"
-            >
-              Reorder This Product
-            </a>
-          </div>
+    <main className="min-h-screen bg-gray-50 px-4 py-10">
+      <div className="mx-auto max-w-md">
+        <div className="mb-8 flex justify-center">
+          <Image
+            src="/images/logo-hero.png"
+            alt="EnVision Direct"
+            width={230}
+            height={90}
+            priority
+            className="h-auto w-auto"
+          />
         </div>
-      )}
-    </div>
+
+        <h1 className="mb-6 text-center text-2xl font-bold text-gray-900">
+          Track Your Order
+        </h1>
+
+        <form onSubmit={handleSubmit} className="rounded-xl bg-white p-6 shadow-md">
+          <div className="space-y-4">
+            <input
+              type="text"
+              value={orderNumber}
+              onChange={(e) => setOrderNumber(e.target.value)}
+              placeholder="Order Number"
+              required
+              className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+            />
+
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email Address"
+              required
+              className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+            />
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-md bg-blue-600 px-5 py-3 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? "Looking Up Order..." : "Track Order"}
+            </button>
+          </div>
+
+          {error && (
+            <div className="mt-5 rounded-md bg-red-50 px-4 py-3 text-center text-sm text-red-600">
+              {error}
+            </div>
+          )}
+        </form>
+      </div>
+    </main>
   );
 }
