@@ -87,7 +87,7 @@ export default async function TrackTokenPage({ params }) {
       <section style={styles.card}>
         <div style={styles.brandHeader}>
           <img src="/images/logo-hero.png" alt="EnVision Direct" style={styles.logo} />
-          <div style={styles.statusBadge}>{status.replaceAll("_", " ").toUpperCase()}</div>
+          
         </div>
 
         <div style={styles.hero}>
@@ -234,16 +234,14 @@ const styles = {
     boxShadow: "0 28px 80px rgba(15, 35, 70, 0.14)",
     border: "1px solid rgba(20, 64, 120, 0.08)",
   },
-  brandHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "20px",
-    marginBottom: "24px",
-    flexWrap: "wrap",
-  },
+brandHeader: {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  marginBottom: "24px",
+},
   logo: {
-    width: "230px",
+    width: "260px",
     maxWidth: "100%",
     height: "auto",
     display: "block",
