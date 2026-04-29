@@ -9,6 +9,7 @@ const products = [
     description: "Premium cards for a polished first impression.",
     image: "/products/business-cards.jpg",
     href: "/order?product=Business%20Cards",
+    seoHref: "/business-cards", // ✅ ADDED
     button: "Order Business Cards",
   },
   {
@@ -16,6 +17,7 @@ const products = [
     description: "Bold, vibrant flyers for events, menus, and advertising.",
     image: "/products/flyers.jpg",
     href: "/order?product=Flyers",
+    seoHref: "/flyers", // ✅ ADDED
     button: "Order Flyers",
   },
   {
@@ -23,6 +25,7 @@ const products = [
     description: "High-quality postcards for promotions and direct mail.",
     image: "/products/postcards.jpg",
     href: "/order?product=Postcards",
+    seoHref: "/postcards", // ✅ ADDED
     button: "Order Postcards",
   },
   {
@@ -30,6 +33,7 @@ const products = [
     description: "Large-format banners for indoor and outdoor visibility.",
     image: "/products/banners.jpg",
     href: "/order?product=Banners",
+    seoHref: "/banners", // ✅ ADDED
     button: "Order Banners",
   },
 ];
@@ -117,11 +121,12 @@ export default async function HomePage() {
                 </Link>
               </div>
 
+              {/* ✅ UPDATED LINKS (SEO BOOST) */}
               <div className="mt-8 flex flex-wrap gap-4">
                 {products.map((product) => (
                   <Link
                     key={product.name}
-                    href={product.href}
+                    href={product.seoHref}
                     className="rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/18"
                   >
                     {product.name}
@@ -205,24 +210,24 @@ export default async function HomePage() {
                     </p>
 
                     {startingPrice !== undefined ? (
-  <div className="mt-5 rounded-2xl bg-blue-50 p-4">
-    <div className="text-xs font-bold uppercase tracking-wide text-blue-700">
-      Starting at
-    </div>
-    <div className="mt-1 text-3xl font-extrabold text-slate-900">
-      {money(startingPrice)}
-    </div>
-    <div className="mt-1 text-xs font-medium text-slate-500">
-      Live pricing updates in estimator
-    </div>
-  </div>
-) : (
-  <div className="mt-5 rounded-2xl bg-slate-50 p-4">
-    <div className="text-sm font-semibold text-slate-600">
-      Live pricing available in estimator
-    </div>
-  </div>
-)}
+                      <div className="mt-5 rounded-2xl bg-blue-50 p-4">
+                        <div className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                          Starting at
+                        </div>
+                        <div className="mt-1 text-3xl font-extrabold text-slate-900">
+                          {money(startingPrice)}
+                        </div>
+                        <div className="mt-1 text-xs font-medium text-slate-500">
+                          Live pricing updates in estimator
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+                        <div className="text-sm font-semibold text-slate-600">
+                          Live pricing available in estimator
+                        </div>
+                      </div>
+                    )}
 
                     <div className="mt-6 flex items-center justify-between">
                       <span className="text-sm font-semibold text-blue-700 group-hover:underline">
@@ -240,7 +245,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-<ReviewsSection />
+
+      <ReviewsSection />
     </main>
   );
 }
