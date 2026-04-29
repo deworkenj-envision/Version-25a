@@ -74,15 +74,17 @@ export default function BannersPage() {
 
       <section className="mx-auto max-w-6xl px-6 pb-10">
         <h3 className="mb-3 text-xl font-semibold">
-          Banner Printing in Huntington Beach & Orange County
+          Top Quality Banner Printing At The Best Prices
         </h3>
 
         <p className="text-gray-700">
-          EnVision Direct provides online banner printing services for customers
-          in Huntington Beach, Orange County, and surrounding areas. Whether you
-          need banners for events, business promotions, or signage, you can order
-          online with fast turnaround and have your banners delivered directly
-          to your door.
+         <p className="text-gray-700">
+            EnVision Direct provides online banner printing services nationwide.
+            Whether you need banners for events, business promotions, or signage,
+            you can order online with fast turnaround and have your banners
+            delivered directly to your door, including customers in Huntington
+            Beach and across Orange County.
+</p>
         </p>
       </section>
     </main>
