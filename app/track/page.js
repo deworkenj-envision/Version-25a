@@ -1,57 +1,103 @@
-import { redirect } from "next/navigation";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useState } from "react";
 
-export default async function TrackPage({ searchParams }) {
-  const params = await searchParams;
-  const token = params?.token;
+export default function TrackPage() {
+  const [orderNumber, setOrderNumber] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  if (token) {
-    redirect(`/track/${encodeURIComponent(token)}`);
+  async function handleTrack() {
+    if (!orderNumber) return;
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await fetch(`/api/orders/track?orderNumber=${encodeURIComponent(orderNumber)}`);
+      const data = await res.json();
+
+      if (!res.ok || !data?.token) {
+        throw new Error("Order not found");
+      }
+
+      // redirect to secure tracking page
+      window.location.href = `/track/${data.token}`;
+    } catch (err) {
+      setError("Order not found. Please check your order number.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "#eef5ff",
-        padding: "40px 18px",
-        fontFamily: "Arial, Helvetica, sans-serif",
-      }}
-    >
-      <section
-        style={{
-          maxWidth: "700px",
-          margin: "0 auto",
-          background: "#ffffff",
-          borderRadius: "22px",
-          padding: "32px",
-          boxShadow: "0 18px 50px rgba(15, 35, 70, 0.12)",
-        }}
-      >
-        <h1 style={{ margin: "0 0 12px", color: "#0f2745", fontSize: "34px" }}>
-          Tracking link missing
-        </h1>
+    <main style={styles.page}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>Track Your Order</h1>
 
-        <p style={{ color: "#334155", fontSize: "16px", marginBottom: "22px" }}>
-          This tracking link is missing the secure order token.
+        <p style={styles.text}>
+          Enter your order number to view your order status.
         </p>
 
-        <a
-          href="/"
-          style={{
-            display: "inline-block",
-            padding: "14px 22px",
-            borderRadius: "12px",
-            background: "#e5edf7",
-            color: "#0f2745",
-            fontWeight: "900",
-            textDecoration: "none",
-          }}
-        >
-          Return Home
-        </a>
-      </section>
+        <input
+          value={orderNumber}
+          onChange={(e) => setOrderNumber(e.target.value)}
+          placeholder="Enter Order Number (ex: EV-10123)"
+          style={styles.input}
+        />
+
+        <button onClick={handleTrack} style={styles.button}>
+          {loading ? "Tracking..." : "Track Order"}
+        </button>
+
+        {error && <p style={styles.error}>{error}</p>}
+      </div>
     </main>
   );
 }
+
+const styles = {
+  page: {
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "#eef5ff",
+  },
+  card: {
+    background: "#fff",
+    padding: "40px",
+    borderRadius: "20px",
+    width: "100%",
+    maxWidth: "400px",
+    textAlign: "center",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+  },
+  title: {
+    fontSize: "28px",
+    marginBottom: "10px",
+  },
+  text: {
+    marginBottom: "20px",
+    color: "#555",
+  },
+  input: {
+    width: "100%",
+    padding: "14px",
+    borderRadius: "10px",
+    border: "1px solid #ccc",
+    marginBottom: "15px",
+  },
+  button: {
+    width: "100%",
+    padding: "14px",
+    background: "#1f5bb5",
+    color: "#fff",
+    borderRadius: "10px",
+    fontWeight: "bold",
+  },
+  error: {
+    marginTop: "15px",
+    color: "red",
+  },
+};
