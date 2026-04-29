@@ -74,13 +74,12 @@ export default function PostcardsPage() {
 
       <section className="mx-auto max-w-6xl px-6 pb-10">
         <h3 className="mb-3 text-xl font-semibold">
-          Postcard Printing in Huntington Beach & Orange County
+          Postcard Printing For All Of Your Marketing Needs
         </h3>
 
         <p className="text-gray-700">
-          EnVision Direct provides online postcard printing services for
-          customers in Huntington Beach, Orange County, and surrounding areas.
-          Whether you're promoting a sale, launching a campaign, or sending
+          EnVision Direct provides top-quality postcard printing services for
+          customers across the country. Whether you're promoting a sale, launching a campaign, or sending
           announcements, you can order online with fast turnaround and have your
           postcards delivered directly to your door.
         </p>
