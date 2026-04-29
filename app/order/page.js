@@ -129,11 +129,16 @@ export default function OrderPage() {
   const [uploadedArtworkFileName, setUploadedArtworkFileName] = useState("");
 
   const [requestedProduct, setRequestedProduct] = useState("");
+  const [pendingReorder, setPendingReorder] = useState(null);
+  const [reorderLoading, setReorderLoading] = useState(false);
+  const [reorderError, setReorderError] = useState("");
+  const [reorderNotice, setReorderNotice] = useState("");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const params = new URLSearchParams(window.location.search);
+    const reorderToken = params.get("reorderToken") || "";
 
     setRequestedProduct(
       params.get("product") ||
@@ -141,6 +146,53 @@ export default function OrderPage() {
         params.get("name") ||
         ""
     );
+
+    if (!reorderToken) return;
+
+    let active = true;
+
+    async function loadReorder() {
+      try {
+        setReorderLoading(true);
+        setReorderError("");
+        setReorderNotice("");
+
+        const res = await fetch(`/api/orders/reorder/${encodeURIComponent(reorderToken)}`, {
+          cache: "no-store",
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data?.success) {
+          throw new Error(data?.error || "Unable to load reorder details.");
+        }
+
+        if (!active) return;
+
+        const reorder = data.reorder || {};
+
+        setPendingReorder(reorder);
+        setRequestedProduct(reorder.product_name || "");
+        setNotes(reorder.notes || "");
+
+        if (reorder.original_order_number) {
+          setReorderNotice(`Reordering from ${reorder.original_order_number}`);
+        } else {
+          setReorderNotice("Reorder details loaded.");
+        }
+      } catch (err) {
+        if (!active) return;
+        setReorderError(err.message || "Unable to load reorder details.");
+      } finally {
+        if (active) setReorderLoading(false);
+      }
+    }
+
+    loadReorder();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -211,14 +263,17 @@ export default function OrderPage() {
   useEffect(() => {
     if (!products.length) return;
 
+    const reorderProduct = pendingReorder?.product_name || "";
+    const matchedReorderProduct = findMatchingProduct(products, reorderProduct);
     const matchedProduct = findMatchingProduct(products, requestedProduct);
 
     setProductName((current) => {
+      if (pendingReorder && matchedReorderProduct) return matchedReorderProduct;
       if (current && products.includes(current)) return current;
       if (matchedProduct) return matchedProduct;
       return products[0];
     });
-  }, [products, requestedProduct]);
+  }, [products, requestedProduct, pendingReorder]);
 
   const selectedProductSlug = useMemo(() => canonicalProductSlug(productName), [productName]);
 
@@ -243,8 +298,15 @@ export default function OrderPage() {
       setSize("");
       return;
     }
+
+    const reorderSize = normalize(pendingReorder?.size);
+    if (pendingReorder && reorderSize && sizeOptions.includes(reorderSize)) {
+      setSize(reorderSize);
+      return;
+    }
+
     if (!sizeOptions.includes(size)) setSize(sizeOptions[0]);
-  }, [sizeOptions, size]);
+  }, [sizeOptions, size, pendingReorder]);
 
   const rowsForSize = useMemo(() => {
     if (!size) return rowsForProduct;
@@ -260,8 +322,15 @@ export default function OrderPage() {
       setPaper("");
       return;
     }
+
+    const reorderPaper = normalize(pendingReorder?.paper);
+    if (pendingReorder && reorderPaper && paperOptions.includes(reorderPaper)) {
+      setPaper(reorderPaper);
+      return;
+    }
+
     if (!paperOptions.includes(paper)) setPaper(paperOptions[0]);
-  }, [paperOptions, paper]);
+  }, [paperOptions, paper, pendingReorder]);
 
   const rowsForPaper = useMemo(() => {
     if (!paper) return rowsForSize;
@@ -277,8 +346,15 @@ export default function OrderPage() {
       setFinish("");
       return;
     }
+
+    const reorderFinish = normalize(pendingReorder?.finish);
+    if (pendingReorder && reorderFinish && finishOptions.includes(reorderFinish)) {
+      setFinish(reorderFinish);
+      return;
+    }
+
     if (!finishOptions.includes(finish)) setFinish(finishOptions[0]);
-  }, [finishOptions, finish]);
+  }, [finishOptions, finish, pendingReorder]);
 
   const rowsForFinish = useMemo(() => {
     if (!finish) return rowsForPaper;
@@ -294,8 +370,15 @@ export default function OrderPage() {
       setSides("");
       return;
     }
+
+    const reorderSides = normalize(pendingReorder?.sides);
+    if (pendingReorder && reorderSides && sidesOptions.includes(reorderSides)) {
+      setSides(reorderSides);
+      return;
+    }
+
     if (!sidesOptions.includes(sides)) setSides(sidesOptions[0]);
-  }, [sidesOptions, sides]);
+  }, [sidesOptions, sides, pendingReorder]);
 
   const rowsForSides = useMemo(() => {
     if (!sides) return rowsForFinish;
@@ -313,12 +396,38 @@ export default function OrderPage() {
       setQuantity("");
       return;
     }
+
+    const reorderQuantity = String(pendingReorder?.quantity || "").trim();
+    if (pendingReorder && reorderQuantity && quantityOptions.includes(reorderQuantity)) {
+      setQuantity(reorderQuantity);
+      return;
+    }
+
     if (!quantityOptions.includes(quantity)) setQuantity(quantityOptions[0]);
-  }, [quantityOptions, quantity]);
+  }, [quantityOptions, quantity, pendingReorder]);
 
   const selectedRow = useMemo(() => {
     return rowsForSides.find((row) => String(row.quantity) === String(quantity)) || null;
   }, [rowsForSides, quantity]);
+
+  useEffect(() => {
+    if (!pendingReorder || !selectedRow) return;
+
+    const matches =
+      normalize(productName).toLowerCase() === normalize(pendingReorder.product_name).toLowerCase() ||
+      canonicalProductSlug(productName) === canonicalProductSlug(pendingReorder.product_name);
+
+    if (
+      matches &&
+      normalize(size) === normalize(pendingReorder.size) &&
+      normalize(paper) === normalize(pendingReorder.paper) &&
+      normalize(finish) === normalize(pendingReorder.finish) &&
+      normalize(sides) === normalize(pendingReorder.sides) &&
+      String(quantity) === String(pendingReorder.quantity)
+    ) {
+      setPendingReorder(null);
+    }
+  }, [pendingReorder, selectedRow, productName, size, paper, finish, sides, quantity]);
 
   const subtotal = Number(selectedRow?.price || 0);
   const shippingCost = Number(selectedRow?.shipping || 0);
@@ -463,6 +572,7 @@ export default function OrderPage() {
   }
 
   function handleProductCardClick(product) {
+    setPendingReorder(null);
     setProductName(product);
   }
 
@@ -483,6 +593,24 @@ export default function OrderPage() {
               Choose your product, select exact print options, see live pricing, and place your
               order with confidence.
             </p>
+
+            {reorderLoading && (
+              <div className="mt-5 rounded-2xl bg-white/15 px-4 py-3 text-sm font-semibold text-white">
+                Loading reorder details...
+              </div>
+            )}
+
+            {reorderNotice && (
+              <div className="mt-5 rounded-2xl bg-emerald-100 px-4 py-3 text-sm font-bold text-emerald-800">
+                {reorderNotice}. Please upload your artwork to continue.
+              </div>
+            )}
+
+            {reorderError && (
+              <div className="mt-5 rounded-2xl bg-red-100 px-4 py-3 text-sm font-bold text-red-700">
+                {reorderError}
+              </div>
+            )}
 
             <div className="mt-6 flex flex-wrap gap-3">
               {products.map((product) => {
