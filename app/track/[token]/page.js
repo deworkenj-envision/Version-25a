@@ -4,8 +4,7 @@ import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 export const dynamic = "force-dynamic";
 
 function formatMoney(value) {
-  const num = Number(value || 0);
-  return num.toLocaleString("en-US", {
+  return Number(value || 0).toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
   });
@@ -13,7 +12,6 @@ function formatMoney(value) {
 
 function formatDate(value) {
   if (!value) return "Not available";
-
   return new Date(value).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -23,41 +21,26 @@ function formatDate(value) {
   });
 }
 
-function getStatusSteps(status) {
+function getSteps(status) {
   const steps = ["paid", "printing", "shipped", "delivered"];
-  const currentIndex = steps.indexOf(status);
+  const i = steps.indexOf(status);
 
-  return steps.map((step, index) => ({
-    key: step,
+  return steps.map((s, idx) => ({
     label:
-      step === "paid"
+      s === "paid"
         ? "Order Received"
-        : step === "printing"
+        : s === "printing"
         ? "In Production"
-        : step === "shipped"
+        : s === "shipped"
         ? "Shipped"
         : "Delivered",
-    complete: currentIndex >= index,
-    current: currentIndex === index,
+    complete: i >= idx,
+    current: i === idx,
   }));
 }
 
-export default async function TrackTokenPage({ params }) {
-  const resolvedParams = await params;
-  const token = resolvedParams?.token;
-
-  if (!token) {
-    return (
-      <main style={styles.page}>
-        <section style={styles.card}>
-          <img src="/images/logo-hero.png" style={styles.logo} />
-          <h1 style={styles.title}>Tracking link missing</h1>
-          <p style={styles.text}>This tracking link is missing the secure order token.</p>
-          <Link href="/" style={styles.secondaryButton}>Return Home</Link>
-        </section>
-      </main>
-    );
-  }
+export default async function Page({ params }) {
+  const { token } = await params;
 
   const { data: order } = await supabaseAdmin
     .from("orders")
@@ -66,163 +49,155 @@ export default async function TrackTokenPage({ params }) {
     .single();
 
   const status = order?.status || "paid";
-  const steps = getStatusSteps(status);
+  const steps = getSteps(status);
 
   return (
     <main style={styles.page}>
       <section style={styles.card}>
-        
+
+        {/* LOGO */}
         <div style={styles.brandHeader}>
           <img src="/images/logo-hero.png" style={styles.logo} />
         </div>
 
+        {/* HERO */}
         <div style={styles.hero}>
           <p style={styles.kicker}>Order Status</p>
           <h1 style={styles.title}>Track Your Order</h1>
-          <p style={styles.text}>Order <strong>{order.order_number}</strong></p>
+          <p>Order <strong>{order.order_number}</strong></p>
         </div>
 
         <div style={styles.layout}>
 
-          {/* LEFT STATUS */}
+          {/* LEFT */}
           <aside style={styles.statusPanel}>
-            <h2 style={styles.panelTitle}>Order Progress</h2>
+            <h2>Order Progress</h2>
 
-            <div style={styles.verticalSteps}>
-              {steps.map((step, index) => (
-                <div key={step.key} style={styles.verticalStep}>
-                  
-                  {index < steps.length - 1 && (
-                    <div style={{
-                      ...styles.verticalLine,
-                      ...(steps[index + 1].complete ? styles.verticalLineComplete : {}),
-                    }} />
-                  )}
-
-                  <div style={{
-                    ...styles.verticalCircle,
-                    ...(step.complete ? styles.verticalCircleComplete : {}),
-                    ...(step.current ? styles.verticalCircleCurrent : {}),
-                  }}>
-                    {step.complete ? "✓" : index + 1}
-                  </div>
-
-                  <div>
-                    <div style={{
-                      ...styles.verticalLabel,
-                      ...(step.current ? styles.verticalLabelCurrent : {}),
-                    }}>
-                      {step.label}
-                    </div>
-                    <div style={styles.verticalSubtext}>
-                      {step.complete ? "Complete" : step.current ? "Current" : "Pending"}
-                    </div>
-                  </div>
-
+            {steps.map((step, i) => (
+              <div key={i} style={styles.step}>
+                <div style={{
+                  ...styles.circle,
+                  ...(step.complete ? styles.circleDone : {})
+                }}>
+                  {step.complete ? "✓" : i + 1}
                 </div>
-              ))}
-            </div>
+
+                <div>
+                  <div style={{
+                    fontWeight: "bold",
+                    color: step.current ? "#16a34a" : "#111"
+                  }}>
+                    {step.label}
+                  </div>
+                  <div style={{ fontSize: 12 }}>
+                    {step.complete ? "Complete" : step.current ? "Current" : "Pending"}
+                  </div>
+                </div>
+              </div>
+            ))}
           </aside>
 
-          {/* RIGHT CONTENT */}
-          <div style={styles.content}>
+          {/* RIGHT */}
+          <div style={styles.rightBox}>
 
-            <div style={styles.grid}>
-              
-              <div style={styles.infoBox}>
-                <h2 style={styles.sectionTitle}>Order Information</h2>
+            <div style={styles.infoBox}>
+              <h3>Order Information</h3>
+              <div style={styles.row}><span>Product</span><strong>{order.product_name}</strong></div>
+              <div style={styles.row}><span>Size</span><strong>{order.size}</strong></div>
+              <div style={styles.row}><span>Paper</span><strong>{order.paper}</strong></div>
+              <div style={styles.row}><span>Finish</span><strong>{order.finish}</strong></div>
+              <div style={styles.row}><span>Sides</span><strong>{order.sides}</strong></div>
+              <div style={styles.row}><span>Qty</span><strong>{order.quantity}</strong></div>
+              <div style={styles.row}><span>Total</span><strong>{formatMoney(order.total)}</strong></div>
+            </div>
 
-                <div style={styles.row}><span>Product</span><strong>{order.product_name}</strong></div>
-                <div style={styles.row}><span>Size</span><strong>{order.size}</strong></div>
-                <div style={styles.row}><span>Paper</span><strong>{order.paper}</strong></div>
-                <div style={styles.row}><span>Finish</span><strong>{order.finish}</strong></div>
-                <div style={styles.row}><span>Sides</span><strong>{order.sides}</strong></div>
-                <div style={styles.row}><span>Quantity</span><strong>{order.quantity}</strong></div>
-                <div style={styles.row}><span>Total</span><strong>{formatMoney(order.total)}</strong></div>
-                <div style={styles.row}><span>Date</span><strong>{formatDate(order.created_at)}</strong></div>
-              </div>
+            <div style={styles.shippingBox}>
+              <h3>Shipping Information</h3>
+              <div style={styles.row}><span>Status</span><strong>{status}</strong></div>
+              <div style={styles.row}><span>Carrier</span><strong>{order.carrier}</strong></div>
+              <div style={styles.row}><span>Tracking</span><strong>{order.tracking_number}</strong></div>
 
-              <div style={styles.infoBox}>
-                <h2 style={styles.sectionTitle}>Shipping Information</h2>
-
-                <div style={styles.row}><span>Status</span><strong>{status}</strong></div>
-                <div style={styles.row}><span>Carrier</span><strong>{order.carrier}</strong></div>
-                <div style={styles.row}><span>Tracking</span><strong>{order.tracking_number}</strong></div>
-
-                <div style={styles.reorderWrap}>
-                  <Link
-                    href={`/order?reorderToken=${encodeURIComponent(token)}`}
-                    style={styles.reorderButton}
-                  >
-                    Reorder This Product
-                  </Link>
-                </div>
-
+              {/* CENTERED BUTTON */}
+              <div style={styles.reorderWrap}>
+                <Link
+                  href={`/order?reorderToken=${token}`}
+                  style={styles.reorderButton}
+                >
+                  Reorder This Product
+                </Link>
               </div>
 
             </div>
 
           </div>
         </div>
+
       </section>
     </main>
   );
 }
 
 const styles = {
-  page: { minHeight: "100vh", background: "#eef5ff", padding: "40px" },
-  card: { maxWidth: "1100px", margin: "0 auto", background: "#fff", padding: "30px", borderRadius: "20px" },
-  brandHeader: { display: "flex", justifyContent: "center", marginBottom: "20px" },
-  logo: { width: "260px" },
-  hero: { background: "#1f5bb5", padding: "25px", borderRadius: "20px", color: "#fff", marginBottom: "20px" },
-  kicker: { fontSize: "12px" },
-  title: { fontSize: "30px", margin: "10px 0" },
-  text: {},
-  layout: { display: "grid", gridTemplateColumns: "300px 1fr", gap: "20px" },
+  page: { background: "#eef5ff", padding: 40 },
+  card: { maxWidth: 1100, margin: "0 auto", background: "#fff", padding: 30, borderRadius: 20 },
 
-  statusPanel: { background: "#eafaf1", padding: "20px", borderRadius: "20px" },
-  panelTitle: { marginBottom: "15px" },
+  brandHeader: { display: "flex", justifyContent: "center", marginBottom: 20 },
+  logo: { width: 260 },
 
-  verticalSteps: {},
-  verticalStep: { position: "relative", display: "grid", gridTemplateColumns: "40px 1fr", marginBottom: "20px" },
-  verticalCircle: { width: "34px", height: "34px", borderRadius: "50%", background: "#cbd5f5", display: "flex", alignItems: "center", justifyContent: "center" },
-  verticalCircleComplete: { background: "#16a34a", color: "#fff" },
-  verticalCircleCurrent: { outline: "4px solid rgba(22,163,74,0.2)" },
-  verticalLine: { position: "absolute", left: "17px", top: "34px", height: "40px", width: "2px", background: "#cbd5f5" },
-  verticalLineComplete: { background: "#16a34a" },
-  verticalLabel: { fontWeight: "bold" },
-  verticalLabelCurrent: { color: "#16a34a" },
-  verticalSubtext: { fontSize: "12px" },
+  hero: { background: "#1f5bb5", color: "#fff", padding: 25, borderRadius: 20, marginBottom: 20 },
+  kicker: { fontSize: 12 },
+  title: { fontSize: 30 },
 
-  content: {},
-  grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" },
-  infoBox: { border: "1px solid #ddd", padding: "20px", borderRadius: "20px" },
-  sectionTitle: { marginBottom: "10px" },
+  layout: { display: "grid", gridTemplateColumns: "300px 1fr", gap: 20 },
+
+  statusPanel: { background: "#eafaf1", padding: 20, borderRadius: 20 },
+  step: { display: "flex", gap: 10, marginBottom: 20 },
+
+  circle: {
+    width: 34,
+    height: 34,
+    borderRadius: "50%",
+    background: "#ddd",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  circleDone: { background: "#16a34a", color: "#fff" },
+
+  rightBox: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 20,
+  },
+
+  infoBox: { border: "1px solid #ddd", padding: 20, borderRadius: 20 },
+
+  shippingBox: {
+    border: "1px solid #ddd",
+    padding: 20,
+    borderRadius: 20,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
+
   row: { display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #eee" },
 
   reorderWrap: {
     display: "flex",
-    alignItems: "center",
     justifyContent: "center",
-    marginTop: "30px",
+    alignItems: "center",
+    flexGrow: 1,
   },
 
   reorderButton: {
     padding: "18px 30px",
-    borderRadius: "14px",
     background: "#0f2745",
     color: "#fff",
+    borderRadius: 14,
     fontWeight: "900",
-    fontSize: "16px",
+    fontSize: 16,
     textDecoration: "none",
-    boxShadow: "0 12px 30px rgba(0,0,0,0.2)",
+    transition: "all 0.2s ease",
   },
-
-  secondaryButton: {
-    marginTop: "20px",
-    display: "inline-block",
-    padding: "10px 20px",
-    background: "#eee",
-    borderRadius: "10px",
-  }
 };
