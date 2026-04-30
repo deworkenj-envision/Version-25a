@@ -30,6 +30,7 @@ const presetOptions = {
   size: [
     "2 x 3.5",
     "4 x 6",
+    "4.25 x 6",
     "5 x 7",
     "5.5 x 8.5",
     "6 x 9",
