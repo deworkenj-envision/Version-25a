@@ -41,6 +41,7 @@ const presetOptions = {
   ],
   paper: [
     "14pt C2S",
+    "14pt Uncoated",
     "16pt C2S",
     "100lb Gloss Text",
     "100lb Matte Text",
