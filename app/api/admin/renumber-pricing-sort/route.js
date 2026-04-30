@@ -13,16 +13,16 @@ export async function POST() {
       );
     }
 
-    const { data: rows, error: fetchError } = await supabaseAdmin
+    const { data: rows, error } = await supabaseAdmin
       .from("pricing")
       .select("id, product_name, sort_order, quantity, size, paper, finish, sides")
       .order("product_name", { ascending: true })
       .order("sort_order", { ascending: true })
       .order("quantity", { ascending: true });
 
-    if (fetchError) {
+    if (error) {
       return NextResponse.json(
-        { success: false, error: fetchError.message },
+        { success: false, error: error.message },
         { status: 500 }
       );
     }
@@ -41,10 +41,10 @@ export async function POST() {
       const productRows = grouped[productName];
 
       for (let i = 0; i < productRows.length; i++) {
-        const row = productRows[i];
         const newSortOrder = i + 1;
+        const row = productRows[i];
 
-        if (Number(row.sort_order) !== newSortOrder) {
+        if (Number(row.sort_order || 0) !== newSortOrder) {
           const { error: updateError } = await supabaseAdmin
             .from("pricing")
             .update({ sort_order: newSortOrder })
@@ -64,8 +64,8 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      message: `Renumbered pricing sort order by product.`,
       updatedCount,
+      message: "Pricing sort orders renumbered by product.",
     });
   } catch (err) {
     return NextResponse.json(
