@@ -4,7 +4,7 @@ import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 function clean(value) {
   return String(value ?? "")
     .trim()
-    .replace(/\s+/g, " "); // remove double spaces
+    .replace(/\s+/g, " ");
 }
 
 export async function GET(req) {
@@ -31,6 +31,7 @@ export async function GET(req) {
     if (quantity) query = query.eq("quantity", Number(quantity));
 
     query = query
+      .order("product_name", { ascending: true })
       .order("sort_order", { ascending: true })
       .order("quantity", { ascending: true });
 
@@ -43,7 +44,6 @@ export async function GET(req) {
       );
     }
 
-    // 🔥 CLEAN + NORMALIZE ALL FIELDS
     const rows = (data || []).map((row) => ({
       ...row,
       product_name: clean(row.product_name),
@@ -55,6 +55,7 @@ export async function GET(req) {
       your_cost: Number(row.your_cost ?? 0),
       markup_percent: Number(row.markup_percent ?? 0),
       shipping_cost: Number(row.shipping_cost ?? 0),
+      sort_order: Number(row.sort_order ?? 0),
     }));
 
     const exactMatch =

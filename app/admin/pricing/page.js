@@ -162,6 +162,20 @@ export default function AdminPricingPage() {
     return value;
   }
 
+  function getNextSortOrder(productName) {
+    if (!productName) return "";
+
+    const productRows = rows.filter((row) => row.product_name === productName);
+
+    if (productRows.length === 0) return 1;
+
+    const maxSort = Math.max(
+      ...productRows.map((row) => Number(row.sort_order || 0))
+    );
+
+    return maxSort + 1;
+  }
+
   function getDropdownOptions(field) {
     const preset = presetOptions[field] || [];
     const existing = rows
@@ -488,15 +502,12 @@ export default function AdminPricingPage() {
         row.shipping_cost !== null && row.shipping_cost !== undefined
           ? String(row.shipping_cost)
           : "",
-      sort_order:
-        row.sort_order !== null && row.sort_order !== undefined
-          ? String(row.sort_order)
-          : "",
+      sort_order: getNextSortOrder(row.product_name || ""),
       active: Boolean(row.active),
     });
 
     setMessage(
-      `Copied row for ${row.product_name}. Update quantity, cost, markup, or shipping, then click Add New Pricing Row.`
+      `Copied row for ${row.product_name}. Sort order was automatically set to the next number for this product.`
     );
 
     if (createFormRef.current) {
@@ -715,9 +726,15 @@ export default function AdminPricingPage() {
           >
             <select
               value={form.product_name}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, product_name: e.target.value }))
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+
+                setForm((prev) => ({
+                  ...prev,
+                  product_name: value,
+                  sort_order: getNextSortOrder(value),
+                }));
+              }}
               className="rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">Product Name</option>
@@ -840,10 +857,8 @@ export default function AdminPricingPage() {
               type="number"
               placeholder="Sort Order"
               value={form.sort_order}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, sort_order: e.target.value }))
-              }
-              className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              readOnly
+              className="rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
             />
 
             <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3">
