@@ -56,7 +56,7 @@ const presetOptions = {
     "No Coating",
     "Matte",
     "Gloss",
-    "UV Coating",
+    "High Gloss UV",
     "AQ Coating",
     "High Gloss UV",
   ],
