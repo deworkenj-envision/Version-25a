@@ -102,7 +102,6 @@ function marginPercent(row) {
 export default function AdminPricingPage() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -191,32 +190,32 @@ export default function AdminPricingPage() {
   }
 
   function handleLocalChange(id, field, value) {
-  const cleanValue = normalizeValue(field, value);
+    const cleanValue = normalizeValue(field, value);
 
-  setRows((prev) =>
-    prev.map((row) =>
-      row.id === id
-        ? {
-            ...row,
-            [field]: cleanValue,
-          }
-        : row
-    )
-  );
+    setRows((prev) =>
+      prev.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              [field]: cleanValue,
+            }
+          : row
+      )
+    );
 
-  const delayedSaveFields = [
-    "sort_order",
-    "your_cost",
-    "markup_percent",
-    "shipping_cost",
-  ];
+    const delayedSaveFields = [
+      "sort_order",
+      "your_cost",
+      "markup_percent",
+      "shipping_cost",
+    ];
 
-  if (delayedSaveFields.includes(field)) {
-    scheduleAutoSave(id, field, cleanValue);
-  } else {
-    updateRow(id, field, cleanValue);
+    if (delayedSaveFields.includes(field)) {
+      scheduleAutoSave(id, field, cleanValue);
+    } else {
+      updateRow(id, field, cleanValue);
+    }
   }
-}
 
   function scheduleAutoSave(id, field, value) {
     const key = `${id}-${field}`;
@@ -230,7 +229,6 @@ export default function AdminPricingPage() {
 
   async function updateRow(id, field, value) {
     try {
-      setSavingId(id);
       setMessage("");
 
       const cleanValue = normalizeValue(field, value);
@@ -249,22 +247,9 @@ export default function AdminPricingPage() {
       if (!res.ok || !data?.success) {
         throw new Error(data?.error || `Update failed with status ${res.status}`);
       }
-
-      setRows((prev) =>
-        prev.map((row) =>
-          row.id === id
-            ? {
-                ...row,
-                [field]: cleanValue,
-              }
-            : row
-        )
-      );
     } catch (err) {
       console.error("PRICING SAVE ERROR:", err);
       setMessage(`Save failed: ${err.message}`);
-    } finally {
-      setSavingId(null);
     }
   }
 
@@ -1215,32 +1200,28 @@ export default function AdminPricingPage() {
                       </td>
 
                       <td className="px-2 py-2">
-  <div className="flex gap-2 whitespace-nowrap">
-    <button
-      type="button"
-      onClick={() => handleCopyRow(row)}
-      className="rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
-    >
-      Copy
-    </button>
+                        <div className="flex gap-2 whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyRow(row)}
+                            className="rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
+                          >
+                            Copy
+                          </button>
 
-    <button
-      type="button"
-      onClick={() => handleDeleteRow(row)}
-      disabled={deletingId === row.id}
-      className="rounded-lg bg-red-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
-    >
-      {deletingId === row.id ? "Deleting..." : "Delete"}
-    </button>
-  </div>
-</td>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRow(row)}
+                            disabled={deletingId === row.id}
+                            className="rounded-lg bg-red-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
+                          >
+                            {deletingId === row.id ? "Deleting..." : "Delete"}
+                          </button>
+                        </div>
+                      </td>
 
                       <td className="px-3 py-4 whitespace-nowrap">
-                        {savingId === row.id ? (
-                          <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                            Saving...
-                          </span>
-                        ) : deletingId === row.id ? (
+                        {deletingId === row.id ? (
                           <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
                             Deleting...
                           </span>
