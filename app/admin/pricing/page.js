@@ -1199,26 +1199,26 @@ export default function AdminPricingPage() {
                         </label>
                       </td>
 
-                      <td className="px-4 py-4">
-                        <div className="flex flex-col gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleCopyRow(row)}
-                            className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
-                          >
-                            Copy
-                          </button>
+                      <td className="px-2 py-2">
+  <div className="flex gap-2 whitespace-nowrap">
+    <button
+      type="button"
+      onClick={() => handleCopyRow(row)}
+      className="rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
+    >
+      Copy
+    </button>
 
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteRow(row)}
-                            disabled={deletingId === row.id}
-                            className="rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
-                          >
-                            {deletingId === row.id ? "Deleting..." : "Delete"}
-                          </button>
-                        </div>
-                      </td>
+    <button
+      type="button"
+      onClick={() => handleDeleteRow(row)}
+      disabled={deletingId === row.id}
+      className="rounded-lg bg-red-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
+    >
+      {deletingId === row.id ? "Deleting..." : "Delete"}
+    </button>
+  </div>
+</td>
 
                       <td className="px-3 py-4 whitespace-nowrap">
                         {savingId === row.id ? (
