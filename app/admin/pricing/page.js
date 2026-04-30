@@ -191,21 +191,32 @@ export default function AdminPricingPage() {
   }
 
   function handleLocalChange(id, field, value) {
-    const cleanValue = normalizeValue(field, value);
+  const cleanValue = normalizeValue(field, value);
 
-    setRows((prev) =>
-      prev.map((row) =>
-        row.id === id
-          ? {
-              ...row,
-              [field]: cleanValue,
-            }
-          : row
-      )
-    );
+  setRows((prev) =>
+    prev.map((row) =>
+      row.id === id
+        ? {
+            ...row,
+            [field]: cleanValue,
+          }
+        : row
+    )
+  );
 
+  const delayedSaveFields = [
+    "sort_order",
+    "your_cost",
+    "markup_percent",
+    "shipping_cost",
+  ];
+
+  if (delayedSaveFields.includes(field)) {
     scheduleAutoSave(id, field, cleanValue);
+  } else {
+    updateRow(id, field, cleanValue);
   }
+}
 
   function scheduleAutoSave(id, field, value) {
     const key = `${id}-${field}`;
