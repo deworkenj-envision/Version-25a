@@ -71,6 +71,11 @@ const presetOptions = {
   ],
   sides: ["Front Only", "Front and Back"],
   quantity: [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
     "100",
     "250",
     "500",
