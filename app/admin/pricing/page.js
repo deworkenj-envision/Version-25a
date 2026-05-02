@@ -123,6 +123,8 @@ export default function AdminPricingPage() {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
   const [duplicatingSetId, setDuplicatingSetId] = useState(null);
+  const [bulkDuplicating, setBulkDuplicating] = useState(false);
+  const [selectedRowIds, setSelectedRowIds] = useState([]);
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -163,6 +165,7 @@ export default function AdminPricingPage() {
       }
 
       setRows(Array.isArray(data.pricing) ? data.pricing : []);
+      setSelectedRowIds([]);
     } catch (err) {
       console.error(err);
       setMessage(err.message || "Failed to load pricing.");
@@ -270,6 +273,114 @@ export default function AdminPricingPage() {
     } catch (err) {
       console.error("PRICING SAVE ERROR:", err);
       setMessage(`Save failed: ${err.message}`);
+    }
+  }
+
+  function toggleSelectedRow(id) {
+    setSelectedRowIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  }
+
+  function toggleSelectAllVisible() {
+    const visibleIds = filteredRows.map((row) => row.id);
+    const allVisibleSelected =
+      visibleIds.length > 0 && visibleIds.every((id) => selectedRowIds.includes(id));
+
+    if (allVisibleSelected) {
+      setSelectedRowIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+    } else {
+      setSelectedRowIds((prev) => [...new Set([...prev, ...visibleIds])]);
+    }
+  }
+
+  async function handleBulkDuplicateCheckedRows() {
+    const selectedRows = rows
+      .filter((row) => selectedRowIds.includes(row.id))
+      .sort((a, b) => {
+        const productCompare = String(a.product_name || "").localeCompare(
+          String(b.product_name || "")
+        );
+
+        if (productCompare !== 0) return productCompare;
+
+        return Number(a.sort_order || 0) - Number(b.sort_order || 0);
+      });
+
+    if (selectedRows.length === 0) {
+      setMessage("Check at least one row to duplicate.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Duplicate ${selectedRows.length} checked row(s)?\n\nThe copies will be added with the next sort numbers for each product.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setBulkDuplicating(true);
+      setMessage("Duplicating checked rows...");
+
+      const nextSortByProduct = {};
+
+      rows.forEach((row) => {
+        const productName = row.product_name || "";
+        const currentSort = Number(row.sort_order || 0);
+
+        if (!nextSortByProduct[productName]) {
+          nextSortByProduct[productName] = currentSort;
+        } else {
+          nextSortByProduct[productName] = Math.max(
+            nextSortByProduct[productName],
+            currentSort
+          );
+        }
+      });
+
+      for (const item of selectedRows) {
+        const productName = item.product_name || "";
+        const nextSort = Number(nextSortByProduct[productName] || 0) + 1;
+
+        nextSortByProduct[productName] = nextSort;
+
+        const payload = {
+          product_name: item.product_name,
+          size: item.size,
+          paper: item.paper,
+          finish: item.finish,
+          sides: item.sides,
+          quantity: Number(item.quantity),
+          your_cost: Number(item.your_cost),
+          markup_percent: Number(item.markup_percent),
+          shipping_cost: Number(item.shipping_cost),
+          sort_order: nextSort,
+          active: Boolean(item.active),
+        };
+
+        const res = await fetch("/api/admin/create-pricing", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data?.success) {
+          throw new Error(data?.error || "Bulk duplicate failed.");
+        }
+      }
+
+      setMessage(`Duplicated ${selectedRows.length} checked row(s).`);
+      setSelectedRowIds([]);
+      await loadPricing();
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message || "Bulk duplicate failed.");
+    } finally {
+      setBulkDuplicating(false);
     }
   }
 
@@ -649,6 +760,7 @@ export default function AdminPricingPage() {
       }
 
       setRows((prev) => prev.filter((item) => item.id !== row.id));
+      setSelectedRowIds((prev) => prev.filter((id) => id !== row.id));
       setMessage("Pricing row deleted successfully.");
     } catch (err) {
       console.error(err);
@@ -703,6 +815,10 @@ export default function AdminPricingPage() {
       return matchesProduct && matchesSearch;
     });
   }, [rows, productFilter, search]);
+
+  const visibleIds = filteredRows.map((row) => row.id);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedRowIds.includes(id));
 
   if (loading) {
     return (
@@ -1030,7 +1146,7 @@ export default function AdminPricingPage() {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-[220px_auto_1fr] md:items-end">
+          <div className="mt-5 grid gap-3 md:grid-cols-[220px_auto_auto_1fr] md:items-end">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
                 Bulk Markup %
@@ -1053,6 +1169,17 @@ export default function AdminPricingPage() {
               Apply to All Rows
             </button>
 
+            <button
+              type="button"
+              onClick={handleBulkDuplicateCheckedRows}
+              disabled={bulkDuplicating || selectedRowIds.length === 0}
+              className="rounded-2xl bg-purple-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-800 disabled:opacity-60"
+            >
+              {bulkDuplicating
+                ? "Duplicating..."
+                : `Duplicate Checked Rows (${selectedRowIds.length})`}
+            </button>
+
             <div className="flex flex-wrap gap-3 text-sm text-slate-600">
               <div className="rounded-full bg-slate-100 px-4 py-2">
                 Total Rows: <span className="font-semibold">{rows.length}</span>
@@ -1061,16 +1188,29 @@ export default function AdminPricingPage() {
                 Showing:{" "}
                 <span className="font-semibold">{filteredRows.length}</span>
               </div>
+              <div className="rounded-full bg-purple-100 px-4 py-2 text-purple-700">
+                Checked:{" "}
+                <span className="font-semibold">{selectedRowIds.length}</span>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="w-full overflow-x-auto rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
           <div className="max-h-[720px] overflow-auto pb-2">
-            <table className="w-full min-w-[1900px] border-separate border-spacing-0 text-sm">
+            <table className="w-full min-w-[2000px] border-separate border-spacing-0 text-sm">
               <thead className="sticky top-0 z-30 bg-slate-100 text-left text-slate-700 shadow-sm">
                 <tr>
-                  <th className="sticky left-0 z-40 bg-slate-100 px-2 py-3 font-semibold">
+                  <th className="sticky left-0 z-50 bg-slate-100 px-2 py-3 font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={toggleSelectAllVisible}
+                      className="h-4 w-4 rounded border-slate-300"
+                      title="Select all visible rows"
+                    />
+                  </th>
+                  <th className="sticky left-10 z-40 bg-slate-100 px-2 py-3 font-semibold">
                     Product
                   </th>
                   <th className="px-2 py-3 font-semibold">Size</th>
@@ -1095,14 +1235,23 @@ export default function AdminPricingPage() {
               <tbody>
                 {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan="17" className="p-8 text-center text-slate-500">
+                    <td colSpan="18" className="p-8 text-center text-slate-500">
                       No pricing rows found.
                     </td>
                   </tr>
                 ) : (
                   filteredRows.map((row) => (
                     <tr key={row.id} className="border-t border-slate-200 align-top">
-                      <td className="sticky left-0 z-20 bg-white px-2 py-3 shadow-[2px_0_0_0_rgba(226,232,240,1)]">
+                      <td className="sticky left-0 z-30 bg-white px-2 py-3 shadow-[2px_0_0_0_rgba(226,232,240,1)]">
+                        <input
+                          type="checkbox"
+                          checked={selectedRowIds.includes(row.id)}
+                          onChange={() => toggleSelectedRow(row.id)}
+                          className="h-4 w-4 rounded border-slate-300"
+                        />
+                      </td>
+
+                      <td className="sticky left-10 z-20 bg-white px-2 py-3 shadow-[2px_0_0_0_rgba(226,232,240,1)]">
                         <select
                           value={row.product_name ?? ""}
                           onChange={(e) =>
@@ -1298,7 +1447,7 @@ export default function AdminPricingPage() {
                           <button
                             type="button"
                             onClick={() => handleDuplicateSet(row)}
-                            disabled={duplicatingSetId === row.id}
+                            disabled={duplicatingSetId === row.id || bulkDuplicating}
                             className="rounded-lg bg-purple-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-purple-700 disabled:opacity-60"
                           >
                             {duplicatingSetId === row.id
@@ -1333,6 +1482,10 @@ export default function AdminPricingPage() {
                         ) : duplicatingSetId === row.id ? (
                           <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
                             Duplicating...
+                          </span>
+                        ) : selectedRowIds.includes(row.id) ? (
+                          <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+                            Checked
                           </span>
                         ) : (
                           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
