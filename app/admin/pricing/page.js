@@ -65,9 +65,9 @@ const presetOptions = {
     "No Coating",
     "Matte",
     "Gloss",
-    "High Gloss UV",
-    "AQ Coating",
-    "High Gloss UV",
+    "UV-High Gloss Coating",
+    "UV-Matte Coating ",
+    "UV-High Gloss Coating",
   ],
   sides: ["Front Only", "Front and Back"],
   quantity: [
