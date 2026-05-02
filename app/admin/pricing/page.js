@@ -316,5 +316,15 @@ export default function AdminPricingPage() {
       setMessage("");
 
       const payload = {
-        product_name: form.product_name.trim(),
-        size
+  product_name: form.product_name.trim(),
+  size: form.size.trim(),
+  paper: form.paper.trim(),
+  finish: form.finish.trim(),
+  sides: form.sides.trim(),
+  quantity: Number(form.quantity),
+  your_cost: Number(form.your_cost),
+  markup_percent: Number(form.markup_percent),
+  shipping_cost: Number(form.shipping_cost),
+  sort_order: form.sort_order === "" ? 0 : Number(form.sort_order),
+  active: Boolean(form.active),
+};

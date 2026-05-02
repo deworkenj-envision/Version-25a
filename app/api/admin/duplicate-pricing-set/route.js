@@ -12,7 +12,6 @@ export async function POST(req) {
       );
     }
 
-    // 1. Get existing rows
     const { data: rows, error } = await supabaseAdmin
       .from("pricing")
       .select("*")
@@ -29,16 +28,16 @@ export async function POST(req) {
       );
     }
 
-    // 2. Get current max sort for this product
-    const { data: maxRows } = await supabaseAdmin
+    const { data: maxRows, error: maxError } = await supabaseAdmin
       .from("pricing")
       .select("sort_order")
       .eq("product_name", product_name);
 
+    if (maxError) throw maxError;
+
     const maxSort =
       Math.max(...(maxRows || []).map((r) => Number(r.sort_order || 0))) || 0;
 
-    // 3. Build duplicated rows
     const newRows = rows.map((row, index) => ({
       product_name: row.product_name,
       size: row.size,
@@ -53,7 +52,6 @@ export async function POST(req) {
       active: row.active,
     }));
 
-    // 4. Insert
     const { error: insertError } = await supabaseAdmin
       .from("pricing")
       .insert(newRows);
@@ -65,9 +63,10 @@ export async function POST(req) {
       count: newRows.length,
     });
   } catch (err) {
-    console.error("DUPLICATE ERROR:", err);
+    console.error("DUPLICATE PRICING SET ERROR:", err);
+
     return NextResponse.json(
-      { success: false, error: err.message },
+      { success: false, error: err.message || "Duplicate failed" },
       { status: 500 }
     );
   }
