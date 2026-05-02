@@ -214,7 +214,11 @@ export async function POST(req) {
       success_url: successUrl,
       cancel_url: cancelUrl,
       customer_email,
+      automatic_tax: { enabled: true },
       billing_address_collection: "auto",
+      shipping_address_collection: {
+        allowed_countries: ["US"],
+      },
       line_items: [
         {
           quantity: 1,
