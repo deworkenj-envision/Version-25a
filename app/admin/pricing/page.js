@@ -308,23 +308,63 @@ export default function AdminPricingPage() {
     }
   }
 
-  async function handleCreateRow(e) {
-    e.preventDefault();
+ async function handleCreateRow(e) {
+  e.preventDefault();
 
-    try {
-      setCreating(true);
-      setMessage("");
+  try {
+    setCreating(true);
+    setMessage("");
 
-      const payload = {
-  product_name: form.product_name.trim(),
-  size: form.size.trim(),
-  paper: form.paper.trim(),
-  finish: form.finish.trim(),
-  sides: form.sides.trim(),
-  quantity: Number(form.quantity),
-  your_cost: Number(form.your_cost),
-  markup_percent: Number(form.markup_percent),
-  shipping_cost: Number(form.shipping_cost),
-  sort_order: form.sort_order === "" ? 0 : Number(form.sort_order),
-  active: Boolean(form.active),
-};
+    const payload = {
+      product_name: form.product_name.trim(),
+      size: form.size.trim(),
+      paper: form.paper.trim(),
+      finish: form.finish.trim(),
+      sides: form.sides.trim(),
+      quantity: Number(form.quantity),
+      your_cost: Number(form.your_cost),
+      markup_percent: Number(form.markup_percent),
+      shipping_cost: Number(form.shipping_cost),
+      sort_order: form.sort_order === "" ? 0 : Number(form.sort_order),
+      active: Boolean(form.active),
+    };
+
+    if (
+      !payload.product_name ||
+      !payload.size ||
+      !payload.paper ||
+      !payload.finish ||
+      !payload.sides ||
+      !payload.quantity ||
+      Number.isNaN(payload.quantity) ||
+      Number.isNaN(payload.your_cost) ||
+      Number.isNaN(payload.markup_percent) ||
+      Number.isNaN(payload.shipping_cost)
+    ) {
+      throw new Error("Please complete all required pricing row fields.");
+    }
+
+    const res = await fetch("/api/admin/create-pricing", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.error || "Failed to create pricing row.");
+    }
+
+    setForm(emptyForm);
+    setMessage("New pricing row created successfully.");
+    await loadPricing();
+  } catch (err) {
+    console.error(err);
+    setMessage(err.message || "Failed to create pricing row.");
+  } finally {
+    setCreating(false);
+  }
+}
