@@ -122,6 +122,7 @@ export default function AdminPricingPage() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [duplicatingSetId, setDuplicatingSetId] = useState(null);
   const [bulkDuplicating, setBulkDuplicating] = useState(false);
   const [selectedRowIds, setSelectedRowIds] = useState([]);
@@ -291,6 +292,52 @@ export default function AdminPricingPage() {
       setSelectedRowIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
     } else {
       setSelectedRowIds((prev) => [...new Set([...prev, ...visibleIds])]);
+    }
+  }
+
+  async function handleBulkDeleteCheckedRows() {
+    const selectedRows = rows.filter((row) => selectedRowIds.includes(row.id));
+
+    if (selectedRows.length === 0) {
+      setMessage("Check at least one row to delete.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete ${selectedRows.length} checked row(s)?\n\nThis cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setBulkDeleting(true);
+      setMessage("Deleting checked rows...");
+
+      for (const row of selectedRows) {
+        const res = await fetch("/api/admin/delete-pricing", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id: row.id }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data?.success) {
+          throw new Error(data?.error || "Bulk delete failed.");
+        }
+      }
+
+      setRows((prev) => prev.filter((row) => !selectedRowIds.includes(row.id)));
+      setSelectedRowIds([]);
+      setMessage(`Deleted ${selectedRows.length} checked row(s).`);
+      await loadPricing();
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message || "Bulk delete failed.");
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -1146,7 +1193,7 @@ export default function AdminPricingPage() {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-[220px_auto_auto_1fr] md:items-end">
+          <div className="mt-5 grid gap-3 md:grid-cols-[220px_auto_auto_auto_1fr] md:items-end">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
                 Bulk Markup %
@@ -1172,12 +1219,23 @@ export default function AdminPricingPage() {
             <button
               type="button"
               onClick={handleBulkDuplicateCheckedRows}
-              disabled={bulkDuplicating || selectedRowIds.length === 0}
+              disabled={bulkDuplicating || bulkDeleting || selectedRowIds.length === 0}
               className="rounded-2xl bg-purple-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-800 disabled:opacity-60"
             >
               {bulkDuplicating
                 ? "Duplicating..."
                 : `Duplicate Checked Rows (${selectedRowIds.length})`}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleBulkDeleteCheckedRows}
+              disabled={bulkDeleting || bulkDuplicating || selectedRowIds.length === 0}
+              className="rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
+            >
+              {bulkDeleting
+                ? "Deleting..."
+                : `Delete Checked Rows (${selectedRowIds.length})`}
             </button>
 
             <div className="flex flex-wrap gap-3 text-sm text-slate-600">
@@ -1447,7 +1505,7 @@ export default function AdminPricingPage() {
                           <button
                             type="button"
                             onClick={() => handleDuplicateSet(row)}
-                            disabled={duplicatingSetId === row.id || bulkDuplicating}
+                            disabled={duplicatingSetId === row.id || bulkDuplicating || bulkDeleting}
                             className="rounded-lg bg-purple-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-purple-700 disabled:opacity-60"
                           >
                             {duplicatingSetId === row.id
@@ -1458,7 +1516,8 @@ export default function AdminPricingPage() {
                           <button
                             type="button"
                             onClick={() => handleCopyRow(row)}
-                            className="rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
+                            disabled={bulkDeleting}
+                            className="rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
                           >
                             Copy
                           </button>
@@ -1466,7 +1525,7 @@ export default function AdminPricingPage() {
                           <button
                             type="button"
                             onClick={() => handleDeleteRow(row)}
-                            disabled={deletingId === row.id}
+                            disabled={deletingId === row.id || bulkDeleting}
                             className="rounded-lg bg-red-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
                           >
                             {deletingId === row.id ? "Deleting..." : "Delete"}
