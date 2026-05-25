@@ -270,13 +270,7 @@ export default function BannersPage() {
               Order Now
             </button>
 
-            <p className="mt-4 text-center text-sm text-gray-500">
-              Standard shipping is $15.
-              Orders over 99 sq ft add
-              $0.10 per extra sq ft.
-              Rush shipping adds $25.
-            </p>
-          </div>
+           </div>
         </div>
       </section>
     </main>
