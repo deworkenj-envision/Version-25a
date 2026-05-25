@@ -93,39 +93,6 @@ export default function BannersPage() {
                 className="h-full w-full object-cover"
               />
             </div>
-
-            {/* FEATURES */}
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl border bg-white p-5 text-center shadow-sm">
-                <div className="text-2xl font-bold text-green-700">
-                  $2.75
-                </div>
-
-                <div className="text-sm text-gray-600">
-                  Per Sq Ft
-                </div>
-              </div>
-
-              <div className="rounded-2xl border bg-white p-5 text-center shadow-sm">
-                <div className="text-2xl font-bold text-green-700">
-                  $15
-                </div>
-
-                <div className="text-sm text-gray-600">
-                  Standard Shipping
-                </div>
-              </div>
-
-              <div className="rounded-2xl border bg-white p-5 text-center shadow-sm">
-                <div className="text-2xl font-bold text-green-700">
-                  +$25
-                </div>
-
-                <div className="text-sm text-gray-600">
-                  Rush Shipping
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* RIGHT SIDE */}
@@ -292,10 +259,6 @@ export default function BannersPage() {
                   <div className="text-right">
                     <div className="text-green-700">
                       ${total.toFixed(2)}
-                    </div>
-
-                    <div className="text-xs font-medium text-gray-500">
-                      (Final price includes sales tax)
                     </div>
                   </div>
                 </div>
