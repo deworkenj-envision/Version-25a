@@ -242,10 +242,6 @@ export default function BannersPage() {
                     <div className="text-green-700">
                       ${total.toFixed(2)}
                     </div>
-
-                    <div className="text-xs font-medium text-gray-500">
-                      (Final price includes sales tax)
-                    </div>
                   </div>
                 </div>
               </div>
